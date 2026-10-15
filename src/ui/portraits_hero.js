@@ -197,7 +197,7 @@ BTS.PortraitsCustom = (function () {
   function jaglikaLate(p, expr) {
     var sk = { base: [206, 182, 172], shade: [168, 142, 136], light: [222, 204, 196], deep: [128, 104, 102] };
     var wrap = [30, 44, 76], wrapD = [16, 24, 46], wrapL = [58, 80, 118];
-    var jacket = [48, 26, 38], jacketD = [30, 16, 26], jacketL = [70, 44, 58], stripe = [176, 160, 164], stripeR = [176, 92, 104];
+    var jacket = [74, 40, 60], jacketD = [50, 26, 42], jacketL = [98, 60, 82], stripe = [176, 160, 164], stripeR = [176, 92, 104];
     var cx = 32, cy = 30, rx = 11, ry = 16;
     // jacket with stand-up collar, zip stripe
     shape(p, 0, 44, 63, 63, function (x, y) {
@@ -241,12 +241,14 @@ BTS.PortraitsCustom = (function () {
       var c = x > 40 ? wrapD : (x < 22 ? wrapL : wrap);
       return fold ? wrapD : c;
     });
+    // knot of the wrap at the crown, tail falling to one side
+    p.ellipse(39, 6, 4, 3, wrapL); p.ellipse(39, 6, 2, 1.5, wrap); p.line(42, 7, 47, 15, wrapD); p.line(43, 7, 48, 15, wrap);
     // star earrings dangling on chains
     [[cx - rx - 1, cy + 6], [cx + rx + 1, cy + 6]].forEach(function (e, k) {
       var c = k ? [80, 96, 130] : [104, 116, 150], cd = [52, 62, 90];
       p.rect(e[0], e[1], 1, 4, [120, 118, 126]);
       var sx = e[0], sy = e[1] + 6;
-      p.px(sx, sy - 2, c); p.rect(sx - 2, sy, 5, 1, c); p.rect(sx - 1, sy - 1, 3, 3, c); p.px(sx - 1, sy + 2, cd); p.px(sx + 1, sy + 2, cd);
+      p.px(sx, sy - 2, c); p.rect(sx - 2, sy, 5, 1, c); p.rect(sx - 1, sy - 1, 3, 3, c); p.px(sx - 1, sy + 2, cd); p.px(sx + 1, sy + 2, cd); p.px(sx - 1, sy - 1, [200, 210, 230]);
     });
   }
 

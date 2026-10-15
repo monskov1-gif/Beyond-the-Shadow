@@ -236,7 +236,7 @@ BTS.CharSprites = (function () {
         else if (anim === 'fear' || anim === 'cower') p.px(cx, eyeY + 2, [70, 30, 30]);
         if (d.wrinkles) { p.px(cx - 3, eyeY + 2, dk(skin)); p.px(cx + 3, eyeY + 2, dk(skin)); }
         if (d.glasses) { var gc = d.glassesCol || [40, 40, 50]; p.rect(cx - 3, eyeY - 1, 3, 1, gc); p.rect(cx + 1, eyeY - 1, 3, 1, gc); p.px(cx - 3, eyeY, gc); p.px(cx + 3, eyeY, gc); p.px(cx, eyeY, gc); }
-        if (d.earring) { p.px(hx - 1, eyeY + 2, d.earring); p.px(hx + hw, eyeY + 2, d.earring); }
+        if (d.earring) { p.px(hx - 1, eyeY + 2, d.earring); p.px(hx + hw, eyeY + 2, d.earring); if (d.hairStyle === 'turban') { p.px(hx - 1, eyeY + 3, lit(d.earring)); p.px(hx + hw, eyeY + 3, lit(d.earring)); } }
       } else if (dir === 'side') {
         p.px(hx + hw - 3, eyeY, d.eyes || [30, 24, 26]);
         if (d.glasses) { p.rect(hx + hw - 4, eyeY - 1, 3, 1, d.glassesCol || [40, 40, 50]); p.px(hx + hw - 4, eyeY, d.glassesCol || [40, 40, 50]); }
@@ -268,7 +268,7 @@ BTS.CharSprites = (function () {
       if (hs === 'turban') {          // tight wrapped head-cloth, ears showing
         var tc = d.scarf;
         hairRow(hy - 2, L + 2, Rr - 2, tc); hairRow(hy - 1, L + 1, Rr - 1, tc); hairRow(hy, L, Rr, tc); hairRow(hy + 1, L, Rr, tc);
-        if (dir === 'down') { hairRow(hy + 2, L, L + 2, tc); hairRow(hy + 2, Rr - 2, Rr, tc); p.rect(L + 3, hy - 1, 1, 3, dk(tc)); p.rect(Rr - 3, hy - 2, 1, 2, dk(tc)); }
+        if (dir === 'down') { hairRow(hy + 2, L, L + 2, tc); hairRow(hy + 2, Rr - 2, Rr, tc); p.rect(L + 3, hy - 1, 1, 3, dk(tc)); p.rect(Rr - 3, hy - 2, 1, 2, dk(tc)); p.rect(cx - 1, hy - 3, 3, 2, lit(tc)); p.px(cx, hy - 3, dk(tc)); }
         else if (dir === 'side') { p.rect(L, hy + 2, 4, 3, tc); p.px(L + 2, hy - 1, dk(tc)); p.rect(L - 1, hy, 2, 3, dk(tc)); }
         else { p.rect(L, hy, hw, 5, tc); p.rect(L + 2, hy + 1, hw - 4, 1, dk(tc)); p.rect(cx - 1, hy + 4, 3, 2, dk(tc)); }
         p.px(L + 2, hy - 1, lit(tc));
@@ -291,7 +291,6 @@ BTS.CharSprites = (function () {
         if (dir === 'down') {
           hairRow(hy + 2, L - 1, Rr + 1); hairRow(hy + 3, L, Rr);
           for (var sx = L; sx <= Rr; sx++) if ((sx * 5 + 1) % 3 !== 0) p.px(sx, hy + 4, hc);           // ragged fringe at eye level
-          p.px(cx + 1, eyeY, hc); p.px(cx + 2, eyeY - 0, dk(hc));                                    // a lock over one eye
           p.rect(L - 1, hy + 4, 2, 5, hc); p.rect(Rr, hy + 4, 2, 5, dk(hc)); p.px(L - 2, hy + 8, hc); p.px(Rr + 2, hy + 8, dk(hc));
         } else if (dir === 'side') {
           hairRow(hy + 2, L - 1, Rr); hairRow(hy + 3, L - 1, Rr - 1); p.px(Rr, hy + 4, hc);

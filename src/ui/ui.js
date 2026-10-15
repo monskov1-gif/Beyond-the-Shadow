@@ -209,7 +209,7 @@ BTS.UI = (function () {
     U.hud.classList.toggle('off', !game);
     U.objective.classList.toggle('hidden', !!BTS.Cutscene.running || BTS.Dialogue.active);
     U.captions.style.bottom = (BTS.Dialogue.active ? (U.dlg.offsetHeight + 40) : 60) + 'px';
-    if (game && !BTS.Cutscene.running && !BTS.Dialogue.active && !(BTS.Touch && BTS.Touch.enabled)) {
+    if (game && !BTS.Cutscene.running && !BTS.Dialogue.active && !(BTS.Story && BTS.Story.cardActive) && !(BTS.Touch && BTS.Touch.enabled)) {
       var ks = BTS.Config.get('keys'), kn = BTS.Input.keyName;
       var pad = BTS.Input.lastDevice === 'pad';
       var hk = (pad ? 'Y' : esc(kn(ks.journal[0]))) + ' ' + esc(t('ui.journal')) + ' · ' + (pad ? 'Back' : esc(kn(ks.map[0]))) + ' ' + esc(t('ui.map')) + ' · ' + (pad ? 'LT' : esc(kn(ks.inventory[0]))) + ' ' + esc(t('ui.inventory')) + ' · ' + (pad ? 'X' : esc(kn(ks.observe[0]))) + ' ' + esc(t('ui.observe')) + ' · ' + (pad ? 'Start' : esc(kn(ks.pause[0]))) + ' ' + esc(t('ui.pause'));

@@ -287,6 +287,7 @@
       K.shelf(10.0, 0.3, 2.6, 'shelf_jars', 2.2); K.shelf(12.6, 0.3, 1.6, 'shelf_jars', 2.2);
       K.table(11.0, 3.8, 2.2, 0.9, { top: 'cloth_red' });
       K.prop('needle_bundle', 10.6, 3.7, { y: 0.8 }); K.prop('needle_bundle', 11.5, 3.9, { y: 0.8, flip: true }); K.prop('vials', 11.0, 3.4, { y: 0.8 });
+      K.candle(11.9, 0.8, 3.6, { scale: 0.9, radius: 4.2, intensity: 0.9 });   // a stub of candle by the needles: the evidence must read
       K.prop('sack', 9.0, 7.4, { collide: 0.25 }); K.prop('jug', 12.8, 7.2, { collide: 0.2 });
       // dark records room (ref photo 1): notes board, posters, desk with book & quill, candelabra, jars
       K.decal(16.0, 1.2, 0, 2.0, 1.4, 'pinned_notes');
@@ -329,6 +330,8 @@
       for (var c = 0; c < 6; c++) K.candle(2.6 + (c % 3) * 0.4, 0.9, 11.2 + Math.floor(c / 3) * 0.35, { light: c === 0, radius: 4.5, intensity: 1.0 });
       K.candle(2.2, 0, 1.5, { scale: 1.8, radius: 4, intensity: 0.9 }); K.candle(7.8, 0, 1.5, { scale: 1.8, radius: 4, intensity: 0.9 });
       K.prop('candelabra', 5, 2.4, { collide: 0.3, scale: 1.3 });
+      // funeral candles at the head and foot of the bier keep the centre of the nave readable
+      K.candle(3.7, 0, 6.6, { scale: 1.6, radius: 5, intensity: 1.1 }); K.candle(6.3, 0, 8.4, { scale: 1.6, radius: 5, intensity: 1.1 });
       L.light(5, 3.0, 3.6, [1, 0.7, 0.4], 5, 0.8, 'fire', 0.12);
       // chandelier (horos)
       L.statics.push({ sprite: 'lantern_hang', x: 5, y: 2.6, z: 6.5, scale: 1.8, emissive: true });

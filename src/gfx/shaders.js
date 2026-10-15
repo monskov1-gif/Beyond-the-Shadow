@@ -82,7 +82,7 @@ BTS.Shaders = (function () {
     '    float att = 1.0 - d/rad; att *= att;',
     '    float dl = (sprite || foliage) ? (0.55 + 0.45*max(dot(N,L),0.0)) : max(dot(N,L),0.0)*0.85 + 0.15;',
     '    light += uLightCol[i].rgb * dl * att;',
-    '    if (wetK > 0.0 || mat == 4 || mat == 7 || mat == 5) { vec3 H = normalize(L+V); float gloss = (mat==4)? 24.0 : 60.0; spec += uLightCol[i].rgb * pow(max(dot(N,H),0.0), gloss) * att * (mat==4 ? 0.5 : (mat==7 ? 0.9 : 0.8*wetK + puddle*1.5)); }',
+    '    if (wetK > 0.0 || mat == 4 || mat == 7 || mat == 5) { vec3 H = normalize(L+V); float gloss = (mat==4)? 24.0 : (mat==7 ? 60.0 : 26.0); spec += uLightCol[i].rgb * pow(max(dot(N,H),0.0), gloss) * att * (mat==4 ? 0.5 : (mat==7 ? 0.9 : min(0.45, 0.4*wetK + puddle*0.6))); }',
     '  }',
     '  if (wetK > 0.0 || mat == 7) { vec3 H = normalize(-uSunDir+V); spec += uSunCol * pow(max(dot(N,H),0.0), 40.0) * (0.3*wetK + puddle) * sh; }',
     '  vec3 col = alb * light + spec;',

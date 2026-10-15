@@ -232,7 +232,7 @@
     },
     /* ================= EPILOGUE ================= */
     { id: 'e_dawn', chapter: 'epilogue', loc: 'village', spawn: 'fair_center', forceSpawn: true, chapterCard: 'chap.epilogue', chapterSub: 'sub.e', day: 95, deaths: ['jaglika'],
-      env: { time: 'morning', weather: 'fog', horror: 0 }, envInstant: true, obj: 'obj.e_dawn', music: 'epilogue',
+      env: { time: 'morning', weather: 'clear', horror: 0 }, envInstant: true, obj: 'obj.e_dawn', music: 'epilogue',
       npcs: { lisa: LISA_FOLLOW, milka: { loc: 'village', at: 'milka_bench', act: 'sit', dir: 'down' }, sava: { loc: 'village', at: 'churchyard', act: 'pray', dir: 'up' }, stana: { loc: 'village', at: 'guest_bench', act: 'sit', dir: 'down' }, dragan: { loc: 'village', at: 'kafana_table', act: 'idle', dir: 'down' } },
       hideAll: true, keep: ['lisa', 'milka', 'sava', 'stana', 'dragan'],
       onPopulate: function (loc) { BTS.World.player.hidden = false; if (BTS.World.player.shadow) BTS.World.player.shadow.setStage(0); },
