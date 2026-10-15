@@ -13,7 +13,7 @@
     { beats: 'c1_river', loc: 'outskirts', at: 'river_bank', act: 'idle', dir: 'down' }
   ] };
   N.pecko = { sheet: 'pecko', schedule: [
-    { beats: FAIR, loc: 'village', at: [79, 69.0], act: 'work', dir: 'down' },
+    { beats: FAIR, loc: 'village', at: [81.0, 71.4], act: 'work', dir: 'left' },
     { beats: 'c1_start..c1_storm', loc: 'zajko_house', at: 'pecko_spot', act: 'work', dir: 'down' },
     { beats: 'c2_bell', loc: 'village', at: [33, 45.5], act: 'mourn', dir: 'up' },
     { beats: 'c2_smithy', loc: 'village', at: 'bakery', act: 'mourn', dir: 'left' }
