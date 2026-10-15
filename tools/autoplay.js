@@ -6,6 +6,7 @@
   function ready() { var st = T.state(); return !st.dlg && !st.cut && !st.trans && st.mode === 'play' && !st.screens.length; }
   function tick() {
     if (BTS.Auto.done) return;
+    if (BTS.State.flag('game_complete')) { BTS.Auto.done = true; log('DONE: game complete, screens', JSON.stringify(T.state().screens)); return; }
     var now = performance.now();
     if (BTS.Dialogue.active) { T.advance(); return; }
     if (busy || now < waitUntil) return;
