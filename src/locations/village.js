@@ -290,6 +290,14 @@
       L.billboard('scarecrow', 4.5, 22, { collide: 0.3 });
       L.billboard('pot_clay', 13.5, 25.6, { mat: BTS.MAT.STONE }); L.billboard('jug', 14.1, 25.5, { mat: BTS.MAT.STONE });
 
+
+      /* ---------- Balkan farmstead details: haystacks on poles (stog), corn cribs (koš), wattle fences (pleter) ---------- */
+      function stog(x, z) { var mb = L.propMB(x, z), y = height(x, z); L.cylinder(mb, x, y - 0.1, z, 1.0, 1.1, 9, 'hay', BTS.MAT.DEFAULT); for (var k = 0; k < 4; k++) L.cylinder(mb, x, y + 1.0 + k * 0.42, z, 0.92 - k * 0.24, 0.42, 9, 'hay', BTS.MAT.DEFAULT, { top: 'hay' }); mb.post(x, y + 2.4, z, 1.0, 0.08, 'wood_dark', { mat: BTS.MAT.WOOD }); L.circle(x, z, 1.05); }
+      function kos(x, z) { var mb = L.propMB(x, z), y = height(x, z); [[-0.8, -0.5], [0.8, -0.5], [-0.8, 0.5], [0.8, 0.5]].forEach(function (o) { mb.post(x + o[0], y - 0.1, z + o[1], 0.7, 0.14, 'stone_block', { mat: BTS.MAT.STONE }); }); mb.box(x, y + 0.6, z, 2.0, 1.6, 1.2, { all: 'wall_planks' }, { mat: BTS.MAT.WOOD }); mb.gableRoof(x, z, 2.0, 1.2, y + 2.2, 0.6, 'roof_shingle', { mat: BTS.MAT.WOOD, overhang: 0.15, gableTile: 'wall_planks' }); L.box(x - 1, z - 0.6, x + 1, z + 0.6); }
+      stog(4.5, 64); stog(8, 67); stog(23, 80.5); stog(36, 79.5); kos(22, 61.5); kos(66, 61); kos(46, 61); kos(104, 33);
+      L.fence([[13, 66.5], [24.5, 66.5]], { pickets: true, tile: 'wood_dark', h: 0.8, rails: 1 }); L.fence([[34, 66.5], [46, 66.5]], { pickets: true, tile: 'wood_dark', h: 0.8, rails: 1 });
+      // lamb on a spit at the fair
+      (function () { var x = 100.5, z = 78, y = height(x, z), mb = L.propMB(x, z); mb.post(x - 0.9, y, z, 1.0, 0.08, 'wood_dark', { mat: BTS.MAT.WOOD }); mb.post(x + 0.9, y, z, 1.0, 0.08, 'wood_dark', { mat: BTS.MAT.WOOD }); mb.box(x, y + 0.85, z, 1.9, 0.05, 0.05, { all: 'metal' }, { mat: BTS.MAT.METAL }); mb.box(x, y + 0.65, z, 1.0, 0.4, 0.4, { all: 'wood_light' }, { mat: BTS.MAT.DEFAULT }); L.billboard('bonfire', x, z + 0.1, { mat: BTS.MAT.WOOD }); L.light(x, y + 0.6, z + 0.4, [1, 0.5, 0.2], 4, 0.9, 'fire', 0.3); L.statics.push({ sprite: 'flame', x: x, y: y + 0.1, z: z + 0.15, scale: 1.2, emissive: true, flicker: true, fire: true }); L.emitter({ type: 'smoke', x: x, y: y + 1.2, z: z, rate: 1.5 }); L.box(x - 1, z - 0.4, x + 1, z + 0.4); })();
       /* ---------- forest belts & boundaries ---------- */
       var tr = BTS.RNG(5);
       function belt(x0, z0, x1, z1, n, kinds) { for (var q = 0; q < n; q++) { var x = x0 + tr() * (x1 - x0), z = z0 + tr() * (z1 - z0); if (roadAt(x, z) || BTS.Physics.pointBlocked(x, z, 1.0, L.colliders)) continue; L.tree(tr.pick(kinds), x, z, { scale: 1 + tr() * 0.3 }); } }
