@@ -15,16 +15,17 @@ BTS.MapUI = (function () {
       s.el.innerHTML = '';
       var tabs = el('div', 'tabs', null, s.el);
       ['village', 'outskirts'].forEach(function (pg) {
-        var b = el('button', 'tab' + (M.page === pg ? ' on' : ''), esc(t('loc.' + pg)), tabs); b.type = 'button';
+        var b = el('button', 'tab' + (M.page === pg ? ' on' : ''), (pg === 'village' ? '◀ ' : '') + esc(t('loc.' + pg)) + (pg === 'outskirts' ? ' ▶' : ''), tabs); b.type = 'button';
         b.addEventListener('click', function () { M.page = pg; s.refresh(); });
       });
       var cv = el('canvas', 'mapcv', null, s.el);
       cv.width = 760; cv.height = 470;
-      M.draw(cv, M.page);
+      M.draw(cv, M.page); s.cv = cv; s.acc = 0;
       var foot = el('div', 'row foot', null, s.el);
       el('span', 'legend', esc(t('map.legend')), foot);
       U.button(s, foot, t('ui.close'), function () { U.pop(); }, { sound: 'ui_back' });
     };
+    s.update = function (dt) { s.acc += dt; if (s.acc > 0.25 && s.cv) { s.acc = 0; M.draw(s.cv, M.page); } };
     s.onBack = function () { U.pop(); };
     s.refresh();
     U.push(s);

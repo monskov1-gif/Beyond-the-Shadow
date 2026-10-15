@@ -4,7 +4,7 @@ BTS.Locale = BTS.Locale || {};
 BTS.Locale.en_parts = BTS.Locale.en_parts || [];
 BTS.Locale.en = {
   ui: {
-    subtitle: 'Beyond the Shadow', new_game: 'New Game', 'continue': 'Continue', load: 'Load', save: 'Save', settings: 'Settings',
+    subtitle: 'Beyond the Shadows', new_game: 'New Game', 'continue': 'Continue', load: 'Load', save: 'Save', settings: 'Settings',
     language: 'Language', credits: 'Credits', exit: 'Quit', resume: 'Resume', journal: 'Journal', map: 'Map', inventory: 'Items', observe: 'Watch a shadow', pause: 'Pause',
     paused: 'Paused', main_menu: 'Main Menu', back: 'Back', close: 'Close', yes: 'Yes', no: 'No', objective: 'Goal:', thought: 'Đorđe’s thoughts',
     confirm_new: 'Start a new game? The autosave will be overwritten as you play.', confirm_exit: 'Quit the game?', confirm_menu: 'Return to the main menu? Unsaved progress since the last checkpoint will be lost.',
@@ -23,7 +23,7 @@ BTS.Locale.en = {
     effects: 'Effects quality', fx_low: 'low', fx_medium: 'medium', fx_high: 'high', dev: 'Developer mode (FPS)',
     controls: 'Controls', press_key: '…press a key (Esc to cancel)', reset_keys: 'Reset keys'
   },
-  key: { up: 'Up', down: 'Down', left: 'Left', right: 'Right', run: 'Run', interact: 'Act / continue', observe: 'Watch a shadow', journal: 'Journal', map: 'Map', inventory: 'Items' },
+  key: { up: 'Up', down: 'Down', left: 'Left', right: 'Right', run: 'Run', interact: 'Act / continue', observe: 'Watch a shadow', journal: 'Journal', map: 'Map', inventory: 'Items', pause: 'Pause / back' },
   verb: { examine: 'Examine', talk: 'Talk', enter: 'Enter', go: 'Go', take: 'Take', open: 'Open', sit: 'Sit', hide: 'Hide', use: 'Use', read: 'Read', listen: 'Listen', look: 'Look', pray: 'Stand a while', leave: 'Leave' },
   jr: {
     tab_obs: 'Observations', tab_fact: 'Facts', tab_hyp: 'Hypotheses', tab_sketch: 'Sketches', tab_tasks: 'Tasks', tab_hint: '← → to turn sections',
@@ -48,7 +48,7 @@ BTS.Locale.en = {
     milka: 'Granny Milka’s house', zajko: 'Zajko’s house', kafana: 'Kafana', guest: 'Guesthouse', tihomir: 'Bell-ringer’s house', gorazd: 'Gorazd’s house', forest: 'Forest path', river: 'The river', fields: 'Fields', viewpoint: 'Lookout rock', mill: 'Old mill' },
   chap: {
     prologue: 'Prologue. The Fair', ch1: 'Chapter 1. Changes', ch2: 'Chapter 2. The First Deaths', ch3: 'Chapter 3. The Pattern', ch4: 'Chapter 4. Gorazd and Jessica',
-    ch5: 'Chapter 5. Lisa', ch6: 'Chapter 6. Watching', ch7: 'Chapter 7. Jaglika’s House', ch8: 'Chapter 8. The Legend', ch9: 'Chapter 9. Rising Threat', ch10: 'Chapter 10. The Rite', ch11: 'Chapter 11. Release', epilogue: 'Epilogue'
+    ch5: 'Chapter 5. Lisa', ch6: 'Chapter 6. Watching', ch7: 'Chapter 7. Jaglika’s House', ch8: 'Chapter 8. The Legend', ch9: 'Chapter 9. The Silent Bell', ch10: 'Chapter 10. The Rite', ch11: 'Chapter 11. Release', epilogue: 'Epilogue'
   },
   date: { jun28: 'June 28', jun29: 'June 29', jul02: 'July 2', jul09: 'July 9', jul14: 'July 14', jul20: 'July 20', jul27: 'July 27', jul29: 'July 29', jul30: 'July 30', aug01: 'August 1',
     aug12: 'August 12', aug15: 'August 15', aug27: 'August 27', aug30: 'August 30', sep01: 'September 1', sep04: 'September 4', sep08: 'September 8', sep11: 'September 11', sep15: 'September 15', sep17: 'September 17',

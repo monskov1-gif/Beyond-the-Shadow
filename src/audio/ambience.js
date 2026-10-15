@@ -50,7 +50,7 @@ BTS.Ambience = (function () {
     var ws = E.windStrength || 0.3;
     set('wind', (inside ? 0.04 + ws * 0.04 : 0.1 + ws * 0.25) * (P.wind === undefined ? 1 : P.wind) * nat);
     if (Amb.layers.wind) Amb.layers.wind.f.frequency.setTargetAtTime(350 + ws * 500, A.ctx.currentTime, 1);
-    set('leaves', (inside ? 0 : ws * 0.06 * (P.leaves === undefined ? 1 : P.leaves)) * nat);
+    set('leaves', (inside ? 0 : ws * ws * 0.07 * (0.6 + 0.4 * Math.sin(BTS.App.time * 0.8)) * (P.leaves === undefined ? 1 : P.leaves)) * nat, 0.4);
     set('rain', E.rain * (inside ? 0.12 : 0.3));
     set('rainLow', E.rain * (inside ? 0.25 : 0.2));
     set('river', (P.river || 0) * 0.25 * nat);
@@ -58,9 +58,10 @@ BTS.Ambience = (function () {
     set('fire', (P.fire || 0) * 0.25);
     set('room', inside ? 0.12 : 0);
     set('hum', horror * 0.35 + (P.hum || 0) * 0.2, 2);
-    set('crickets', (!inside && night > 0.5 && E.rain < 0.2 ? 0.012 * (P.crickets === undefined ? 1 : P.crickets) : 0) * nat);
-    // sporadic events
+    set('crickets', (!inside && E.rain < 0.2 ? (night > 0.5 ? 0.012 : (E.weather === 'clear' && E.hour > 10 && E.hour < 18 ? 0.006 : 0)) * (P.crickets === undefined ? 1 : P.crickets) : 0) * nat);
+    // sporadic events (not while someone is speaking)
     var T = Amb.timers;
+    if (BTS.Dialogue.active) return;
     function every(key, min, max, fn) { T[key] = (T[key] === undefined ? Math.random() * max : T[key]) - dt; if (T[key] <= 0) { T[key] = min + Math.random() * (max - min); fn(); } }
     var c = BTS.Camera.target;
     if (!inside && horror < 0.5) {
@@ -70,7 +71,10 @@ BTS.Ambience = (function () {
       if (P.sheep) every('sheep', 12, 30, function () { A.play('sheep', { x: P.sheep[0], z: P.sheep[1] }); });
       if (P.crows || night > 0.4) every('crow', 30, 80, function () { A.play('crow', { x: c[0] + (Math.random() - 0.5) * 40, z: c[2] - 15, caption: false }); });
     }
-    if (!inside && E.windStrength > 0.8) every('shutter', 15, 35, function () { A.play('shutter', { x: c[0] + (Math.random() - 0.5) * 20, z: c[2] - 6 }); });
+    if (!inside && E.windStrength > 0.6) every('shutter', 15, 35, function () { A.play('shutter', { x: c[0] + (Math.random() - 0.5) * 20, z: c[2] - 6 }); });
+    if (P.crowd) { every('murmur', 0.6, 2.2, function () { A.play('murmur', { x: c[0] + (Math.random() - 0.5) * 14, z: c[2] + (Math.random() - 0.5) * 10, vol: P.crowd * (1 - horror), caption: false }); }); every('laugh', 6, 15, function () { A.play('laugh', { x: c[0] + (Math.random() - 0.5) * 12, z: c[2] - 3, vol: P.crowd * 0.8, caption: false }); }); }
+    if (!inside && P.voices !== false && horror < 0.3 && night < 0.6) every('voices', 14, 35, function () { A.play('murmur', { x: c[0] + (Math.random() - 0.5) * 40, z: c[2] - 12 - Math.random() * 10, vol: 0.35, caption: false }); });
+    if (!inside && E.rain > 0.15) every('drip', 0.25, 1.2, function () { A.play('drip', { x: c[0] + (Math.random() - 0.5) * 10, z: c[2] + (Math.random() - 0.5) * 6, vol: 0.5 + E.rain * 0.5, caption: false }); });
     if (P.fire) every('pop', 0.3, 1.5, function () { var f = P.firePos || c; A.play('fire_pop', { x: f[0], z: f[2] === undefined ? f[1] : f[2], vol: 0.6, caption: false }); });
     if (horror > 0.45) every('whisper', 9, 22, function () { A.play('whisper', { vol: horror }); });
   };

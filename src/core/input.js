@@ -11,7 +11,7 @@ BTS.Input = (function () {
     if (!keyState[e.code]) keyPressed[e.code] = true;
     keyState[e.code] = true;
     I.lastDevice = 'kb';
-    if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Tab'].indexOf(e.code) >= 0 && !(e.target && /INPUT|SELECT|TEXTAREA/.test(e.target.tagName))) e.preventDefault();
+    if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Tab', 'Enter'].indexOf(e.code) >= 0 && !(e.target && /INPUT|SELECT|TEXTAREA/.test(e.target.tagName))) e.preventDefault();
   });
   window.addEventListener('keyup', function (e) { keyState[e.code] = false; });
   window.addEventListener('blur', function () { keyState = {}; });

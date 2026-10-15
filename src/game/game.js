@@ -145,9 +145,9 @@ BTS.Game = (function () {
     var inDialogue = U.updateDialogue(dt);
     var free = !inDialogue && !BTS.Cutscene.running && !G.transitioning && !G.observing;
     // hotkeys
-    if (!inDialogue && !G.transitioning) {
-      if (I.pressed.pause) { BTS.Screens.pause(); I.consume('pause'); }
-      else if (I.pressed.journal) BTS.Journal.open();
+    if (I.pressed.pause && !G.transitioning) { BTS.Screens.pause(); I.consume('pause'); }
+    else if (!inDialogue && !G.transitioning) {
+      if (I.pressed.journal) BTS.Journal.open();
       else if (I.pressed.map) BTS.MapUI.open();
       else if (I.pressed.inventory) BTS.Inventory.open();
     }

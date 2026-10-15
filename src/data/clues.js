@@ -17,7 +17,7 @@
   clue('obs_zajko_changes', 'obs', 'jul09');
   clue('obs_amulet_zajko', 'obs', 'jul09', { type: 'object', obj: 'needle', name: 'sk.o_amulet', note: 'sk.n_amulet' });
   clue('obs_zajko_visions', 'obs', 'jul09');
-  clue('obs_storm_gate', 'obs', 'jul14');
+  clue('obs_storm_gate', 'obs', 'jul09');
   clue('obs_jag_herbs_pecko', 'obs', 'jul30');
   clue('obs_gvozdin_shadow', 'obs', 'aug01');
   clue('obs_jag_smithy', 'obs', 'jul27', { type: 'house', name: 'sk.h_smithy', figure: true, date: 'jul27', note: 'sk.n_smithy', cross: 'clue:fact_gvozdin_death' });

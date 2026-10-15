@@ -57,13 +57,13 @@
           .then(function () { C.sfx('door_close', {}); C.despawn('zajko'); });
       }, after: 'p_go_fair'
     },
-    { id: 'p_go_fair', chapter: 'prologue', obj: 'obj.p_go_fair', extras: STREET_EXTRAS, music: 'village', musicByLoc: { djordje_house: 'explore' },
+    { id: 'p_go_fair', chapter: 'prologue', obj: 'obj.p_go_fair', ambience: { crowd: 0.4 }, extras: STREET_EXTRAS, music: 'village', musicByLoc: { djordje_house: 'explore' },
       triggers: [{ loc: 'village', box: [67, 65, 78, 71.5], run: function (C) {
         return C.say('p_arrive').then(function () { return C.walk('zajko', [88.2, 79.2], { run: true, noWait: true }); });
       }, then: 'p_fair' }],
       blockExit: { west: 'block_fair', south: 'block_fair' }
     },
-    { id: 'p_fair', chapter: 'prologue', obj: 'obj.p_fair', extras: FAIR_EXTRAS, music: 'fair', musicByLoc: { djordje_house: 'explore', kafana: 'explore' },
+    { id: 'p_fair', chapter: 'prologue', obj: 'obj.p_fair', ambience: { crowd: 1, fire: 0.8, firePos: [90.5, 82] }, extras: FAIR_EXTRAS, music: 'fair', musicByLoc: { djordje_house: 'explore', kafana: 'explore' },
       tick: crowdTick,
       triggers: [{ loc: 'village', id: 'conflict', box: [80, 72, 100, 88], cond: 'flag:talked_milka&flag:talked_pecko', run: function (C) {
         C.spawn('jaglika', [94.2, 70.6], { dir: 'left', noTalk: true });
@@ -76,7 +76,7 @@
       } }],
       blockExit: { west: 'block_fair', south: 'block_fair' }
     },
-    { id: 'p_game', chapter: 'prologue', obj: 'obj.p_game', extras: FAIR_EXTRAS, music: 'fair', tick: crowdTick,
+    { id: 'p_game', chapter: 'prologue', obj: 'obj.p_game', ambience: { crowd: 1, fire: 1, firePos: [90.5, 82] }, extras: FAIR_EXTRAS, music: 'fair', tick: crowdTick,
       npcs: { zajko: { loc: 'village', at: [89.2, 80.6], act: 'idle', dir: 'left' }, mila: { loc: 'village', at: [92, 81], act: 'wander', radius: 1.5 }, luka: { loc: 'village', at: [89.5, 83.8], act: 'wander', radius: 1.5 } },
       shadows: { zajko: { stage: 1 } },
       scene: function (C) {

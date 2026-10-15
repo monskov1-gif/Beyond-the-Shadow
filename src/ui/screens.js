@@ -149,9 +149,9 @@ BTS.Screens = (function () {
       });
       option(box, 'scale', [[0, 'set.scale_auto'], [270, 'set.scale_270'], [360, 'set.scale_360'], [450, 'set.scale_450'], [540, 'set.scale_540']], function () { return C.get('pixelScale'); }, function (v) { C.set('pixelScale', v); BTS.Renderer.resize(); });
       option(box, 'effects', [[0, 'set.fx_low'], [1, 'set.fx_medium'], [2, 'set.fx_high']], function () { return C.get('effects'); }, function (v) { C.set('effects', v); });
-      option(box, 'dev', [[false, 'set.off'], [true, 'set.on']], function () { return C.get('devMode'); }, function (v) { C.set('devMode', v); });
+      if (BTS.Game.query && BTS.Game.query.get('dev')) option(box, 'dev', [[false, 'set.off'], [true, 'set.on']], function () { return C.get('devMode'); }, function (v) { C.set('devMode', v); });
       el('div', 'set-head', esc(t('set.controls')), box);
-      ['up', 'down', 'left', 'right', 'run', 'interact', 'observe', 'journal', 'map', 'inventory'].forEach(function (a) {
+      ['up', 'down', 'left', 'right', 'run', 'interact', 'observe', 'journal', 'map', 'inventory', 'pause'].forEach(function (a) {
         var row = el('div', 'set-row nav key', null, box); U.bindNav(s, row);
         el('span', 'lbl', esc(t('key.' + a)), row);
         var v = el('span', 'opt', esc(C.get('keys')[a].map(BTS.Input.keyName).join(' / ')), row);
@@ -159,7 +159,11 @@ BTS.Screens = (function () {
           v.textContent = t('set.press_key');
           setTimeout(function () {
             BTS.Input.captureKey(function (code) {
-              if (code !== 'Escape') { var k = C.get('keys'); k[a] = [code].concat(k[a].filter(function (c) { return c !== code; })).slice(0, 2); C.set('keys', k); }
+              if (code !== 'Escape' || a === 'pause') {
+                var k = C.get('keys');
+                Object.keys(k).forEach(function (o) { if (o !== a && o !== 'cancel' && !(a === 'pause' && o === 'cancel')) { var before = k[o].length; k[o] = k[o].filter(function (c) { return c !== code; }); if (k[o].length < before && !k[o].length) k[o] = C.defaults.keys[o].filter(function (c) { return c !== code; }).slice(0, 1); } });
+                k[a] = [code].concat(k[a].filter(function (c) { return c !== code; })).slice(0, 3); C.set('keys', k);
+              }
               s.refresh();
             });
           }, 50);
@@ -168,7 +172,7 @@ BTS.Screens = (function () {
       U.button(s, box, t('set.reset_keys'), function () { C.resetKeys(); s.refresh(); });
       U.button(s, box, t('ui.back'), function () { U.pop(); }, { sound: 'ui_back' });
     };
-    s.onBack = function () { U.pop(); };
+    s.onBack = function () { BTS.Input.capture = null; U.pop(); };
     s.refresh();
     return U.push(s);
   };

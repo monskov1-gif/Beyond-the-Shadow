@@ -132,7 +132,7 @@
       },
       interact: [
         { loc: 'jaglika_house', id: 'herbs_j', at: [4.5, 1.0], label: 'it.herbs', dlg: 'c7_herbs', clue: 'obs_herbs', hint: true, once: true },
-        { loc: 'jaglika_house', id: 'vials_j', at: [5.1, 3.0], label: 'it.vials', dlg: 'c7_vials', item: 'vial', clue: 'fact_medicines', hint: true, once: true },
+        { loc: 'jaglika_house', id: 'vials_j', at: [5.1, 3.0], label: 'it.vials', dlg: 'c7_vials', sfx: 'glass', item: 'vial', clue: 'fact_medicines', hint: true, once: true },
         { loc: 'jaglika_house', id: 'needles_j', at: [11, 3.3], label: 'it.needles', dlg: 'c7_needles', clue: 'fact_needles', hint: true, once: true },
         { loc: 'jaglika_house', id: 'candelabra', at: [18.6, 4.4], label: 'it.candelabra', verb: 'verb.use', dlg: 'c7_candle', set: 'candle_lit', hint: true, once: true, sfx: 'match' },
         { loc: 'jaglika_house', id: 'board_dark', at: [16, 1.0], label: 'it.board', dlg: 'c7_board_dark', cond: '!flag:candle_lit', condLive: true },

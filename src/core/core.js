@@ -63,7 +63,7 @@ BTS.Config = (function () {
     keys: {
       up: ['KeyW', 'ArrowUp'], down: ['KeyS', 'ArrowDown'], left: ['KeyA', 'ArrowLeft'], right: ['KeyD', 'ArrowRight'],
       run: ['ShiftLeft', 'ShiftRight'], interact: ['KeyE', 'Space', 'Enter'], cancel: ['Escape', 'Backspace'],
-      journal: ['KeyJ'], map: ['KeyM'], inventory: ['KeyI', 'Tab'], observe: ['KeyF'], pause: ['Escape']
+      journal: ['KeyJ'], map: ['KeyM'], inventory: ['KeyI', 'Tab'], observe: ['KeyF'], pause: ['Escape', 'KeyP']
     }
   };
   var KEY = 'bts.settings.v1';

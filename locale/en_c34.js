@@ -11,8 +11,8 @@ BTS.Locale.en_parts.push({
   },
   dlg: {
     c3_wake: { 1: 'September. The house is so quiet I can hear Milka’s clock ticking down the hill. No. It’s mine.', 2: 'Granny Milka brings food morning and evening. The town promised to send someone “in two weeks”.', 3: 'I’m not waiting. I’m counting.', 4: 'I need to reread the sketchbook. All of it. The entries that were “just”.' },
-    c3_reread: { 1: 'Đorđe turns the pages. Houses, dates, shadows, people.', 2: '“June 28. 7:40 pm. Old woman at Zajko’s gate. 11 minutes.”', 3: '“July 14. Storm. A figure at Zajko’s gate.”',
-      4: '“July 27. Morning. The same old woman. At Gvozdin’s smithy. She stood there while he worked. He didn’t see her.” I wrote that. And forgot.', 5: '“July 30. Graveyard. She gave Pečko herbs.”',
+    c3_reread: { 1: 'Đorđe turns the pages. Houses, dates, shadows, people.', 2: '“June 28. 7:40 pm. Old woman at Zajko’s gate. 11 minutes.”', 3: '“July 9. Storm. A figure at Zajko’s gate.”',
+      4: '“July 27. Morning. The same old woman. At Gvozdin’s smithy. She stood there while he worked. He didn’t see her.” I wrote that. And forgot.', 5: '“July 29. Graveyard. She gave Pečko herbs.” And on the 30th — she came to their house.',
       6: 'There are no dates of death beside the entries. There were no deaths yet back then.', 7: 'I need exact dates. They’re on the crosses. In the graveyard by the church.' },
     c3_g_zajko: { 1: 'A new cross. It still smells of fresh wood. “Zajko. 2.III — 29.VII.”', 2: 'Twelve years. Four months. Twenty-seven days.' },
     c3_g_pecko: { 1: '“Pečko. 27.VIII.”', 2: 'Her headscarf hangs on the cross. Someone tied it there.' },

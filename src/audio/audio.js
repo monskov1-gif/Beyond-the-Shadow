@@ -5,7 +5,7 @@
 BTS.Audio = (function () {
   var A = { ctx: null, ready: false, bus: {}, voices: {}, reverbAmt: 0.15, duck: 0, muffle: 0 };
   var noise = {};
-  var LIMITS = { step: 5, ambient: 8, ui: 4, horror: 4, shadow: 4, default: 10 };
+  var LIMITS = { step: 5, ambient: 6, ui: 4, horror: 4, shadow: 4, default: 12 };
 
   A.init = function () {
     if (A.ctx) return;
@@ -16,13 +16,17 @@ BTS.Audio = (function () {
     comp.threshold.value = -10; comp.knee.value = 8; comp.ratio.value = 6; comp.attack.value = 0.004; comp.release.value = 0.25;
     A.master = ctx.createGain();
     A.muffleFilter = ctx.createBiquadFilter(); A.muffleFilter.type = 'lowpass'; A.muffleFilter.frequency.value = 20000;
-    A.master.connect(A.muffleFilter); A.muffleFilter.connect(comp); comp.connect(ctx.destination);
+    var lim = ctx.createDynamicsCompressor();
+    lim.threshold.value = -2; lim.knee.value = 0; lim.ratio.value = 20; lim.attack.value = 0.001; lim.release.value = 0.1;
+    A.master.connect(A.muffleFilter); A.muffleFilter.connect(comp); comp.connect(lim); lim.connect(ctx.destination);
+    A.send = {};
     ['music', 'ambience', 'sfx', 'ui', 'voice'].forEach(function (b) { var g = ctx.createGain(); g.connect(A.master); A.bus[b] = g; });
     // reverb
     A.reverb = ctx.createConvolver();
     A.reverb.buffer = impulse(2.8, 2.2);
     A.reverbSend = ctx.createGain(); A.reverbSend.gain.value = A.reverbAmt;
     A.reverbSend.connect(A.reverb); A.reverb.connect(A.master);
+    ['music', 'ambience', 'sfx', 'ui', 'voice'].forEach(function (b) { var s = ctx.createGain(); s.connect(A.reverbSend); A.send[b] = s; });
     makeNoise();
     A.applyVolumes();
     A.ready = true;
@@ -44,6 +48,8 @@ BTS.Audio = (function () {
     A.bus.sfx.gain.setTargetAtTime(C.get('sfxVolume') * 0.85, t, 0.05);
     A.bus.ui.gain.setTargetAtTime(C.get('uiVolume') * 0.7, t, 0.05);
     A.bus.voice.gain.setTargetAtTime(C.get('sfxVolume') * 0.35, t, 0.05);
+    for (var b in A.bus) if (A.send[b]) A.send[b].gain.setTargetAtTime(A.bus[b].gain.value, t, 0.05);
+    ['music', 'ambience', 'sfx', 'ui', 'voice'].forEach(function (b) { var gv = { music: C.get('musicVolume') * 0.55 * (1 - duck * 0.45), ambience: C.get('ambienceVolume') * 0.8 * (1 - duck * 0.3), sfx: C.get('sfxVolume') * 0.85, ui: C.get('uiVolume') * 0.7, voice: C.get('sfxVolume') * 0.35 }[b]; A.send[b].gain.setTargetAtTime(gv, t, 0.3); });
   };
   A.setDuck = function (v) { if (A.duck !== v) { A.duck = v; A.applyVolumes(); } };
   A.setReverb = function (amt, len) {
@@ -109,7 +115,7 @@ BTS.Audio = (function () {
     }
     var g = A.gain(vol, A.panner(pan, dest));
     var rv = o.reverb === undefined ? 1 : o.reverb;
-    if (rv > 0) { var s = A.gain(rv, A.reverbSend); g.connect(s); }
+    if (rv > 0) { var s = A.gain(rv, A.send[bus] || A.send.sfx); g.connect(s); }
     return g;
   };
   A.claim = function (cat) {

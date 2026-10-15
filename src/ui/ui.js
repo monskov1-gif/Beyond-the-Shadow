@@ -24,7 +24,7 @@ BTS.UI = (function () {
     U.objective = el('div', 'objective', null, U.hud);
     U.banner = el('div', 'banner', null, U.hud);
     U.prompt = el('div', 'prompt', null, U.hud);
-    U.toasts = el('div', 'toasts', null, U.hud);
+
     U.captions = el('div', 'captions', null, U.hud);
     U.hintKeys = el('div', 'hintkeys', null, U.hud);
     U.lbTop = el('div', 'letterbox top', null, U.root);
@@ -39,6 +39,7 @@ BTS.UI = (function () {
     U.dlgChoices = el('div', 'choices', null, U.dlgBody);
     U.screenRoot = el('div', 'screens', null, U.root);
     U.fadeEl = el('div', 'uifade', null, U.root);
+    U.toasts = el('div', 'toasts', null, U.root);
     makePaper();
     bindDialogue();
     BTS.Events.on('language', function () { U.refresh(); });
@@ -164,6 +165,7 @@ BTS.UI = (function () {
     if (key) { U.objective.classList.add('flash'); setTimeout(function () { U.objective.classList.remove('flash'); }, 1600); }
   };
   U.showBanner = function (text) {
+    if (U.card.classList.contains('show')) return;
     U.banner.textContent = text;
     U.banner.classList.remove('show'); void U.banner.offsetWidth; U.banner.classList.add('show');
   };
@@ -197,16 +199,20 @@ BTS.UI = (function () {
         var key = BTS.Input.lastDevice === 'pad' ? 'A' : BTS.Input.keyName(BTS.Config.get('keys').interact[0]);
         var html = '<b>' + esc(key) + '</b> ' + esc(t(it.verb || 'verb.examine')) + (it.label ? ' · ' + esc(t(it.label)) : '');
         if (U.prompt._html !== html) { U.prompt.innerHTML = html; U.prompt._html = html; }
-        U.prompt.style.transform = 'translate(' + Math.round(sp[0]) + 'px,' + Math.round(sp[1]) + 'px) translate(-50%,-100%)';
+        var pw = U.prompt.offsetWidth || 120, vw = window.innerWidth;
+        var px = Math.max(pw / 2 + 8, Math.min(vw - pw / 2 - 8, sp[0])), py = Math.max(40, sp[1]);
+        U.prompt.style.transform = 'translate(' + Math.round(px) + 'px,' + Math.round(py) + 'px) translate(-50%,-100%)';
         U.prompt.classList.add('show');
       }
     } else U.prompt.classList.remove('show');
     var game = BTS.Game && BTS.Game.started && !U.stack.length;
     U.hud.classList.toggle('off', !game);
     U.objective.classList.toggle('hidden', !!BTS.Cutscene.running || BTS.Dialogue.active);
+    U.captions.style.bottom = (BTS.Dialogue.active ? (U.dlg.offsetHeight + 40) : 60) + 'px';
     if (game && !BTS.Cutscene.running && !BTS.Dialogue.active) {
       var ks = BTS.Config.get('keys'), kn = BTS.Input.keyName;
-      var hk = esc(kn(ks.journal[0])) + ' ' + esc(t('ui.journal')) + ' · ' + esc(kn(ks.map[0])) + ' ' + esc(t('ui.map')) + ' · ' + esc(kn(ks.inventory[0])) + ' ' + esc(t('ui.inventory')) + ' · ' + esc(kn(ks.observe[0])) + ' ' + esc(t('ui.observe')) + ' · Esc ' + esc(t('ui.pause'));
+      var pad = BTS.Input.lastDevice === 'pad';
+      var hk = (pad ? 'Y' : esc(kn(ks.journal[0]))) + ' ' + esc(t('ui.journal')) + ' · ' + (pad ? 'Back' : esc(kn(ks.map[0]))) + ' ' + esc(t('ui.map')) + ' · ' + (pad ? 'LT' : esc(kn(ks.inventory[0]))) + ' ' + esc(t('ui.inventory')) + ' · ' + (pad ? 'X' : esc(kn(ks.observe[0]))) + ' ' + esc(t('ui.observe')) + ' · ' + (pad ? 'Start' : esc(kn(ks.pause[0]))) + ' ' + esc(t('ui.pause'));
       if (U.hintKeys._html !== hk) { U.hintKeys.innerHTML = hk; U.hintKeys._html = hk; }
       U.hintKeys.classList.remove('hidden');
     } else U.hintKeys.classList.add('hidden');

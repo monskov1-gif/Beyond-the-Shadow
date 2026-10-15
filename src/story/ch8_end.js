@@ -119,7 +119,7 @@
       triggers: [{ loc: 'village', box: [72, 33, 96, 50], run: function (C) {
         C.shadow('jaglika', { beast: 0.6, wall: { x: 87, z: 26.6, y: BTS.World.heightAt(87, 26.6) } }); C.supernatural(0.6);
         C.sfx('shadow_move', { x: 86, z: 28 }); C.sfx('crow', { x: 88, z: 24 });
-        return C.cam({ target: [86, 2, 28], time: 1.8 }).then(function () { return C.say('c9_beast'); })
+        return C.cam({ target: [86, 2, 28], time: 1.8 }).then(function () { C.sfx('sting_low', {}); return C.say('c9_beast'); })
           .then(function () { return C.walk('jaglika', [78, 36], { noWait: true }); }).then(function () { return C.wait(1.5); })
           .then(function () { C.despawn('jaglika'); C.supernatural(0); });
       }, clue: 'sk_jaglika_beast', then: 'c9_lisa' }],
@@ -180,9 +180,9 @@
           shades = spawnShades(j.x, j.z, 18, 1.2);
           chase(shades, [j.x, j.z], 3.5);
           return C.cam({ target: [93, 1, 81], dist: 28, time: 1.5 });
-        }).then(function () { return C.say('c11_shades'); })
+        }).then(function () { return C.say('c11_shades'); }).then(function () { return C.wait(3); })
           .then(function () {
-            C.anim('jaglika', null); C.music('chase', 0.5); C.env({ weather: 'rain' });
+            C.anim('jaglika', null); C.music('chase', 2); C.env({ weather: 'rain' });
             BTS.Camera.followTarget = j; C.camRelease();
             var route = [[100, 70], [91, 64.5], [70, 64.5], [52, 64], [49, 56], [30, 47], [14, 46.6], [11, 38], [6, 31.2]];
             var step = function (k) {
@@ -239,7 +239,7 @@
         return C.say('e_bridge').then(function () { return C.fade(1, 1.2); }).then(function () { return C.title('e.card1', 'e.card1b'); }).then(function () { return C.title('e.card2', 'e.card2b'); });
       }, then: 'e_final' }]
     },
-    { id: 'e_final', chapter: 'epilogue', loc: 'village', spawn: 'fair_edge', forceSpawn: true, chapterCard: 'date.next_june', chapterSub: 'sub.e_final', day: 365,
+    { id: 'e_final', chapter: 'epilogue', ambience: { crowd: 0.8, fire: 0.8, firePos: [90.5, 82] }, loc: 'village', spawn: 'fair_edge', forceSpawn: true, chapterCard: 'date.next_june', chapterSub: 'sub.e_final', day: 365,
       env: { time: 'night', weather: 'clear', horror: 0.1 }, envInstant: true, obj: null, music: 'fair', noSave: true,
       npcs: { mila: { loc: 'village', at: [89.4, 80.4], act: 'wander', radius: 1.6, stage: 1 }, luka: { loc: 'village', at: [92, 81.8], act: 'wander', radius: 1.5 }, milka: { loc: 'village', at: [76.2, 79.6], act: 'sit', dir: 'down' } },
       hideAll: true, keep: ['mila', 'luka', 'milka'],
@@ -288,8 +288,8 @@
     { label: 'end' }, { if: 'flag:chose.c8_legend.dlg.c8_legend.c3', then: 'fin' }, ['baka', '23'], { goto: 'q' },
     { label: 'fin' }, ['baka', '24', { p: 'smile' }], ['baka', '25'], ['>', '26']
   ]);
-  D('c8_back', [['*', '1'], ['lisa', '2', { p: 'worried' }], ['dj', '3'], ['dj', '4'], ['lisa', '5', { p: 'worried' }], ['dj', '6'], ['lisa', '7'], ['>', '8']]);
-  D('c9_wake', [['>', '1'], ['>', '2'], ['>', '3'], ['lisa', '4', { p: 'worried' }], ['>', '5']]);
+  D('c8_back', [['*', '1'], ['lisa', '2', { p: 'worried' }], ['dj', '3'], ['dj', '4'], ['lisa', '5', { p: 'worried' }], ['dj', '6'], ['lisa', '7'], ['>', '8'], ['>', '9']]);
+  D('c9_wake', [['>', '1'], ['>', '2'], ['>', '3'], ['lisa', '4', { p: 'worried' }], ['lisa', '6', { p: 'sad' }], ['>', '5']]);
   D('c9_village', [['*', '1'], ['vesna', '2', { p: 'sad' }], ['radoje', '3'], ['*', '4'], ['>', '5'], ['>', '6']]);
   D('c9_beast', [['*', '1'], ['*', '2'], ['lisa', '3', { p: 'scared' }], ['>', '4'], ['>', '5'], ['*', '6']]);
   D('c9_decide', [['lisa', '1', { p: 'tired' }], ['lisa', '2'], ['lisa', '3'], { choice: [['c1', 'a'], ['c2', 'b']] },
@@ -326,5 +326,5 @@
   D('e_ready', [['lisa', '1'], ['>', '2']]);
   D('e_bridge', [['*', '1'], ['>', '2'], ['>', '3'], ['lisa', '4', { p: 'smile' }], ['dj', '5'], ['*', '6']]);
   D('e_final', [['*', '1'], ['*', '2'], ['mila', '3', { p: 'smile' }], ['*', '4']]);
-  D('e_question', [['*', '1'], ['*', '2']]);
+  D('e_question', [['*', '1']]);
 })();

@@ -72,7 +72,7 @@ BTS.Locale.en_parts.push({
     fact_list: { t: 'The list on the wall', d: 'Names and dates. Zajko, Pečko, Gvozdin, Gorazd, Jessica — crossed out. Tihomir — September 26. The last name: “Đorđe. September 29.”' },
     fact_legend: { t: 'Grandmother’s legend', d: 'The shadow-eater takes a shadow, and with it a piece of the mind. Each shadow makes her stronger. In the house of the chosen one she leaves a needle.' },
     fact_tihomir_death: { t: 'Tihomir’s death', d: 'Tihomir died on the night of September 26 — only six days after the needle. In the morning the bell did not ring.' },
-    hyp_month_zajko: { t: 'A month before Zajko died', d: 'The old woman stood at Zajko’s gate on June 28. Zajko died on July 29. Exactly a month.' },
+    hyp_month_zajko: { t: 'A month before Zajko died', d: 'The old woman stood at Zajko’s gate on June 28. Zajko died on July 29. A month and a day.' },
     hyp_month_gvozdin: { t: 'A month before Gvozdin died', d: 'The old woman stood at the smithy on July 27. Gvozdin died on August 30. About a month.' },
     hyp_pattern: { t: 'The pattern', d: 'About a month before a death, Jaglika appears at the future victim’s house. It’s not coincidence. It’s a schedule.' },
     hyp_gorazd_next: { t: 'Gorazd is next', d: 'Jaglika was at Gorazd’s house on August 12. If the schedule holds — around September 11.' },
@@ -82,7 +82,7 @@ BTS.Locale.en_parts.push({
     hyp_tihomir_next: { t: 'Tihomir is next', d: 'A needle under the bell-ringer’s pillow. So it’s him.' },
     hyp_poison: { t: 'Lisa’s hypothesis: poison', d: 'Sleeping herbs and strong medicine could drive a person mad and kill them. An explanation without witches. But it doesn’t explain the shadows.' },
     hyp_needle_rule: { t: 'The rule of the needle', d: 'The needle she left can be turned against her. Wait until her shadow becomes “full” — when it no longer obeys her body — and drive the needle into the shadow’s head. Then every stolen shadow will be set free.' },
-    hyp_djordje_next: { t: 'I am on her list', d: 'She was at my house. My name is the last one. September 29.' }
+    hyp_djordje_next: { t: 'I am on her list', d: 'She watched me at the fair and by the well — the same night she stood at Zajko’s gate. She has been waiting. My name is last. September 29.' }
   },
   ded: {
     month_zajko: 'Đorđe counts the days on his fingers. Thirty-one.', month_gvozdin: 'Thirty-four. Almost the same.',

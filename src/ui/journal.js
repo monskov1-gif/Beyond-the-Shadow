@@ -25,6 +25,7 @@ BTS.Journal = (function () {
         b.addEventListener('click', function () { J.tab = tb; BTS.Audio.play('page'); s.refresh(); });
       });
       el('div', 'tabhint', esc(t('jr.tab_hint')), s.el);
+      if (J.lastResult) { el('div', 'linkresult', esc(J.lastResult), s.el); J.lastResult = null; }
       var body = el('div', 'jbody', null, s.el);
       if (J.tab === 'sketch') renderSketches(s, body);
       else if (J.tab === 'tasks') renderTasks(s, body);
@@ -51,6 +52,7 @@ BTS.Journal = (function () {
         el('div', 'ed', U.fmt(t(def.text)), e);
         if (def.date) el('div', 'date', esc(t('date.' + def.date)), e);
         e.addEventListener('mouseenter', function () { st.isNew = false; });
+        e._clue = st;
         e.addEventListener('click', function () {
           st.isNew = false;
           if (!linkSel) return;
@@ -65,7 +67,7 @@ BTS.Journal = (function () {
       var cur = BTS.State.d.objectiveKey;
       if (cur) { var e = el('div', 'entry task cur', null, body); el('div', 'et', esc(t('jr.current')), e); el('div', 'ed', U.fmt(t(cur)), e); }
       var past = BTS.Story.pastObjectives();
-      past.slice().reverse().forEach(function (k) { var e2 = el('div', 'entry task done', null, body); el('div', 'ed', '✓ ' + U.fmt(t(k)), e2); });
+      past.slice().reverse().forEach(function (k) { var e2 = el('div', 'entry task done', null, body); U.bindNav(s, e2); el('div', 'ed', '✓ ' + U.fmt(t(k)), e2); });
       var c = el('div', 'entry chapter', null, body);
       el('div', 'et', esc(t(BTS.Story.chapterKey(BTS.State.d.beat))), c);
     }
@@ -81,6 +83,7 @@ BTS.Journal = (function () {
         if (sk.text) el('div', 'sd', U.fmt(t(sk.text)), e);
       });
     }
+    s.update = function () { if (s.focus && s.focus._clue) s.focus._clue.isNew = false; };
     s.onBack = function () { if (linkSel) { linkSel = null; s.refresh(); } else U.pop(); };
     s.refresh();
     U.push(s);
@@ -102,17 +105,17 @@ BTS.Journal = (function () {
     for (var i = 0; i < ds.length; i++) {
       var d = ds[i];
       if ((d.a === a && d.b === b) || (d.a === b && d.b === a)) {
-        if (BTS.State.hasClue(d.result)) { BTS.UI.toast(t('jr.link_known')); return false; }
-        if (d.cond && !BTS.Cond.eval(d.cond)) { BTS.UI.toast(t('jr.link_notyet')); return false; }
+        if (BTS.State.hasClue(d.result)) { J.lastResult = t('jr.link_known'); BTS.UI.toast(J.lastResult); return false; }
+        if (d.cond && !BTS.Cond.eval(d.cond)) { J.lastResult = t('jr.link_notyet'); BTS.UI.toast(J.lastResult); return false; }
         BTS.State.addClue(d.result);
         if (d.flag) BTS.State.set(d.flag);
-        if (d.thought) BTS.UI.toast(t(d.thought));
+        J.lastResult = d.thought ? t(d.thought) : null; if (d.thought) BTS.UI.toast(t(d.thought));
         BTS.Events.emit('deduced', d.result);
         return true;
       }
     }
     BTS.Audio.play('ui_denied');
-    BTS.UI.toast(t('jr.link_fail'));
+    J.lastResult = t('jr.link_fail'); BTS.UI.toast(J.lastResult);
     return false;
   };
 

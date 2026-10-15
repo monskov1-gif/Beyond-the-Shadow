@@ -34,7 +34,7 @@ BTS.Locale.en_parts.push({
       3: '“15.8. Jaglika from the edge of the village came by, asked for the foreigner, took nothing.”', 4: 'August fifteenth. September fifteenth. Exactly a month.', 5: 'Lisa photographs the page with her phone. Twice.' },
     c5_convinced: { 1: 'For eight years I’ve worked with children who see things that aren’t there. After losses, after wars, after fires.', 2: 'You’re not like that. You see what is there. Just before anyone else.',
       3: 'Do you believe me?', 4: 'I don’t believe in witches, Đorđe. But I believe in dates.', 5: 'All right. What do we do next?', 6: 'We. She said “we”.' },
-    c6_plan: { 1: 'I talked to people. Jaglika settled here in May. The house had stood empty for nine years.', 2: 'Nobody knows where she came from. Some say Brestovac. Some say nowhere.',
+    c6_plan: { 1: 'I talked to people. Jaglika moved into the empty house at the edge in June — a few days before the fair. It had stood empty for nine years.', 2: 'Nobody knows where she came from. Some say Brestovac. Some say nowhere.',
       3: 'She goes out at night. I want to see where.', 4: 'At night. The two of us. If anything goes wrong — we leave. At once. Agreed?', 5: 'Take a jacket. There’s fog.', 6: 'The hiding place — by the fence opposite her house, on the west path.' },
     c6_hide: { 1: 'Đorđe and Lisa crouch by the fence. The fog lies on the ground like milk.', 2: 'Quiet. Look — the door.', 3: 'The door opens. Jaglika comes out without a lantern.', 4: 'We have to follow her. Not too close. Not too far. And when she turns round — don’t move.' },
     c6_losing: { 1: 'Đorđe, we’re losing her. Faster.' },

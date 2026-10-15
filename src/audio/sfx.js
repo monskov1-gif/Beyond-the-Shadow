@@ -38,6 +38,7 @@ BTS.SFX = (function () {
     return 0.15;
   };
   S.cats.step = 'step';
+  ['bird', 'dog_bark', 'crow', 'fire_pop', 'rooster', 'sheep', 'shutter'].forEach(function (n) { S.cats[n] = 'ambient'; });
   S.footsteps_other = function (t, o) { S.step(t, o); S.step(t + 0.45, o); S.step(t + 0.9, o); return 1.2; };
   S.step_distorted = function (t, o) { o.pitch = 0.55; o.reverb = 2; S.step(t, o); S.step(t + 0.23, { surface: o.surface, pitch: 0.5, vol: 0.4, x: o.x, z: o.z, reverb: 2 }); return 0.5; };
 
@@ -157,6 +158,10 @@ BTS.SFX = (function () {
     A.env(g.gain, t, 0.05, 0.4, 0.4, 0.25);
     return 1;
   };
+  S.drip = function (t, o) { tone(t, o, 'ambience', 'sine', rnd(1800, 2600), 0.001, 0.1 * (o.vol || 1), 0.06, rnd(900, 1200)); return 0.1; };
+  S.murmur = function (t, o) { var n = 3 + Math.floor(Math.random() * 5), p0 = rnd(0.8, 1.3); for (var i = 0; i < n; i++) S.voice(t + i * rnd(0.08, 0.15), { pitch: p0 * rnd(0.9, 1.1), vol: (o.vol || 1) * 0.5 }); return n * 0.12; };
+  S.laugh = function (t, o) { var p0 = rnd(1, 1.5); for (var i = 0; i < 4; i++) S.voice(t + i * 0.11, { pitch: p0 * (1.2 - i * 0.05), vol: (o.vol || 1) * 0.6 }); return 0.5; };
+  S.cats.drip = 'ambient'; S.cats.murmur = 'ambient'; S.cats.laugh = 'ambient';
   S.fire_pop = function (t, o) { burst(t, o, 'sfx', 2500, 2, 'bandpass', 0.001, (o.vol || 1) * 0.5, 0.03); return 0.05; };
   S.match = function (t, o) { burst(t, o, 'sfx', 3000, 1, 'highpass', 0.01, 0.4, 0.2); burst(t + 0.15, o, 'sfx', 800, 0.5, 'lowpass', 0.2, 0.25, 0.8, 'pink'); return 1; };
 
@@ -178,8 +183,9 @@ BTS.SFX = (function () {
     var bp = A.filter('bandpass', 1500, 8, g), bp2 = A.filter('bandpass', 2600, 10, g);
     A.noiseSrc('white', t, dur, bp); A.noiseSrc('white', t, dur, bp2);
     var tt = t, formants = [[600, 1700], [400, 2300], [800, 1200], [300, 2600], [500, 1900]];
-    while (tt < t + dur) { var f = formants[Math.floor(Math.random() * formants.length)]; bp.frequency.setValueAtTime(f[0] * 2, tt); bp2.frequency.setValueAtTime(f[1], tt); g.gain.setValueAtTime(Math.random() < 0.25 ? 0.0001 : 0.09 * (o.vol || 1), tt); tt += rnd(0.07, 0.16); }
-    g.gain.setValueAtTime(0.0001, t + dur);
+    g.gain.setValueAtTime(0.0001, t);
+    while (tt < t + dur) { var f = formants[Math.floor(Math.random() * formants.length)]; bp.frequency.setTargetAtTime(f[0] * 2, tt, 0.02); bp2.frequency.setTargetAtTime(f[1], tt, 0.02); g.gain.setTargetAtTime(Math.random() < 0.25 ? 0.0001 : 0.09 * (o.vol || 1), tt, 0.015); tt += rnd(0.07, 0.16); }
+    g.gain.setTargetAtTime(0.0001, t + dur, 0.03);
     return dur;
   };
   S.cats.whisper = 'horror';

@@ -194,6 +194,8 @@ BTS.Story = (function () {
       else S.refreshHints();
     };
     if (x.sfx) BTS.Audio.play(x.sfx, { x: BTS.World.player.x, z: BTS.World.player.z });
+    else if (x.verb === 'verb.read') BTS.Audio.play('paper', {});
+    else if (x.verb === 'verb.take') BTS.Audio.play('cloth', {});
     if (x.run) BTS.Cutscene.play(function (C) { return x.run(C); }, x.id).then(after);
     else if (x.dlg) BTS.Cutscene.play(function (C) { return C.say(typeof x.dlg === 'function' ? x.dlg() : x.dlg); }, x.id).then(after);
     else after();
@@ -243,6 +245,7 @@ BTS.Story = (function () {
       S.runAction(rule, null);
       return;
     }
+    if (stage > 0 || (ent.shadow && ent.shadow.beast)) BTS.Audio.play('heartbeat', { vol: 0.7 });
     var key = stage === 0 && !(ent.shadow && ent.shadow.beast) ? 'obs_normal' : (ent.shadow && ent.shadow.beast ? 'obs_beast' : 'obs_odd');
     BTS.Cutscene.play(function (C) { return C.say(key); }, 'obs');
   };
@@ -257,6 +260,7 @@ BTS.Story = (function () {
     var b = S.cur(), def = BTS.World.loc && BTS.World.loc.def;
     if (BTS.Cutscene.running && S.busy) return;
     var m = (b && b.musicByLoc && b.musicByLoc[loc]) || (b && b.music) || (def && def.music) || 'village';
+    if (BTS.Ambience && def) { var prof = {}, k; for (k in (def.ambience || {})) prof[k] = def.ambience[k]; if (b && b.ambience && !def.interior) for (k in b.ambience) prof[k] = b.ambience[k]; BTS.Ambience.setProfile(prof); }
     BTS.Music.set(m);
   };
   return S;

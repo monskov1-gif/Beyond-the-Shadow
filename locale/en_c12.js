@@ -12,7 +12,7 @@ BTS.Locale.en_parts.push({
     c1_wake: { 1: 'Morning. A grey sky, low as a ceiling.', 2: 'Zajko hasn’t come for eleven days. He promised to come “the day after tomorrow”.', 3: 'The day after tomorrow was nine days ago.', 4: 'This morning the door was ajar. Someone left bread and a note on the table.', 5: 'The bread is from Pečko. I know her pogača by its smell.' },
     c1_note: { 1: 'A note in Pečko’s handwriting. The letters jump, as if she wrote it standing up.', 2: '“Đorđe, son. Zajko is ill, he doesn’t sleep. He listens to you. Come and see us. P.”', 3: 'Zajko isn’t ill. Zajko is never ill.', 4: 'I have to go. Zajko’s house is on the main street — yellow, with blue shutters.' },
     c1_pecko: {
-      1: 'You came… Thank you for coming.', 2: 'He doesn’t sleep, Đorđe. Three weeks now. He sits by the window and watches the gate.',
+      1: 'You came… Thank you for coming.', 2: 'He doesn’t sleep, Đorđe. Ten days now. He sits by the window and watches the gate.',
       3: 'He’s turned angry. Shouts at me, at his father. Says someone follows him. Says we aren’t his parents.', 4: 'Pečko speaks more slowly than usual. Between the words — empty places.',
       5: 'We took him to town, to the doctor. The doctor said — puberty, nerves. Gave him pills. He won’t take them.',
       c1: '“When did it start?”', c2: '[Say nothing]',
@@ -22,7 +22,7 @@ BTS.Locale.en_parts.push({
     },
     c1_pecko_again: { 1: 'Talk to him, son. Please.' },
     c1_zajko: {
-      1: 'What are you here for? Mum called you? To spy?', 2: 'He stands by the window. The curtains are half drawn. Under his eyes — blue.',
+      1: 'What are you here for? Mum called you? To spy?', 2: 'He stands by the window. The curtains are half drawn. Dark rings under his eyes.',
       3: 'Everyone’s watching. Everyone. You think I don’t see?', 4: 'I’m not watching. I came.',
       5: 'At night there’s someone standing at the gate. Every night. I go out — nobody.', 6: 'Mum says it’s a dream. Dad says don’t make things up. They’re lying. They’re not… they’re not real.',
       c1: '“What person at the gate?”', c2: '“What’s wrong with your shadow?”', c3: '[Sit beside him in silence]',
@@ -51,7 +51,7 @@ BTS.Locale.en_parts.push({
     c1_home: { 1: 'Home. I close the door until it clicks. Then once more.', 2: 'They said there’d be a storm tonight.' },
     c1_storm_a: { 1: 'A storm. Rain hits the glass like a fistful of sand.', 2: 'Down below, at Zajko’s house, a lamp is burning. All night.' },
     c1_storm_b: { 1: 'A flash — someone is standing at Zajko’s gate. Small. Hunched.', 2: 'Dark. I count to seven. Thunder.' },
-    c1_storm_c: { 1: 'A flash. No one at the gate.', 2: 'I write: “July 14. Storm. A figure at Zajko’s gate. One flash.”', 3: 'I can’t sleep. I count the flashes. Twenty-three.' },
+    c1_storm_c: { 1: 'A flash. No one at the gate.', 2: 'I write: “July 9. Storm. A figure at Zajko’s gate. One flash.”', 3: 'I can’t sleep. I count the flashes. Twenty-three.' },
     c2_wake: { 1: 'The bell. One stroke. A pause. One stroke.', 2: 'That’s how they ring when someone has died.', 3: 'I know who. I know who, and I don’t want to know.', 4: 'The fog is so thick I can’t see the gate. I have to go down.' },
     c2_gate: {
       1: 'People at Zajko’s gate. No one speaks loudly.', 2: 'Đorđe… Son.', 3: 'Zajko, in the night… Our Zajko is gone.',
@@ -82,7 +82,7 @@ BTS.Locale.en_parts.push({
     },
     c2_pecko_bakery: { 1: 'Bread… I have to bake bread. For Zajko. He likes it with a crunchy crust.', 2: 'Pečko looks right through me. Her voice is flat, like a line on paper.', 3: 'Whose boy are you?', 4: 'She didn’t recognize me.' },
     c2_milka_news: {
-      1: 'Evening. Rain. Granny Milka came with a pot and spent a long time shaking water off her headscarf.', 2: 'Pečko… Three days ago. In her sleep. Went quietly.',
+      1: 'Evening. Rain. Granny Milka came with a pot and spent a long time shaking water off her headscarf.', 2: 'Pečko… Three days ago. In her sleep. Went quietly. You heard the bell, son. You didn’t come down. I didn’t make you.',
       3: 'And Gvozdin was found today. In the smithy. The forge cold, and him sitting on the floor.', 4: 'Don’t be afraid, son. I’ll bring you food. Dragan rang the town — someone from social services will come.',
       5: 'Pečko. Gvozdin. Zajko first. Three people from one house in a month.', 6: 'People say it’s a curse. That someone put the evil eye on us at the fair. That it’s the well water.',
       7: 'I say nothing. I’m old.', c1: '“It isn’t the water”', c2: '[Say nothing]',
@@ -91,7 +91,7 @@ BTS.Locale.en_parts.push({
       12: 'I need to go to their house. To say goodbye. Zajko’s rabbit is still there.'
     },
     c2_toy: { 1: 'A rag rabbit. One ear sewn back on — with thread of another colour.', 2: 'Pečko sewed it. Zajko used to say: “That’s his battle wound.”', 3: 'I take it. It shouldn’t be left alone in an empty house.' },
-    c2_notebook: { 1: 'Pečko’s order book. “Radoje — 2 pogača. Stana — bread and a pie.”', 2: 'Between the lines — something else. Smaller handwriting.', 3: '“30.7. Old Jaglika came by, brought herbs for sleep. Said they’d help. I don’t want to drink them.”', 4: 'Jaglika. The old woman has a name.', 5: 'She came the day after the funeral. Just like by the graveyard.' },
+    c2_notebook: { 1: 'Pečko’s order book. “Radoje — 2 pogača. Stana — bread and a pie.”', 2: 'Between the lines — something else. Smaller handwriting.', 3: '“30.7. Old Jaglika came by, brought herbs for sleep. Said they’d help. I don’t want to drink them.”', 4: 'Jaglika. The old woman has a name.', 5: 'She came the day after the funeral. Just as she did at the graveyard.' },
     c2_mirror: { 1: 'The mirror is covered with a black scarf. People do that when someone in the house has died.', 2: 'So the soul doesn’t get lost. Grandmother said so.' },
     c2_house_end: { 1: 'An empty house sounds different. Footsteps — louder. Silence — thicker.', 2: 'I’ve been here hundreds of times. Never alone.', 3: 'Time to go home. Tomorrow — reread the sketchbook. All of it. From the very beginning.' }
   }

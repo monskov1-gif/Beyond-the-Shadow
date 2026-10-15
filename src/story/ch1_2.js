@@ -76,7 +76,7 @@
       },
       shadows: { pecko: { stage: 1 } },
       scene: function (C) {
-        return C.cam({ target: [5, 0.5, 7], time: 0.1 }).then(function () { return C.say('c2_funeral'); });
+        C.sfx('drone', { dur: 8, vol: 0.5 }); return C.cam({ target: [5, 0.5, 7], time: 0.1 }).then(function () { return C.say('c2_funeral'); });
       },
       observe: { pecko: { run: function (C) { return C.say('c2_observe_pecko'); }, clue: 'sk_pecko', set: 'saw_pecko_shadow' } },
       triggers: [{ loc: 'village', id: 'herbs', box: [80, 26, 95, 36], cond: 'flag:saw_pecko_shadow', run: function (C) {
@@ -95,7 +95,7 @@
       npcs: { gvozdin: { loc: 'village', at: 'smithy', act: 'work', dir: 'up', stage: 2 } },
       shadows: { gvozdin: { stage: 2 }, pecko: { stage: 1 } }
     },
-    { id: 'c2_parents', chapter: 'ch2', loc: 'djordje_house', spawn: 'table', forceSpawn: true, chapterCard: 'sub.c2_parents', day: 63,
+    { id: 'c2_parents', chapter: 'ch2', loc: 'djordje_house', spawn: 'table', forceSpawn: true, chapterCard: 'sub.c2_parents', day: 64,
       env: { time: 'evening', weather: 'rain', horror: 0.25 }, envInstant: true, obj: 'obj.c2_parents', music: 'symptoms', deaths: ['pecko', 'gvozdin'],
       npcs: { milka: { loc: 'djordje_house', at: 'lisa_table', act: 'mourn', dir: 'left' } },
       scene: function (C) { C.anim('player', 'sit'); return C.say('c2_milka_news'); }, after: 'c2_house'

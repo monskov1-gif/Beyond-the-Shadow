@@ -5,11 +5,11 @@
 BTS.Music = (function () {
   var A = BTS.Audio;
   var Mu = { state: null, layers: {}, intensity: 0, ksCache: {} };
-  var LOOK = 0.25;
+  var LOOK = 1.0;
   function mtof(m) { return 440 * Math.pow(2, (m - 69) / 12); }
   var HIJAZ = [0, 1, 4, 5, 7, 8, 10], MINOR = [0, 2, 3, 5, 7, 8, 10];
   function deg(scale, root, d) { var o = Math.floor(d / scale.length), i = ((d % scale.length) + scale.length) % scale.length; return root + o * 12 + scale[i]; }
-  var R = BTS.RNG(1234);
+  var R = BTS.RNG((Date.now() & 0xffffff) + 7);
 
   /* ---------- instruments (dest = layer gain) ---------- */
   function ks(m) {          // Karplus-Strong plucked string buffer
@@ -185,8 +185,8 @@ BTS.Music = (function () {
       tick: function (L, t) {
         var beat = 0.3;
         for (var i = 0; i < 16; i++) if (i % 2 === 0 || R() < 0.4) drum(L.g, t + i * beat, 0.7, i % 4 === 0);
-        choir(L.g, t, 62, beat * 16, 0.8, 'a'); choir(L.g, t, 69, beat * 16, 0.6, 'o'); choir(L.g, t, 74, beat * 16, 0.5, 'a');
-        bowed(L.g, t, 50, beat * 16, 0.8, 0); bowed(L.g, t, 57, beat * 16, 0.6, 0);
+        choir(L.g, t, 62, beat * 16, 0.5, 'a'); choir(L.g, t, 69, beat * 16, 0.4, 'o');
+        bowed(L.g, t, 50, beat * 16, 0.5, 0); bowed(L.g, t, 57, beat * 16, 0.35, 0);
         L.next = t + beat * 16;
       }
     },
@@ -231,7 +231,7 @@ BTS.Music = (function () {
       old.dying = t + f;
     }
     var g = A.gain(0, A.bus.music);
-    var rs = A.gain(0.45, A.reverbSend); g.connect(rs);
+    var rs = A.gain(0.45, A.send.music); g.connect(rs);
     g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(1, t + Math.max(0.05, f * 0.8));
     Mu.layers[state + '_' + Math.floor(t * 1000)] = { state: state, g: g, next: t + 0.1 };
     Mu.state = state;
@@ -241,7 +241,7 @@ BTS.Music = (function () {
   Mu.cut = function () {
     if (!A.ready) return;
     var t = A.now();
-    for (var k in Mu.layers) { var L = Mu.layers[k]; L.g.gain.cancelScheduledValues(t); L.g.gain.setValueAtTime(0.0001, t + 0.02); L.dying = t + 0.05; }
+    for (var k in Mu.layers) { var L = Mu.layers[k]; L.g.gain.cancelScheduledValues(t); L.g.gain.setValueAtTime(L.g.gain.value, t); L.g.gain.linearRampToValueAtTime(0.0001, t + 0.015); L.dying = t + 0.05; }
     Mu.state = 'silence';
   };
   Mu.schedule = function () {
@@ -253,6 +253,7 @@ BTS.Music = (function () {
       if (L.dying) continue;
       var st = STATES[L.state];
       var guard = 0;
+      if (L.next < t - 0.5) L.next = t + 0.05;
       while (L.next < t + LOOK && guard++ < 4) { try { st.tick(L, Math.max(L.next, t + 0.02)); } catch (e) { BTS.Log.warn('music tick', e); L.next = t + 2; } }
     }
   };
