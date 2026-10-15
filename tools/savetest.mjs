@@ -20,7 +20,11 @@ while (Date.now() - t0 < 1500000) {
   const s = await p.evaluate(() => ({ beat: BTS.State.d.beat, ok: BTS.Save.canSave(), err: BTS.Auto.error }));
   if (s.err) { console.log('autoplay error', s.err); process.exit(1); }
   if (s.beat !== globalThis.__lb) { globalThis.__lb = s.beat; console.log('beat', s.beat); }
-  if (s.beat === target && s.ok) break;
+  if (s.beat === target) {   // stop the bot and let the current scene/dialogue finish so saving is allowed
+    await p.evaluate(() => { BTS.Auto.done = true; });
+    for (let i = 0; i < 80; i++) { const ok = await p.evaluate(() => { if (BTS.Dialogue.active) BTS.Test.advance(); return BTS.Save.canSave(); }); if (ok) break; await p.waitForTimeout(500); }
+    break;
+  }
 }
 const before = await p.evaluate(() => { BTS.Auto.done = true; BTS.Save.save('2'); return { beat: BTS.State.d.beat, loc: BTS.World.locId, inv: BTS.State.d.inventory.map(i => i.id), clues: BTS.State.d.clueOrder.length, dead: Object.keys(BTS.State.d.npc).filter(k => BTS.State.d.npc[k].dead) }; });
 console.log('SAVED', JSON.stringify(before));
