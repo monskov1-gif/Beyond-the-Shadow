@@ -6,7 +6,8 @@ const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..')
 const b = await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 const ctx = await b.newContext({ viewport: { width: 800, height: 450 } });
 const p = await ctx.newPage();
-const errs = []; p.on('pageerror', e => errs.push(e.message));
+const errs = []; p.on('pageerror', e => errs.push(e.message)); p.on('crash', () => console.log('PAGE CRASH')); p.on('close', () => console.log('PAGE CLOSED'));
+p.on('console', m => { if (m.type() === 'error') console.log('[console]', m.text().slice(0, 200)); });
 await p.addInitScript(() => { if (!localStorage.getItem('bts.settings.v1')) localStorage.setItem('bts.settings.v1', JSON.stringify({ language: 'en', textSpeed: 3, effects: 0 })); });
 async function boot() { await p.goto('file://' + root + '/index.html'); await p.waitForFunction(() => window.BTS && BTS.Game && BTS.Game.mode === 'menu', null, { timeout: 60000 }); }
 async function auto() { await p.addScriptTag({ path: root + '/tools/walkthrough.js' }); await p.addScriptTag({ path: root + '/tools/autoplay.js' }); }
@@ -18,6 +19,7 @@ while (Date.now() - t0 < 1500000) {
   await p.waitForTimeout(1500);
   const s = await p.evaluate(() => ({ beat: BTS.State.d.beat, ok: BTS.Save.canSave(), err: BTS.Auto.error }));
   if (s.err) { console.log('autoplay error', s.err); process.exit(1); }
+  if (s.beat !== globalThis.__lb) { globalThis.__lb = s.beat; console.log('beat', s.beat); }
   if (s.beat === target && s.ok) break;
 }
 const before = await p.evaluate(() => { BTS.Auto.done = true; BTS.Save.save('2'); return { beat: BTS.State.d.beat, loc: BTS.World.locId, inv: BTS.State.d.inventory.map(i => i.id), clues: BTS.State.d.clueOrder.length, dead: Object.keys(BTS.State.d.npc).filter(k => BTS.State.d.npc[k].dead) }; });
