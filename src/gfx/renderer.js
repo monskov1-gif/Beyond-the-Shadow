@@ -256,6 +256,9 @@ BTS.Renderer = (function () {
       pass(T.halfA, progCopy); bindTex(0, T.scene.color); gl.uniform1i(progCopy.u.uSrc, 0); quad();
       pass(T.halfB, progBlur); bindTex(0, T.halfA.color); gl.uniform1i(progBlur.u.uSrc, 0); gl.uniform2f(progBlur.u.uDir, 1.3, 0); quad();
       pass(T.halfA, progBlur); bindTex(0, T.halfB.color); gl.uniform2f(progBlur.u.uDir, 0, 1.3); quad();
+      // second, wider pass: a soft lens blur instead of blocky pixels
+      pass(T.halfB, progBlur); bindTex(0, T.halfA.color); gl.uniform2f(progBlur.u.uDir, 2.4, 0); quad();
+      pass(T.halfA, progBlur); bindTex(0, T.halfB.color); gl.uniform2f(progBlur.u.uDir, 0, 2.4); quad();
     }
 
     /* 4. composite + nearest upscale to screen */
@@ -277,7 +280,7 @@ BTS.Renderer = (function () {
     gl.uniform1f(u.uSat, g.sat);
     gl.uniform1f(u.uContrast, g.contrast);
     gl.uniform1f(u.uExposure, g.exposure);
-    gl.uniform1f(u.uGrain, effects > 1 ? g.grain : 0);
+    gl.uniform1f(u.uGrain, 0);   // animated grain shimmered in dark areas while moving — disabled
     gl.uniform1f(u.uTime, BTS.App.time);
     gl.uniform1f(u.uFade, env.fadeBlack || 0);
     gl.uniform1f(u.uSepia, env.sepia || 0);

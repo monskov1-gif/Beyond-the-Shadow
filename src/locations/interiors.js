@@ -45,12 +45,14 @@
   };
   Kit.prototype.window = function (x, z, o) {
     o = o || {};
-    var mb = this.mb, L = this.L, y = o.y || 1.2, side = o.side || 's';
+    var mb = this.mb, L = this.L, side = o.side || 's';
     var face = side === 'back' ? 's' : side;
-    mb.decal(x, y, z + 0.02, o.w || 1.0, o.h || 1.0, face, o.tile || 'window_plain', MAT.GLASS);
+    // windows sized to the hero (~1.5 m): about 1.6 x 1.3 m, sill at ~0.75 m
+    var ww = Math.max(1.6, (o.w || 1.0) * 1.6), wh = Math.max(1.3, (o.h || 1.0) * 1.3), y = Math.max(1.4, (o.y || 1.2) + 0.1);
+    mb.decal(x, y, z + 0.02, ww, wh, face, o.tile || 'window_plain', MAT.GLASS);
     if (o.light !== false) {
       L.light(x, y + 0.6, z + 1.0, o.color || [0.55, 0.62, 0.8], 5.5, o.intensity || 0.7, 'day', 0);
-      L.statics.push({ beam: [[x - 0.45, y + 0.9, z + 0.05], [x + 0.45, y + 0.9, z + 0.05], [x + 0.9, 0.02, z + 2.6], [x - 0.2, 0.02, z + 2.2]], col: [1, 0.92, 0.75], day: true });
+      L.statics.push({ beam: [[x - ww * 0.42, y + wh * 0.45, z + 0.05], [x + ww * 0.42, y + wh * 0.45, z + 0.05], [x + ww * 0.75, 0.02, z + 2.8], [x - ww * 0.25, 0.02, z + 2.4]], col: [1, 0.92, 0.75], day: true });
       L.emitter({ type: 'dust', x: x + 0.3, y: 0.3, z: z + 1.4, rate: 0.8, area: [1.2, 1.4], dayOnly: true, fx: true });
     }
   };

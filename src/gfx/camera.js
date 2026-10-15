@@ -65,6 +65,13 @@ BTS.Camera = (function () {
     var cp = Math.cos(C.pitch), sp = Math.sin(C.pitch);
     var fx = Math.sin(C.yaw), fz = Math.cos(C.yaw);
     var t = [C.target[0] + sx, C.target[1] + 0.9 + sy, C.target[2]];
+    // pixel-grid snap: move the view in whole low-res pixels so textures don't shimmer while walking
+    if (!C.cine && Math.abs(C.yaw) < 1e-3 && BTS.Renderer.internal) {
+      var pw = 2 * C.dist * Math.tan(C.fov / 2) / BTS.Renderer.internal[1];
+      var sz = pw / Math.max(0.2, Math.sin(C.pitch));
+      var sy2 = pw / Math.max(0.2, Math.cos(C.pitch));
+      t[0] = Math.round(t[0] / pw) * pw; t[2] = Math.round(t[2] / sz) * sz; t[1] = Math.round(t[1] / sy2) * sy2;
+    }
     C.eye = [t[0] + fx * cp * C.dist, t[1] + sp * C.dist, t[2] + fz * cp * C.dist];
     M.lookAt(C.view, C.eye, t, [0, 1, 0]);
     var asp = BTS.Renderer.internal[0] / BTS.Renderer.internal[1];

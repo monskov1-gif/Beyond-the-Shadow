@@ -51,11 +51,13 @@ BTS.World = (function () {
     BTS.Renderer.zoom = (cp.dist || 26) / 44; BTS.Renderer.resize();
     BTS.Camera.setPreset(cp, true);
     var b = st.def.camBounds || st.def.bounds;
-    BTS.Camera.bounds = [b[0] + (cp.padX || 6), b[1] + (cp.padZ0 || 4), b[2] - (cp.padX || 6), b[3] - (cp.padZ1 || 2)];
+    // interiors: small padding so the camera keeps following Đorđe to the walls instead of sitting in the middle
+    var padX = cp.padX || (W.interior ? 2 : 6), padZ0 = cp.padZ0 || (W.interior ? 1.5 : 4), padZ1 = cp.padZ1 || (W.interior ? 0.5 : 2);
+    BTS.Camera.bounds = [b[0] + padX, b[1] + padZ0, b[2] - padX, b[3] - padZ1];
     if (BTS.Camera.bounds[0] > BTS.Camera.bounds[2]) { var mx = (b[0] + b[2]) / 2; BTS.Camera.bounds[0] = BTS.Camera.bounds[2] = mx; }
     if (BTS.Camera.bounds[1] > BTS.Camera.bounds[3]) { var mz = (b[1] + b[3]) / 2; BTS.Camera.bounds[1] = BTS.Camera.bounds[3] = mz; }
     // player
-    var p = W.player || new BTS.Entity({ id: 'player', kind: 'player', sheet: 'djordje', radius: 0.28, speed: 2.5 });
+    var p = W.player || new BTS.Entity({ id: 'player', kind: 'player', sheet: 'djordje', radius: 0.28, speed: 3.2 });
     p.isPlayer = true; p.hidden = false; p.solid = true;
     W.player = p;
     var sp = typeof spawn === 'string' ? st.spots[spawn] : spawn;
@@ -106,16 +108,20 @@ BTS.World = (function () {
       if (control && !p.path) {
         var ax = I.axis();
         var run = I.down.run;
-        var sp = (run ? 4.3 : 2.5) * (W.speedMul || 1);
+        var mag = Math.min(1, Math.hypot(ax[0], ax[1]));
+        // walk 3.6 u/s, run 6.4 u/s; an analog stick scales the speed but never below a slow walk
+        var sp = (run ? 6.4 : 3.6) * Math.max(0.45, mag) * (W.speedMul || 1);
         if (ax[0] || ax[1]) {
-          var ox = p.x, oz = p.z;
-          p.x += ax[0] * sp * dt; p.z += ax[1] * sp * dt;
+          var ox = p.x, oz = p.z, nx = ax[0] / (mag || 1), nz = ax[1] / (mag || 1);
+          p.x += nx * sp * dt; p.z += nz * sp * dt;
           if (Math.abs(ax[0]) > Math.abs(ax[1]) * 0.9) p.dir = ax[0] > 0 ? 'right' : 'left'; else p.dir = ax[1] > 0 ? 'down' : 'up';
           BTS.Physics.resolve(p, W.colliders, W.entities);
           var b = W.loc.bounds;
           p.x = M.clamp(p.x, b[0] + 0.5, b[2] - 0.5); p.z = M.clamp(p.z, b[1] + 0.5, b[3] - 0.5);
           var moved = Math.hypot(p.x - ox, p.z - oz) > 0.001;
-          p.anim.set(moved ? (run ? 'run' : 'walk') : 'idle');
+          var running = sp > 4.6;
+          p.anim.set(moved ? (running ? 'run' : 'walk') : 'idle');
+          p.anim.speed = moved ? BTS.M.clamp(sp / (running ? 6.4 : 3.6), 0.6, 1.25) : 1;
           p.moving = moved;
         } else { if (!p.anim.lock) p.anim.set(W.playerIdle || 'idle'); p.moving = false; }
       } else if (p.path) {

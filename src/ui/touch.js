@@ -64,10 +64,10 @@ BTS.Touch = (function () {
       var dx = e.clientX - stickOrigin[0], dy = e.clientY - stickOrigin[1], l = Math.hypot(dx, dy);
       if (l > RADIUS) { dx *= RADIUS / l; dy *= RADIUS / l; }
       knob.style.transform = 'translate(calc(-50% + ' + dx + 'px), calc(-50% + ' + dy + 'px))';
-      var m = Math.min(1, l / RADIUS), dead = 0.18;
+      var m = Math.min(1, l / RADIUS), dead = 0.12;
       var k = m < dead ? 0 : (m - dead) / (1 - dead);
       T.axis = l > 0 ? [dx / Math.max(l, 1e-3) * k, dy / Math.max(l, 1e-3) * k] : [0, 0];
-      T.farPush = m > 0.92;
+      T.farPush = m > 0.85;
     });
     var end = function (e) { if (e.pointerId !== stickId) return; stickId = null; T.axis = [0, 0]; T.farPush = false; T.stick.classList.remove('on'); };
     zone.addEventListener('pointerup', end); zone.addEventListener('pointercancel', end);
@@ -126,7 +126,26 @@ BTS.Touch = (function () {
     I.touch.down.run = free && (T.runToggle || T.farPush);
   };
 
+  /* fullscreen on the first interaction with the page (browsers only allow it inside a user gesture) */
+  T.autoFullscreen = function () {
+    var done = false;
+    var go = function () {
+      if (done) return; done = true;
+      ['pointerup', 'touchend', 'keydown', 'click'].forEach(function (ev) { window.removeEventListener(ev, go, true); });
+      if (!BTS.Config.get('autoFullscreen') || document.fullscreenElement || BTS.Game && BTS.Game.query && BTS.Game.query.get('test')) return;
+      var el = document.documentElement, rq = el.requestFullscreen || el.webkitRequestFullscreen;
+      if (!rq) return;   // iPhone Safari has no fullscreen API for pages
+      try {
+        var r = rq.call(el, { navigationUI: 'hide' });
+        var lock = function () { try { if (T.enabled && screen.orientation && screen.orientation.lock) screen.orientation.lock('landscape').catch(function () { }); } catch (e) { } };
+        if (r && r.then) r.then(lock).catch(function () { }); else lock();
+      } catch (e) { }
+    };
+    ['pointerup', 'touchend', 'keydown', 'click'].forEach(function (ev) { window.addEventListener(ev, go, true); });
+  };
+
   T.init = function () {
+    T.autoFullscreen();
     I.touch = I.touch || { axis: [0, 0], down: {}, pressed: {} };
     window.addEventListener('resize', T.applyScale);
     window.addEventListener('orientationchange', function () { setTimeout(T.applyScale, 200); });

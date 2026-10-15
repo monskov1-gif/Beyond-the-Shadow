@@ -155,6 +155,7 @@ BTS.Env = (function () {
       if (E.supernatural > 0 && L.kind !== 'day') fk *= 1 - E.supernatural * (Math.random() < 0.08 ? 0.7 : 0.1);
       var inten = (L.intensity || 1) * on * fk;
       L.cur = [L.color[0] * inten, L.color[1] * inten, L.color[2] * inten];
+      L.steady = (L.color[0] + L.color[1] + L.color[2]) / 3 * (L.intensity || 1) * on;   // brightness without flicker (character shadows)
       var d = Math.hypot(L.x - fx, L.z - fz);
       L.score = d - L.radius * 0.5 - (L.important ? 100 : 0);
       cand.push(L);

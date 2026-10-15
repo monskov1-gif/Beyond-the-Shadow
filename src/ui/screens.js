@@ -145,7 +145,7 @@ BTS.Screens = (function () {
       el('div', 'set-head', esc(t('set.video')), box);
       option(box, 'fullscreen', [[false, 'set.off'], [true, 'set.on']], function () { return !!document.fullscreenElement; }, function (v) {
         try { if (v) document.documentElement.requestFullscreen(); else if (document.fullscreenElement) document.exitFullscreen(); } catch (e) { }
-        C.set('fullscreen', v);
+        C.set('fullscreen', v); C.set('autoFullscreen', v);
       });
       option(box, 'ui_size', [[0.8, 'set.size_s'], [1, 'set.size_m'], [1.15, 'set.size_l'], [1.3, 'set.size_xl']], function () { return C.get('uiScale'); }, function (v) { C.set('uiScale', v); BTS.Touch.applyScale(); });
       option(box, 'touch', [[0, 'set.scale_auto'], [1, 'set.on'], [2, 'set.off']], function () { return C.get('touchControls'); }, function (v) { C.set('touchControls', v); BTS.Touch.refresh(); });
