@@ -37,9 +37,15 @@ BTS.Dialogue = (function () {
   D.start = function (id, opts) {
     opts = opts || {};
     var script = BTS.Data.dialogues[id];
+    if (script && D.active) {
+      // queue behind the running conversation instead of overwriting it
+      return new Promise(function (res) {
+        var h = function () { BTS.Events.off('dlg_end', h); setTimeout(function () { res(D.start(id, opts)); }, 0); };
+        BTS.Events.on('dlg_end', h);
+      });
+    }
     return new Promise(function (resolve) {
       if (!script) { BTS.Log.error('missing dialogue', id); resolve('missing'); return; }
-      if (D.active) { BTS.Log.warn('dialogue already active, queue', id); }
       var labels = {};
       script.forEach(function (s, i) { if (s && s.label) labels[s.label] = i; });
       D.current = { id: id, script: script, pc: 0, labels: labels, resolve: resolve, steps: 0, opts: opts, history: [] };

@@ -56,7 +56,7 @@ BTS.Test = (function () {
   T.state = function () {
     var W = BTS.World, p = W.player;
     return {
-      beat: BTS.State.d.beat, loc: W.locId, x: p && p.x, z: p && p.z, dlg: BTS.Dialogue.active, cut: BTS.Cutscene.running, trans: BTS.Game.transitioning,
+      beat: BTS.State.d.beat, loc: W.locId, x: p && p.x, z: p && p.z, dlg: BTS.Dialogue.active, cut: BTS.Cutscene.running || BTS.Story.cardActive || BTS.Story.busy, trans: BTS.Game.transitioning,
       screens: BTS.UI.stack.map(function (s) { return s.name; }), obj: BTS.State.d.objectiveKey, mode: BTS.Game.mode,
       interact: W.interactables.map(function (i) { return { id: i.id, x: i.ent ? i.ent.x : i.x, z: i.ent ? i.ent.z : i.z, ok: !i.cond || i.cond(), hint: !!i.hint }; }),
       ents: W.entities.map(function (e) { return e.id; }), missing: Object.keys(BTS.I18N.missing), clues: BTS.State.d.clueOrder.length, fps: BTS.App.fps

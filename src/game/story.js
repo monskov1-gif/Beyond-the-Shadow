@@ -12,7 +12,7 @@ BTS.Story = (function () {
   S.beatId = function () { return State.d.beat; };
   S.cur = function () { return S.byId[State.d.beat]; };
   S.chapterKey = function (beatId) { var b = S.byId[beatId]; return 'chap.' + (b ? b.chapter : 'prologue'); };
-  S.noSave = function () { var b = S.cur(); return !!(b && b.noSave) || S.busy; };
+  S.noSave = function () { var b = S.cur(); return !!(b && b.noSave) || S.busy || !!S.cardActive; };
   S.pastObjectives = function () {
     var out = [], ci = S.indexOf(State.d.beat);
     for (var i = 0; i < ci; i++) { var o = S.beats[i].obj; if (o && out.indexOf(o) < 0 && o !== State.d.objectiveKey) out.push(o); }
@@ -60,16 +60,20 @@ BTS.Story = (function () {
       S.refresh();
       if (fresh) BTS.Save.autosave();
     };
+    var card = function () {
+      S.cardActive = true; BTS.World.controlLocked = (BTS.World.controlLocked || 0) + 1;
+      return BTS.UI.chapterTitle(b.chapterCard, b.chapterSub).then(function () { S.cardActive = false; BTS.World.controlLocked = Math.max(0, BTS.World.controlLocked - 1); });
+    };
     if (needLoad) {
       if (b.chapterCard && !State.done('card:' + id)) {
         State.markDone('card:' + id);
         BTS.Env.fadeBlack = 1; BTS.Env.fadeGoal = 1;
         BTS.Game.enterLocation(b.loc, b.spawn, true);
-        BTS.UI.chapterTitle(b.chapterCard, b.chapterSub).then(function () { BTS.Env.fadeTo(0, 0.8); run(); });
-      } else BTS.Game.enterLocation(b.loc, b.spawn).then(run);
+        card().then(function () { BTS.Env.fadeTo(0, 0.8); run(); });
+      } else { S.cardActive = true; BTS.Game.enterLocation(b.loc, b.spawn).then(function () { S.cardActive = false; run(); }); }
     } else if (b.chapterCard && !State.done('card:' + id)) {
       State.markDone('card:' + id);
-      BTS.UI.chapterTitle(b.chapterCard, b.chapterSub).then(run);
+      card().then(run);
     } else run();
   };
   S.next = function () { var b = S.cur(); var n = S.beats[b.index + 1]; if (n) S.goto(n.id, true); };

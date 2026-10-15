@@ -143,7 +143,7 @@ BTS.Game = (function () {
     if (menuOpen) { U.updateHUD(); if (BTS.Ambience) BTS.Ambience.update(dt); BTS.Env.update(0, BTS.Camera.target); return; }  // paused
     BTS.State.d.playtime += dt;
     var inDialogue = U.updateDialogue(dt);
-    var free = !inDialogue && !BTS.Cutscene.running && !G.transitioning && !G.observing;
+    var free = !inDialogue && !BTS.Cutscene.running && !G.transitioning && !G.observing && !BTS.Story.cardActive;
     // hotkeys
     if (I.pressed.pause && !G.transitioning) { BTS.Screens.pause(); I.consume('pause'); }
     else if (!inDialogue && !G.transitioning) {
