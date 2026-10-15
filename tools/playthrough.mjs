@@ -18,7 +18,7 @@ const t0 = Date.now(); let lastBeat = '', n = 0;
 while (Date.now() - t0 < maxS * 1000) {
   await p.waitForTimeout(2000);
   const st = await p.evaluate(() => ({ beat: BTS.State.d.beat, done: BTS.Auto.done, err: BTS.Auto.error, loc: BTS.World.locId, missing: Object.keys(BTS.I18N.missing), play: BTS.State.d.playtime }));
-  if (st.beat !== lastBeat) { lastBeat = st.beat; console.log('BEAT', st.beat, 'loc', st.loc, 'game-time', st.play.toFixed(0) + 's'); if (shots) { await p.waitForFunction(() => !BTS.Story.cardActive && !BTS.Game.transitioning, null, { timeout: 20000 }).catch(() => {}); await p.waitForTimeout(1500); } if (shots) await p.screenshot({ path: `${shots}/${String(++n).padStart(2, '0')}_${st.beat}.png` }); }
+  if (st.beat !== lastBeat) { lastBeat = st.beat; console.log('BEAT', st.beat, 'loc', st.loc, 'game-time', st.play.toFixed(0) + 's'); if (shots) { await p.waitForFunction(() => !BTS.Story.cardActive && !BTS.Game.transitioning && BTS.Env.fadeBlack < 0.05, null, { timeout: 20000 }).catch(() => {}); await p.waitForTimeout(1500); } if (shots) await p.screenshot({ path: `${shots}/${String(++n).padStart(2, '0')}_${st.beat}.png` }); }
   if (st.done) { console.log(st.err ? 'FAILED: ' + st.err : 'PLAYTHROUGH COMPLETE'); console.log('missing keys:', JSON.stringify(st.missing)); break; }
 }
 console.log('page errors:', errors.length);

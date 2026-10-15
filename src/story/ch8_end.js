@@ -161,7 +161,8 @@
       },
       scene: function (C) {
         C.intensity(0.2);
-        return C.cam({ target: [93, 1, 82], time: 1.6 }).then(function () { return C.say('c10_arrive'); })
+        BTS.Camera.setPreset({ dist: 19 });   // the climax is played close: the beast, the fire and the hero fill the frame
+        return C.cam({ target: [93, 1, 82], dist: 19, time: 1.6 }).then(function () { return C.say('c10_arrive'); })
           .then(function () { C.shadow('jaglika', { beast: 0.95 }); C.sfx('shadow_tear', {}); C.shake(0.8); C.intensity(0.6); return C.say('c10_grow'); })
           .then(function () { riteStart(BTS.World); C.intensity(0.8); });
       },
@@ -173,6 +174,7 @@
       npcs: { lisa: { loc: 'village', at: [84.5, 85.6], act: 'idle', dir: 'up' }, jaglika: { loc: 'village', at: [96.5, 81.5], act: 'idle', dir: 'left', noTalk: true } },
       hideAll: true, keep: ['lisa', 'jaglika'],
       scene: function (C) {
+        BTS.Camera.setPreset({ dist: 26 });
         var W = BTS.World, j = C.ent('jaglika'), shades, relT = null;
         W.extraRender = null;
         C.musicCut(); C.timeScale(0.35); C.sfx('shadow_tear', {}); C.shake(1.4);

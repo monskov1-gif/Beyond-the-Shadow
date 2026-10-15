@@ -276,10 +276,11 @@
       K.partition(14, 0, 9, 5.4, 7, 'wall_stone_dark');
       // hearth room
       K.mb.box(1.4, 0, 0.8, 2.2, 1.4, 1.0, { all: 'wall_stone_dark', top: 'stone_block' }, { mat: MAT.STONE }); L.box(0.3, 0.2, 2.5, 1.3);
-      L.light(1.4, 0.6, 1.8, [1, 0.42, 0.16], 4.2, 0.8, 'fire', 0.35); L.statics.push({ sprite: 'flame', x: 1.4, y: 0.25, z: 1.32, scale: 0.65, emissive: true, flicker: true, fire: true });
+      L.light(1.4, 0.6, 1.8, [1, 0.42, 0.16], 6.0, 1.0, 'fire', 0.35); L.statics.push({ sprite: 'flame', x: 1.4, y: 0.25, z: 1.32, scale: 0.65, emissive: true, flicker: true, fire: true });
       K.prop('herbs_hang', 3.6, 0.3, { y: 2.0, mat: MAT.CLOTH }); K.prop('herbs_hang', 5.4, 0.3, { y: 2.1, mat: MAT.CLOTH, flip: true });
       var th = K.table(4.6, 3.6, 2.0, 1.0); K.chair(4.6, 4.6, false);
       K.prop('pot_clay', 4.2, 3.5, { y: th }); K.prop('vials', 5.1, 3.5, { y: th });
+      K.candle(3.8, th, 3.9, { scale: 0.8, radius: 4.5, intensity: 0.85 });   // oil-lamp glow over the herbs and ampoules
       K.mb.box(6.8, 0, 1.0, 1.2, 1.4, 0.8, { all: 'wood_dark' }, { mat: MAT.WOOD }); K.prop('basket', 6.8, 1.5, { y: 0 }); L.box(6.2, 0.6, 7.4, 1.4);   // loom
       K.window(3.2, 0, { side: 'back', y: 1.4, w: 0.7, h: 0.7, intensity: 0.4 });
       K.rug(4.4, 6.4, 3, 2, 'rug_plain');
