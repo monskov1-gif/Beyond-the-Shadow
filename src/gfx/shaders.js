@@ -148,7 +148,7 @@ BTS.Shaders = (function () {
   var compositeFS = [
     common,
     'uniform sampler2D uScene; uniform sampler2D uBloom; uniform sampler2D uBlur; uniform sampler2D uDepth;',
-    'uniform vec2 uInternal; uniform vec2 uScreen; uniform vec4 uViewport;',
+    'uniform vec2 uInternal; uniform vec2 uScreen; uniform vec4 uViewport; uniform vec2 uSubpx;',
     'uniform float uBloomK; uniform float uVignette; uniform float uSat; uniform float uContrast; uniform float uExposure;',
     'uniform float uGrain; uniform float uTime; uniform float uFade; uniform float uSepia; uniform vec3 uLift; uniform vec3 uGain;',
     'uniform float uNear; uniform float uFar; uniform float uFocus; uniform float uFocusRange; uniform float uDofK; uniform float uHorror; uniform float uFlash;',
@@ -156,7 +156,9 @@ BTS.Shaders = (function () {
     'float linDepth(float d){ float z = d*2.0-1.0; return 2.0*uNear*uFar/(uFar+uNear - z*(uFar-uNear)); }',
     'void main(){',
     '  vec2 sp = (gl_FragCoord.xy - uViewport.xy) / uViewport.zw;',
-    '  ivec2 ip = ivec2(sp * uInternal);',
+    '  vec2 fp = sp * uInternal + uSubpx;',                               // smooth sub-pixel scrolling of the snapped image
+    '  ivec2 ip = clamp(ivec2(floor(fp)), ivec2(0), ivec2(uInternal) - 1);',
+    '  sp = fp / uInternal;',
     '  vec3 c = texelFetch(uScene, ip, 0).rgb;',
     '  vec2 uv = (vec2(ip)+0.5)/uInternal;',
     '  float z = linDepth(texelFetch(uDepth, ip, 0).r);',

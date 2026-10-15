@@ -66,11 +66,17 @@ BTS.Camera = (function () {
     var fx = Math.sin(C.yaw), fz = Math.cos(C.yaw);
     var t = [C.target[0] + sx, C.target[1] + 0.9 + sy, C.target[2]];
     // pixel-grid snap: move the view in whole low-res pixels so textures don't shimmer while walking
+    // ...and the leftover fraction of a pixel is applied when the picture is upscaled (C.subpx),
+    // so the motion stays smooth while textures don't swim
+    C.subpx = [0, 0];
     if (!C.cine && Math.abs(C.yaw) < 1e-3 && BTS.Renderer.internal) {
       var pw = 2 * C.dist * Math.tan(C.fov / 2) / BTS.Renderer.internal[1];
       var sz = pw / Math.max(0.2, Math.sin(C.pitch));
       var sy2 = pw / Math.max(0.2, Math.cos(C.pitch));
-      t[0] = Math.round(t[0] / pw) * pw; t[2] = Math.round(t[2] / sz) * sz; t[1] = Math.round(t[1] / sy2) * sy2;
+      var r0 = Math.round(t[0] / pw) * pw, r1 = Math.round(t[1] / sy2) * sy2, r2 = Math.round(t[2] / sz) * sz;
+      var ddx = t[0] - r0, ddy = t[1] - r1, ddz = t[2] - r2;
+      C.subpx = [ddx / pw, (ddy * Math.cos(C.pitch) - ddz * Math.sin(C.pitch)) / pw];
+      t[0] = r0; t[1] = r1; t[2] = r2;
     }
     C.eye = [t[0] + fx * cp * C.dist, t[1] + sp * C.dist, t[2] + fz * cp * C.dist];
     M.lookAt(C.view, C.eye, t, [0, 1, 0]);

@@ -274,6 +274,8 @@ BTS.Renderer = (function () {
     bindTex(2, T.halfA.color); gl.uniform1i(u.uBlur, 2);
     bindTex(3, T.scene.depth); gl.uniform1i(u.uDepth, 3);
     gl.uniform2f(u.uInternal, T.scene.w, T.scene.h);
+    var sub = cam.subpx || [0, 0];
+    if (u.uSubpx) gl.uniform2f(u.uSubpx, sub[0], sub[1]);
     gl.uniform4f(u.uViewport, vpt[0], vpt[1], vpt[2], vpt[3]);
     gl.uniform1f(u.uBloomK, effects > 0 ? g.bloom : 0);
     gl.uniform1f(u.uVignette, g.vignette);
