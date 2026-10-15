@@ -96,6 +96,7 @@ BTS.Game = (function () {
     e.brain = new BTS.Brain(id);
     e.add('brainc', e.brain);
     if (o.act) e.brain.setTask({ at: at.slice(), act: o.act, dir: o.dir, radius: o.radius }, e, true);
+    if (o.follow) { e.follow = BTS.World.player; e.brain.paused = true; e.keepPaused = true; e.speed = 2.6; }
     BTS.World.addEntity(e);
     var st = BTS.State.npc(id);
     if (e.shadow) { e.shadow.setStage(o.stage !== undefined ? o.stage : (st.stage || 0)); if (o.beast !== undefined) e.shadow.beast = o.beast; }

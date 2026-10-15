@@ -21,7 +21,7 @@ BTS.Shadows = (function () {
       var elev = Math.max(0.12, -sd[1]);
       var sunLum = (env.sunCol[0] + env.sunCol[1] + env.sunCol[2]) / 3;
       var sa = BTS.M.clamp(sunLum * 0.55, 0, 0.58);
-      if (!best || sa > best.a * 0.8) return { dx: sd[0] / h, dz: sd[2] / h, k: BTS.M.clamp(h / elev, 0.45, 2.6), a: sa };
+      if (!best || sa > best.a * 0.8) return { dx: sd[0] / h, dz: sd[2] / h, k: BTS.M.clamp(h / elev, 0.45, 1.9), a: sa * BTS.M.clamp(elev * 2.2, 0.45, 1) };
     }
     return best;
   }

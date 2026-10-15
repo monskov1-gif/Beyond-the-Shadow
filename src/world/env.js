@@ -9,10 +9,10 @@ BTS.Env = (function () {
     fadeBlack: 0, fadeGoal: 0, fadeSpeed: 1.5, lightningOn: false, nextLightning: 10, supernatural: 0
   };
   var TIME = {
-    morning: { h: 7.5, sunPos: [0.8, 0.35, 0.35], sunCol: [1.05, 0.8, 0.58], sunK: 1.15, sky: [0.42, 0.46, 0.55], ground: [0.2, 0.18, 0.16], fog: [0.6, 0.6, 0.62], fogD: 0.011, glow: 0.05, lamp: 0, grade: { exposure: 1.05, contrast: 1.04, sat: 0.92, lift: [0.02, 0.025, 0.04], gain: [1.03, 1.0, 0.95], vignette: 0.9, bloom: 0.35, grain: 0.03 } },
-    day: { h: 13, sunPos: [0.35, 0.85, 0.5], sunCol: [1.0, 0.94, 0.84], sunK: 1.25, sky: [0.44, 0.5, 0.58], ground: [0.24, 0.22, 0.19], fog: [0.62, 0.68, 0.74], fogD: 0.008, glow: 0, lamp: 0, grade: { exposure: 1.0, contrast: 1.06, sat: 0.95, lift: [0.015, 0.02, 0.03], gain: [1.02, 1.0, 0.97], vignette: 0.8, bloom: 0.25, grain: 0.025 } },
-    evening: { h: 19, sunPos: [-0.8, 0.22, 0.45], sunCol: [1.0, 0.56, 0.3], sunK: 1.05, sky: [0.3, 0.27, 0.36], ground: [0.16, 0.12, 0.12], fog: [0.48, 0.36, 0.34], fogD: 0.013, glow: 0.55, lamp: 0.7, grade: { exposure: 1.05, contrast: 1.08, sat: 0.95, lift: [0.03, 0.015, 0.04], gain: [1.08, 0.98, 0.9], vignette: 1.0, bloom: 0.55, grain: 0.035 } },
-    night: { h: 23, sunPos: [-0.35, 0.75, 0.55], sunCol: [0.34, 0.42, 0.66], sunK: 0.6, sky: [0.16, 0.18, 0.26], ground: [0.07, 0.07, 0.09], fog: [0.1, 0.12, 0.17], fogD: 0.022, glow: 1.0, lamp: 1.0, grade: { exposure: 1.45, contrast: 1.08, sat: 0.85, lift: [0.012, 0.018, 0.04], gain: [0.98, 1.0, 1.08], vignette: 1.15, bloom: 0.8, grain: 0.045 } }
+    morning: { h: 7.5, sunPos: [0.8, 0.35, 0.35], sunCol: [1.05, 0.8, 0.58], sunK: 1.15, sky: [0.42, 0.46, 0.55], ground: [0.2, 0.18, 0.16], fog: [0.6, 0.6, 0.62], fogD: 0.011, glow: 0.05, lamp: 0, grade: { exposure: 1.05, contrast: 1.04, sat: 0.92, lift: [0.02, 0.025, 0.04], gain: [1.03, 1.0, 0.95], vignette: 0.9, bloom: 0.35, grain: 0.012 } },
+    day: { h: 13, sunPos: [0.35, 0.85, 0.5], sunCol: [1.06, 0.94, 0.78], sunK: 1.25, sky: [0.40, 0.48, 0.62], ground: [0.24, 0.22, 0.19], fog: [0.62, 0.68, 0.74], fogD: 0.008, glow: 0, lamp: 0, grade: { exposure: 1.0, contrast: 1.06, sat: 0.95, lift: [0.015, 0.02, 0.03], gain: [1.02, 1.0, 0.97], vignette: 0.8, bloom: 0.25, grain: 0.01 } },
+    evening: { h: 19, sunPos: [-0.8, 0.22, 0.45], sunCol: [1.0, 0.56, 0.3], sunK: 1.05, sky: [0.3, 0.27, 0.36], ground: [0.16, 0.12, 0.12], fog: [0.38, 0.34, 0.42], fogD: 0.013, glow: 0.55, lamp: 0.7, grade: { exposure: 1.05, contrast: 1.08, sat: 0.95, lift: [0.03, 0.015, 0.04], gain: [1.05, 0.98, 0.94], vignette: 1.0, bloom: 0.55, grain: 0.014 } },
+    night: { h: 23, sunPos: [-0.35, 0.75, 0.55], sunCol: [0.34, 0.42, 0.66], sunK: 0.6, sky: [0.16, 0.18, 0.26], ground: [0.07, 0.07, 0.09], fog: [0.1, 0.12, 0.17], fogD: 0.022, glow: 1.0, lamp: 1.0, grade: { exposure: 1.45, contrast: 1.08, sat: 0.85, lift: [0.012, 0.018, 0.04], gain: [0.98, 1.0, 1.08], vignette: 1.15, bloom: 0.8, grain: 0.016 } }
   };
   var WEATHER = {
     clear: { sunMul: 1, skyGrey: 0, fogAdd: 0, rain: 0, wet: 0, wind: 0.35, satMul: 1, lightning: false, fogHeight: 0.2 },
@@ -60,7 +60,7 @@ BTS.Env = (function () {
     if (E.weather !== 'clear') { p.sky = lerpArr(p.sky, p.sky.map(function (v) { return v * 0.85; }), 0.5); p.glow = Math.max(p.glow, E.weather === 'fog' ? 0.25 : 0.35); p.lamp = Math.max(p.lamp, 0.4); }
     if (E.interior) {
       p.sunK *= 0.0; p.fogD = 0.004; p.fog = [0.02, 0.02, 0.025];
-      p.sky = p.sky.map(function (v) { return v * 0.75 + 0.07; }); p.ground = p.ground.map(function (v) { return v * 0.7 + 0.04; });
+      p.sky = p.sky.map(function (v) { return v * 0.9 + 0.12; }); p.ground = p.ground.map(function (v) { return v * 0.8 + 0.07; }); p.exposure = Math.max(p.exposure, 1.3);
       p.rain = 0; p.windK = 0; p.fogHeight = 0;
     }
     // horror: drains colour, chills tint, deepens vignette

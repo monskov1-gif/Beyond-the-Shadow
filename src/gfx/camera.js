@@ -4,18 +4,18 @@
 BTS.Camera = (function () {
   var M = BTS.M;
   var C = {
-    target: [0, 0, 0], goal: [0, 0, 0], yaw: 0, pitch: 0.62, dist: 44, fov: 0.5,
+    target: [0, 0, 0], goal: [0, 0, 0], yaw: 0, pitch: 0.55, dist: 44, fov: 0.5,
     near: 1, far: 160, eye: [0, 10, 10],
     view: M.mat4(), proj: M.mat4(), viewProj: M.mat4(),
     right: [1, 0, 0], up: [0, 1, 0], toward: [0, 0, 1],
     focusDist: 19, focusRange: 5, bounds: null, shake: 0,
-    preset: { pitch: 0.62, dist: 44, fov: 0.5, yaw: 0 },
+    preset: { pitch: 0.55, dist: 44, fov: 0.5, yaw: 0 },
     cine: null, lookOffset: [0, 0, 0]
   };
-  var cur = { pitch: 0.62, dist: 44, fov: 0.5, yaw: 0 };
+  var cur = { pitch: 0.55, dist: 44, fov: 0.5, yaw: 0 };
 
   C.setPreset = function (p, instant) {
-    C.preset = { pitch: p.pitch || 0.62, dist: p.dist || 44, fov: p.fov || 0.5, yaw: p.yaw || 0 };
+    C.preset = { pitch: p.pitch || 0.55, dist: p.dist || 44, fov: p.fov || 0.5, yaw: p.yaw || 0 };
     if (instant) { cur.pitch = C.preset.pitch; cur.dist = C.preset.dist; cur.fov = C.preset.fov; cur.yaw = C.preset.yaw; }
   };
   C.snap = function (pos) {

@@ -165,7 +165,7 @@
       { id: 'x_dj_drawings', at: [11.2, 1.0], label: 'it.drawings', dlg: 'x_dj_drawings' },
       { id: 'x_dj_shelf', at: [15.2, 1.0], label: 'it.shelf', dlg: 'x_dj_shelf' },
       { id: 'x_dj_cupboard', at: [3.6, 1.2], label: 'it.cupboard', dlg: 'x_dj_cupboard' },
-      { id: 'x_dj_rabbit', at: [17.1, 3.6], label: 'it.toy', dlg: 'x_dj_rabbit', when: 'ch2_funeral..' }
+      { id: 'x_dj_rabbit', at: [17.1, 3.6], label: 'it.toy', dlg: 'x_dj_rabbit', when: 'c2_funeral..' }
     ]
   });
 

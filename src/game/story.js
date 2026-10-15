@@ -117,7 +117,7 @@ BTS.Story = (function () {
       if (!p || p.loc !== loc) return;
       var at = typeof p.at === 'string' ? W.spot(p.at) : (p.at ? { x: p.at[0], z: p.at[1] } : null);
       if (!at) return;
-      var e = BTS.Game.spawnNPC(id, [at.x, at.z], { act: p.act || 'idle', dir: p.dir || at.dir, radius: p.radius, sheet: p.sheet, stage: p.stage, beast: p.beast, noTalk: p.noTalk });
+      var e = BTS.Game.spawnNPC(id, [at.x, at.z], { act: p.act || 'idle', dir: p.dir || at.dir, radius: p.radius, sheet: p.sheet, stage: p.stage, beast: p.beast, noTalk: p.noTalk, follow: p.follow });
       if (p.anim) e.anim.lock = p.anim;
     });
     // crowd extras (fair etc.)

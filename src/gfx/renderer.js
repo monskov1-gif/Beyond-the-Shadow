@@ -46,12 +46,13 @@ BTS.Renderer = (function () {
     var dpr = Math.min(window.devicePixelRatio || 1, 2);
     var cw = Math.max(320, Math.floor(c.clientWidth * dpr)), ch = Math.max(200, Math.floor(c.clientHeight * dpr));
     if (c.width !== cw || c.height !== ch) { c.width = cw; c.height = ch; }
-    var targetH = BTS.Config.get('pixelScale') || 360;
+    var targetH = (BTS.Config.get('pixelScale') || 360) * (R.zoom || 1);
     var scale = Math.max(1, Math.round(ch / targetH));
     var ih = Math.floor(ch / scale), iw = Math.floor(cw / scale);
     var vw = iw * scale, vh = ih * scale;
     R.viewport = [Math.floor((cw - vw) / 2), Math.floor((ch - vh) / 2), vw, vh];
     if (T.scene && T.scene.w === iw && T.scene.h === ih) return;
+    if (ih < 120) return;
     R.internal = [iw, ih]; R.scale = scale;
     ['scene', 'halfA', 'halfB', 'qA', 'qB'].forEach(function (k) { GLX.freeTarget(T[k]); });
     T.scene = GLX.target(iw, ih, { hdr: true, depth: true });

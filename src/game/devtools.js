@@ -67,11 +67,8 @@ BTS.Test = (function () {
     var W = BTS.World, it = W.interactables.filter(function (i) { return i.id === id; })[0];
     if (!it) return 'no-interact';
     var p = W.player, x = it.ent ? it.ent.x : it.x, z = it.ent ? it.ent.z : it.z;
-    var path = W.findPath(p.x, p.z, x, z) || [[x, z]];
-    // stop short of the target
-    var last = path[path.length - 1];
-    var dx = last[0] - p.x, dz = last[1] - p.z;
-    path[path.length - 1] = [x - Math.sign(dx) * 0.0, z + 0.0];
+    var path = W.findPath(p.x, p.z, x, z);
+    if (!path || !path.length) path = [[x, z]];
     return new Promise(function (res) {
       p.path = path; p.pathSpeed = 2.2;
       var tries = 0;

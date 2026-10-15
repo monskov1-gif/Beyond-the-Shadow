@@ -37,7 +37,7 @@ BTS.World = (function () {
     W.locId = id; W.loc = st;
     W.chunks = st.chunks.slice();
     W.colliders = st.colliders.slice();
-    W.heightAt = st.heightAt;
+    W.heightAt = st.def.walkHeight || st.heightAt;
     W.nav = st.nav;
     W.statics = st.statics;
     W.entities = []; W.interactables = []; W.triggers = [];
@@ -47,6 +47,8 @@ BTS.World = (function () {
     BTS.Particles.clear();
     st.emitters.forEach(function (e) { var c = {}; for (var k in e) c[k] = e[k]; BTS.Particles.addEmitter(c); });
     var cp = st.def.camera || {};
+    if (W.interior && !cp.dist) cp.dist = 30;
+    BTS.Renderer.zoom = (cp.dist || 44) / 44; BTS.Renderer.resize();
     BTS.Camera.setPreset(cp, true);
     var b = st.def.camBounds || st.def.bounds;
     BTS.Camera.bounds = [b[0] + (cp.padX || 6), b[1] + (cp.padZ0 || 4), b[2] - (cp.padX || 6), b[3] - (cp.padZ1 || 2)];
@@ -125,6 +127,14 @@ BTS.World = (function () {
     // npcs and entity components
     for (var i = 0; i < W.entities.length; i++) {
       var e = W.entities[i];
+      if (e.follow && !BTS.Cutscene.running) {   // companion following the player
+        if (e.brain) { e.brain.paused = true; e.keepPaused = true; }
+        var fd = Math.hypot(e.follow.x - e.x, e.follow.z - e.z);
+        e._rp = (e._rp || 0) - dt;
+        if (fd > 2.6 && e._rp <= 0) { var fp = W.findPath(e.x, e.z, e.follow.x, e.follow.z); if (fp && fp.length) { fp.pop(); if (!fp.length) fp = null; } e.path = fp || [[e.follow.x - Math.sign(e.follow.x - e.x) * 1.2, e.follow.z - Math.sign(e.follow.z - e.z) * 1.2]]; e._rp = 0.5; e.pathRun = fd > 6; }
+        if (fd < 1.7) { e.path = null; e.faceTo(e.follow.x, e.follow.z); }
+        if (fd > 25) { e.x = e.follow.x - 1; e.z = e.follow.z + 0.8; e.path = null; }
+      }
       if (e.brain && !e.brain.paused) e.brain.update(dt, e, W);
       else if (e !== p && e.path) { e.followPath(dt, e.pathSpeed || 1); if (e.anim) { e.anim.set(e.path && e.path.length ? (e.pathRun ? 'run' : 'walk') : (e.idleAnim || 'idle')); e.anim.speed = e.pathSpeed && e.pathSpeed < 1 ? 0.65 : 1; } if (!e.path || !e.path.length) { e.path = null; if (e.onArrive) { var c2 = e.onArrive; e.onArrive = null; c2(); } } }
       if (e.animal) W.updateAnimal(e, dt);
@@ -197,6 +207,11 @@ BTS.World = (function () {
       var s = W.statics[i];
       if (s.night && !(env.lampOn > 0.25)) continue;
       if (s.off) continue;
+      if (s.pool) {
+        var pa = (s.night ? env.lampOn : 1) * 0.16 * (0.92 + 0.08 * Math.sin(t * 9 + i));
+        if (pa > 0.01) { var P = s.pool; R.pushFx(2, [[P[0] - P[3], P[1], P[2] + P[3]], [P[0] + P[3], P[1], P[2] + P[3]], [P[0] + P[3], P[1], P[2] - P[3]], [P[0] - P[3], P[1], P[2] - P[3]]], BTS.Atlas.get('soft_dot'), [s.col[0], s.col[1], s.col[2], pa]); }
+        continue;
+      }
       if (s.beam) {
         var ba = s.day ? Math.max(0, 1 - env.lampOn * 1.2) * 0.2 : 0.2;
         if (env.weather !== 'clear') ba *= 0.5;

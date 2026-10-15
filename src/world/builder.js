@@ -333,14 +333,16 @@ BTS.LocationBuilder = function (def) {
     o = o || {};
     this.billboard('lantern_post', x, z, { mat: MAT.WOOD, collide: 0.15 });
     var y = this.height(x, z);
-    this.light(x, y + 1.85, z + 0.2, o.color || [1.0, 0.68, 0.35], o.radius || 6, o.intensity || 1.1, o.kind || 'lamp', 0.08);
+    this.light(x, y + 1.85, z + 0.2, o.color || [1.0, 0.68, 0.35], o.radius || 8, o.intensity || 1.5, o.kind || 'lamp', 0.08);
+    this.statics.push({ pool: [x, y + 0.04, z + 0.3, 2.6], col: [1, 0.6, 0.3], night: true });
     this.statics.push({ sprite: 'flame', x: x, y: y + 1.62, z: z + 0.05, scale: 0.5, emissive: true, flicker: true, night: o.kind !== 'fire' });
   };
   LB.brazier = function (x, z, o) {
     o = o || {};
     this.billboard('brazier', x, z, { mat: MAT.METAL, collide: 0.35, scale: o.scale || 1.3 });
     var y = this.height(x, z) + (o.scale || 1.3) * 0.62;
-    this.light(x, y + 0.6, z + 0.2, [1.0, 0.55, 0.22], o.radius || 7, o.intensity || 1.6, 'fire', 0.25);
+    this.light(x, y + 0.6, z + 0.2, [1.0, 0.55, 0.22], o.radius || 8, o.intensity || 1.8, 'fire', 0.25);
+    this.statics.push({ pool: [x, this.height(x, z) + 0.04, z + 0.3, 3], col: [1, 0.5, 0.2] });
     this.statics.push({ sprite: 'flame', x: x, y: y - 0.05, z: z + 0.02, scale: 1.6, emissive: true, flicker: true, fire: true });
     this.emitter({ type: 'embers', x: x, y: y + 0.2, z: z, rate: 3, fx: true });
   };
@@ -352,6 +354,7 @@ BTS.LocationBuilder = function (def) {
     this.statics.push({ sprite: 'flame', x: x - 0.25, y: y + 0.2, z: z + 0.05, scale: 2.6, emissive: true, flicker: true, fire: true });
     this.statics.push({ sprite: 'flame', x: x + 0.25, y: y + 0.15, z: z + 0.1, scale: 2.0, emissive: true, flicker: true, fire: true });
     this.emitter({ type: 'embers', x: x, y: y + 1, z: z, rate: 9, area: [0.6, 0.6] });
+    this.statics.push({ pool: [x, y + 0.04, z, 5.5], col: [1, 0.45, 0.15] });
     this.emitter({ type: 'smoke', x: x, y: y + 1.8, z: z, rate: 2, col: [0.4, 0.38, 0.38] });
   };
 

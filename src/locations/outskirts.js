@@ -24,7 +24,7 @@
     var rd = riverD(x, z);
     if (rd < 2.4) return 'water';
     if (rd < 3.4) return 'sand';
-    if (Math.abs(x - 88) < 2.2 && Math.abs(z - 57) < 4) return 'flags';
+    if (Math.abs(x - 88) < 2.2 && Math.abs(z - 57) < 4.4) return 'cobble';
     for (var i = 0; i < PATHS.length; i++) if (polyDist(x, z, PATHS[i].pts) < PATHS[i].w / 2 + (M.hash(x | 0, z | 0) - 0.5) * 0.5) return PATHS[i].t;
     if (x > 18 && x < 70 && z > 25 && z < 40) return ((z | 0) % 6 < 4) ? 'field' : 'grass_dry';
     if (z < 26 || x < 8) return M.fbm(x * 0.2, z * 0.2) > 0.55 ? 'grass_dark' : 'grass';
@@ -37,7 +37,9 @@
     if (ix < 0 || iz < 0 || ix >= 100 || iz >= 74) return 'grass_dark';
     return cache[iz * 100 + ix];
   }
+  function deck(z) { var t = BTS.M.clamp((z - 52.8) / 8.4, 0, 1); return -0.1 + Math.sin(t * Math.PI) * 0.9 + (1 - Math.sin(t * Math.PI)) * 0.0; }
   BTS.Locations.outskirts = {
+    walkHeight: function (x, z) { if (Math.abs(x - 88) < 1.75 && z > 52.6 && z < 61.4) return Math.max(height(x, z), deck(z)); return height(x, z); },
     id: 'outskirts', nameKey: 'loc.outskirts', bounds: [3, 4, 97, 70], music: 'village', height: height, tile: tileAt,
     ambience: { wind: 1.2, leaves: 1.4, river: 1, dogs: true, crows: true, reverb: 0.1, sheep: [70, 66] },
     surface: function (x, z) { var t = tileAt(x, z); if (t === 'flags') return 'stone'; if (/water|sand/.test(t)) return 'mud'; if (/dirt|field/.test(t)) return 'dirt'; return 'grass'; },
@@ -45,12 +47,24 @@
       var R = BTS.RNG(31);
       // river collision (except the bridge)
       for (var x = 0; x <= 100; x += 1) for (var z = 30; z < 70; z += 1) if (riverD(x + 0.5, z + 0.5) < 2.0 && !(Math.abs(x + 0.5 - 88) < 2 && Math.abs(z + 0.5 - 57) < 4)) L.box(x, z, x + 1, z + 1, 'river');
-      // stone bridge
+      // humped single-arch stone bridge (ćuprija)
       (function () {
-        var mb = L.propMB(88, 57);
-        mb.box(88, -0.6, 57, 3.6, 0.85, 8, { all: 'wall_stone', top: 'flags' }, { mat: BTS.MAT.STONE });
-        mb.box(86.15, 0.25, 57, 0.3, 0.6, 8, { all: 'wall_stone_grey' }, { mat: BTS.MAT.STONE }); mb.box(89.85, 0.25, 57, 0.3, 0.6, 8, { all: 'wall_stone_grey' }, { mat: BTS.MAT.STONE });
-        L.box(85.9, 53, 86.4, 61); L.box(89.6, 53, 90.1, 61);
+        var mb = L.propMB(88, 57), n = 10;
+        for (var k = 0; k < n; k++) {
+          var z0 = 52.8 + k * 0.84, z1 = z0 + 0.84, y0 = deck(z0), y1 = deck(z1);
+          mb.quad([[86.3, y1, z1], [89.7, y1, z1], [89.7, y0, z0], [86.3, y0, z0]], [0, 1, 0], [[0, 0.4], [1.7, 0.4], [1.7, 0], [0, 0]], 'cobble', null, BTS.MAT.STONE);
+          [86.15, 89.85].forEach(function (px) {
+            mb.wall(px + (px < 88 ? -0.15 : 0.15), z0, px + (px < 88 ? -0.15 : 0.15), z1, Math.min(y0, y1) - 2.2, Math.min(y0, y1) + 0.55, 'wall_stone', { mat: BTS.MAT.STONE, u0: k * 0.84 });
+            mb.wall(px + (px < 88 ? 0.15 : -0.15), z1, px + (px < 88 ? 0.15 : -0.15), z0, Math.min(y0, y1), Math.min(y0, y1) + 0.55, 'wall_stone', { mat: BTS.MAT.STONE, u0: k * 0.84 });
+            mb.box(px, Math.min(y0, y1) + 0.55, (z0 + z1) / 2, 0.36, 0.08, 0.86, { all: 'stone_block' }, { mat: BTS.MAT.STONE });
+          });
+        }
+        // arch faces
+        for (var q = 0; q < 12; q++) {
+          var a0 = q / 12 * Math.PI, a1 = (q + 1) / 12 * Math.PI;
+          [86.0, 90.0].forEach(function (fx) { mb.box(fx, -1.4 + Math.sin(a0) * 1.2, 57 - Math.cos(a0) * 2.6, 0.1, 0.3, 0.5, { all: 'plaster_trim' }, { mat: BTS.MAT.STONE }); });
+        }
+        L.box(85.8, 52.6, 86.35, 61.4); L.box(89.65, 52.6, 90.2, 61.4);
       })();
       // old water mill ruin
       (function () {
@@ -89,7 +103,8 @@
       L.spot('from_village_w', 94, 20, 'left'); L.spot('from_village_s', 93.5, 58.5, 'left'); L.spot('default', 90, 21, 'left');
       L.spot('field_mid', 40, 36, 'down'); L.spot('field_end', 22, 34); L.spot('river_bank', 60, 46.5, 'down'); L.spot('bridge', 88, 54, 'down'); L.spot('forest_mid', 74, 18.5, 'left'); L.spot('pit', 30, 36);
       L.area('forest', 40, 4, 96, 24); L.area('viewpoint', 20, 4, 40, 20); L.area('fields', 16, 24, 70, 41); L.area('river', 4, 41, 96, 62); L.area('mill', 38, 40, 52, 50);
-      L.ground(0, 0, 100, 74, { waterLevel: -0.8 });
+      belt(-24, -20, 124, 0, 50, ['tree_pine', 'tree_oak']); belt(-24, 0, 0, 96, 40, ['tree_pine', 'tree_oak']); belt(100, 0, 124, 96, 40, ['tree_oak', 'tree_pine']); belt(-24, 74, 124, 96, 30, ['tree_oak', 'tree_poplar']);
+      L.ground(-24, -20, 124, 96, { waterLevel: -0.8 });
     },
     exits: [
       { id: 'to_village_w', at: [95.2, 20], to: 'village', spawn: 'from_outskirts_w', label: 'loc.village', verb: 'verb.go', door: false },

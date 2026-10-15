@@ -267,7 +267,7 @@ BTS.Textures = (function () {
     /* ---------- roofs ---------- */
     def('roof_tile', 32, 32, 2, function (p) { roofTiles(p, { ramp: C.ramp(['3e1d14', '5a2b1c', '773a24', '8f4a2d', 'a65c38', 'b86d45']), seed: 1, moss: 0.08 }); });
     def('roof_tile_brown', 32, 32, 2, function (p) { roofTiles(p, { ramp: C.ramp(['2f1d16', '45291e', '5b3727', '704632', '84563d']), seed: 2, moss: 0.15 }); });
-    def('roof_slab', 32, 32, 2, function (p) { roofTiles(p, { ramp: C.ramp(['2b2926', '3b3834', '4d4943', '5f5a52', '726c62']), rowH: 8, tw: 11, seed: 3, moss: 0.2 }); });
+    def('roof_slab', 32, 32, 2, function (p) { roofTiles(p, { ramp: C.ramp(['2b2926', '3b3834', '4d4943', '5f5a52', '726c62']), rowH: 5, tw: 7, seed: 3, moss: 0.2 }); });
     def('roof_shingle', 32, 32, 2, function (p) { roofTiles(p, { ramp: C.ramp(['1f1a16', '2d2620', '3c332a', '4a4034', '594d3e']), rowH: 4, tw: 4, seed: 4, moss: 0.12 }); });
 
     /* ---------- trims & details ---------- */

@@ -69,6 +69,7 @@ BTS.Shaders = (function () {
     '    vec2 q = vWorld.xz; float r = sin(q.x*1.7 + uTime*1.4)*0.5 + sin(q.y*2.3 - uTime*1.1 + q.x)*0.5;',
     '    alb = mix(alb, uSkyCol*0.9 + vec3(0.04), 0.35 + 0.1*r);',
     '  }',
+    '  if (foliage) shadowPos -= uSunDir * 0.9;',
     '  float sh = shadowAt(shadowPos, sprite ? vec3(0.0,1.0,0.0) : N);',
     '  float ndl = dot(N, -uSunDir);',
     '  if (sprite || foliage) ndl = 0.45 + 0.55*max(ndl, 0.0); else ndl = max(ndl, 0.0);',

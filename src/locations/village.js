@@ -50,20 +50,20 @@
     var r = roadAt(x, z);
     if (Math.hypot(x - 52, z - 47) < 5.2) return 'cobble';
     if (r) return r;
-    if (x > 66 && x < 104 && z > 67 && z < 88) return ((x * 7 + z * 3) | 0) % 11 === 0 ? 'grass_dry' : 'grass_meadow';
+    if (x > 66 && x < 104 && z > 67 && z < 97) return ((x * 7 + z * 3) | 0) % 11 === 0 ? 'grass_dry' : 'grass_meadow';
     if (x > 77 && x < 97 && z > 14 && z < 34) return 'grass_dark';                  // churchyard
     if (x < 34 && z > 77 && z < 88) return ((z | 0) % 9 < 7) ? 'field' : 'grass';     // fields
     if (Math.hypot(x - 22, z - 86) < 5 || (z > 86 && x > 10 && x < 40)) return 'water';    // creek pond
-    if (x < 7 || x > 104 || z < 6 || z > 88) return 'grass_dark';
+    if (x < 7 || x > 104 || z < 6 || z > 97) return 'grass_dark';
     if (Math.hypot(x - 11, z - 25) < 6) return M.hash(x, z) > 0.6 ? 'mud' : 'grass_dry';  // Jaglika's yard
     var n = M.fbm(x * 0.15 + 3, z * 0.15, 2);
     if (n > 0.66) return 'grass_dry';
     return 'grass';
   }
   function tileAt(x, z) {
-    if (!tileCache) { tileCache = []; for (var zz = 0; zz < 92; zz++) for (var xx = 0; xx < 112; xx++) tileCache.push(computeTile(xx + 0.5, zz + 0.5)); }
+    if (!tileCache) { tileCache = []; for (var zz = 0; zz < 100; zz++) for (var xx = 0; xx < 112; xx++) tileCache.push(computeTile(xx + 0.5, zz + 0.5)); }
     var ix = Math.floor(x), iz = Math.floor(z);
-    if (ix < 0 || iz < 0 || ix >= 112 || iz >= 92) return 'grass_dark';
+    if (ix < 0 || iz < 0 || ix >= 112 || iz >= 100) return 'grass_dark';
     return tileCache[iz * 112 + ix];
   }
 
@@ -136,7 +136,14 @@
         mb.decal(87, fl + 4.6, 26.5, 0.6, 0.6, 's', 'window_round', BTS.MAT.GLASS);
         // voussoir arch over the door: light stone blocks
         for (var a = 0; a <= 8; a++) { var ang = Math.PI * a / 8; mb.box(87 + Math.cos(ang) * 0.72, fl + 1.95 + Math.sin(ang) * 0.5, 26.55, 0.22, 0.16, 0.08, { all: 'plaster_trim' }, { mat: BTS.MAT.STONE }); }
-        mb.billboard(87, fl + 4.0 + 2.2 + 0.05, 22.5, 'cross_wood', { scale: 1.3, mat: BTS.MAT.METAL });
+        mb.billboard(87, fl + 4.0 + 2.2 + 0.05, 22.5, 'cross_wood', { scale: 2.0, mat: BTS.MAT.METAL });
+        // semicircular apse on the north (east-facing altar) end with a half-cone roof
+        var ar = 2.1, az = 18.5, seg = 8;
+        for (var q = 0; q < seg; q++) {
+          var a0 = Math.PI + q / seg * Math.PI, a1 = Math.PI + (q + 1) / seg * Math.PI;
+          mb.wall(87 + Math.cos(a1) * ar, az + Math.sin(a1) * ar, 87 + Math.cos(a0) * ar, az + Math.sin(a0) * ar, fl - 0.4, fl + 3.1, 'wall_stone', { mat: BTS.MAT.STONE, u0: q * 0.8 });
+          mb.tri([[87, fl + 4.3, az], [87 + Math.cos(a1) * (ar + 0.2), fl + 3.05, az + Math.sin(a1) * (ar + 0.2)], [87 + Math.cos(a0) * (ar + 0.2), fl + 3.05, az + Math.sin(a0) * (ar + 0.2)]], BTS.M.norm3([Math.cos((a0 + a1) / 2), 1.2, Math.sin((a0 + a1) / 2)]), [[0.5, 0], [0, 1], [1, 1]], 'roof_slab', null, BTS.MAT.STONE);
+        }
         // donation box and table beside the door
         mb.box(85.2, fl - 0.1, 27.1, 0.5, 1.0, 0.4, { all: 'metal' }, { mat: BTS.MAT.METAL });
       })();
@@ -227,16 +234,17 @@
       /* ---------- the fair meadow (ref photo 5) ---------- */
       (function () {
         var px = 84, pz = 76.5, y0 = height(px, pz), mb = L.propMB(px, pz);
-        var PH = 8.5;
+        var PH = 10.5;
         mb.post(px, y0 - 0.3, pz, PH + 0.3, 0.28, 'bark', { mat: BTS.MAT.WOOD });
-        // garland wrapping the pole: green/flower billboards spiralling up
-        for (var k = 0; k < 44; k++) { var a = k * 0.9, yy = y0 + 0.2 + k * (PH / 44); mb.billboard(px + Math.cos(a) * 0.18, yy, pz + Math.sin(a) * 0.18 + 0.12, 'garland', { scale: 1.6, wind: 0.05 }); }
-        // crossbar with garland, ropes to the top, and hanging wreaths
-        var cy = y0 + PH * 0.62;
-        for (var k2 = -9; k2 <= 9; k2++) mb.billboard(px + k2 * 0.36, cy - 0.15, pz + 0.15, 'garland', { scale: 1.9, wind: 0.1 });
-        for (k2 = 0; k2 <= 12; k2++) { var tt = k2 / 12; mb.billboard(px - 3.3 + 3.3 * tt, cy + (PH - (cy - y0)) * tt - 0.1, pz + 0.12, 'garland', { scale: 1.4, wind: 0.1 }); mb.billboard(px + 3.3 - 3.3 * tt, cy + (PH - (cy - y0)) * tt - 0.1, pz + 0.12, 'garland', { scale: 1.4, wind: 0.1 }); }
-        mb.billboard(px - 2.5, cy - 1.75, pz + 0.2, 'wreath', { scale: 1.3, wind: 0.6 }); mb.billboard(px + 2.5, cy - 1.75, pz + 0.2, 'wreath', { scale: 1.3, wind: 0.6 });
-        ['ribbon_red', 'ribbon_white', 'ribbon_blue', 'ribbon_red', 'ribbon_white'].forEach(function (rb, i2) { mb.billboard(px - 0.4 + i2 * 0.2, y0 + PH - 1.4, pz + 0.2, rb, { scale: 1.6, wind: 1.2 }); });
+        // dense garland wrapping the pole, thickening toward the crown (ref photo 5)
+        for (var k = 0; k < 70; k++) { var a = k * 0.75, tt0 = k / 70, yy = y0 + 0.2 + tt0 * PH, rr = 0.18 + tt0 * 0.12; mb.billboard(px + Math.cos(a) * rr, yy, pz + Math.sin(a) * rr + 0.12, 'garland', { scale: 1.5 + tt0 * 1.2, wind: 0.05 + tt0 * 0.1 }); }
+        // leafy crown at the top
+        for (k = 0; k < 14; k++) { var ca = k * 2.4; mb.billboard(px + Math.cos(ca) * 0.35, y0 + PH - 0.3 + (k % 4) * 0.22, pz + 0.15 + Math.sin(ca) * 0.2, 'garland', { scale: 2.6, wind: 0.25 }); }
+        // two short arms near the top with big hanging flower wreaths
+        var cy = y0 + PH * 0.78;
+        for (var k2 = -5; k2 <= 5; k2++) if (k2 !== 0) mb.billboard(px + k2 * 0.3, cy, pz + 0.15, 'garland', { scale: 1.8, wind: 0.1 });
+        mb.billboard(px - 1.55, cy - 2.75, pz + 0.22, 'wreath', { scale: 2.3, wind: 0.5 }); mb.billboard(px + 1.55, cy - 2.75, pz + 0.22, 'wreath', { scale: 2.3, wind: 0.5 });
+        ['ribbon_red', 'ribbon_white', 'ribbon_blue', 'ribbon_red', 'ribbon_white', 'ribbon_blue'].forEach(function (rb, i2) { mb.billboard(px - 0.5 + i2 * 0.2, y0 + PH - 1.6, pz + 0.24, rb, { scale: 1.9, wind: 1.2 }); });
         L.circle(px, pz, 0.45, 'pole');
         L.spot('fair_pole', px, pz + 2.2, 'up');
         // ring of stones for "Hvatanje senke" around the bonfire
@@ -245,7 +253,7 @@
         for (k = 0; k < 16; k++) { var aa = k / 16 * 6.283; L.billboard('rock', fx + Math.cos(aa) * 4.2, fz + Math.sin(aa) * 3.2, { scale: 0.7, mat: BTS.MAT.STONE }); }
         L.spot('game_ring', fx - 2.2, fz - 1.5, 'right'); L.spot('game_watch', fx - 6.5, fz - 2.5, 'right'); L.spot('fair_bonfire', fx, fz - 2.5, 'down');
         // stalls with cloth awnings
-        [[73, 72, 'cloth_red', 'stall_goods'], [79, 70.2, 'cloth_green', 'bread'], [91.5, 70.5, 'cloth_red', 'stall_goods'], [98, 74, 'cloth_green', 'stall_goods']].forEach(function (s, i3) {
+        [[73, 72, 'cloth_white', 'licitar'], [79, 70.2, 'cloth_white', 'bread'], [91.5, 70.5, 'cloth_red', 'stall_goods'], [98, 74, 'cloth_white', 'licitar']].forEach(function (s, i3) {
           var sx = s[0], sz = s[1], sy = height(sx, sz), m2 = L.propMB(sx, sz);
           var top = L.table(sx, sz, 2.6, 1.1, { cloth: s[2] });
           m2.billboard(sx, top, sz, s[3], { scale: 1.6, mat: BTS.MAT.DEFAULT });
@@ -288,7 +296,7 @@
       belt(0, 0, 112, 6, 34, ['tree_pine', 'tree_oak', 'tree_pine', 'tree_birch']);
       belt(0, 6, 7, 86, 46, ['tree_pine', 'tree_oak', 'tree_dead', 'tree_pine']);
       belt(104, 6, 112, 90, 36, ['tree_oak', 'tree_pine', 'tree_poplar']);
-      belt(0, 90, 112, 98, 12, ['tree_oak', 'tree_birch']);
+      belt(0, 93, 60, 99, 8, ['tree_oak', 'tree_birch']);
       belt(7, 6, 30, 18, 14, ['tree_pine', 'tree_oak2']);
       belt(66, 6, 104, 14, 14, ['tree_oak', 'tree_pine']);
       belt(36, 74, 50, 86, 6, ['tree_oak2', 'tree_walnut']);
@@ -313,7 +321,9 @@
       L.area('hill', 38, 4, 68, 22); L.area('church', 76, 12, 100, 36); L.area('center', 38, 34, 64, 54); L.area('west', 4, 34, 38, 66);
       L.area('east', 64, 34, 106, 66); L.area('south', 4, 66, 64, 89); L.area('fair', 64, 66, 106, 89); L.area('jaglika', 4, 12, 24, 34);
       L.area('slope', 22, 18, 76, 34);
-      L.ground(0, 0, 112, 100);
+      // far skirt: woods and hills beyond the playable map, fading into fog
+      belt(-24, -20, 136, 0, 60, ['tree_pine', 'tree_oak', 'tree_pine']); belt(-24, 0, 0, 112, 50, ['tree_pine', 'tree_oak']); belt(112, 0, 136, 112, 50, ['tree_oak', 'tree_pine', 'tree_poplar']); belt(-24, 100, 136, 112, 24, ['tree_oak', 'tree_birch']);
+      L.ground(-24, -20, 136, 112);
     },
     exits: [
       { id: 'djordje', at: 'djordje_door', to: 'djordje_house', spawn: 'door', label: 'loc.djordje_house' },
@@ -329,8 +339,8 @@
     ],
     examine: [
       { id: 'x_well', at: [52, 49.4], label: 'it.well', dlg: 'x_well' },
-      { id: 'x_pole', at: [84, 77.6], label: 'it.pole', dlg: 'x_pole', when: '..ch1_morning' },
-      { id: 'x_pole_late', at: [84, 77.6], label: 'it.pole', dlg: 'x_pole_late', when: 'ch1_morning..' },
+      { id: 'x_pole', at: [84, 77.6], label: 'it.pole', dlg: 'x_pole', when: '..c1_start' },
+      { id: 'x_pole_late', at: [84, 77.6], label: 'it.pole', dlg: 'x_pole_late', when: 'c1_start..' },
       { id: 'x_view', at: [57, 19], label: 'it.view', dlg: 'x_view' },
       { id: 'x_beehive', at: [47, 13.4], label: 'it.beehives', dlg: 'x_beehive' },
       { id: 'x_church_plaque', at: [87, 27.6], label: 'it.plaque', dlg: 'x_plaque', r: 1.4, hy: 2.4 },
@@ -341,15 +351,15 @@
       { id: 'x_scarecrow', at: [4.5, 23], label: 'it.scarecrow', dlg: 'x_scarecrow' },
       { id: 'x_jag_herbs', at: [9.4, 26.2], label: 'it.herbs', dlg: 'x_jag_herbs' },
       { id: 'x_sheep', at: [11.5, 56], label: 'it.sheep', dlg: 'x_sheep' },
-      { id: 'x_easel', at: [69, 41.8], label: 'it.easel', dlg: 'x_easel', when: 'ch4_start..ch4_jessica_dead' },
+      { id: 'x_easel', at: [69, 41.8], label: 'it.easel', dlg: 'x_easel', when: 'c4_start..c4_jessica_dead' },
       { id: 'x_axe', at: [95.8, 61], label: 'it.axe', dlg: 'x_axe' },
-      { id: 'x_bridge', at: [53, 86.2], label: 'it.bridge', dlg: 'x_bridge', when: '..ch2_start' },
+      { id: 'x_bridge', at: [53, 86.2], label: 'it.bridge', dlg: 'x_bridge', when: '..c2_bell' },
       { id: 'x_bell', at: [91.5, 24.6], label: 'it.bell', dlg: 'x_bell' }
     ],
     animals: [
       { sprite: 'chicken', at: [29, 42], range: 2.5, flee: true }, { sprite: 'chicken2', at: [33.5, 42.5], range: 2, flee: true }, { sprite: 'chicken', at: [24, 58.5], range: 2, flee: true },
       { sprite: 'sheep', at: [8, 55], range: 2.5 }, { sprite: 'sheep', at: [9.5, 58.5], range: 2.5 }, { sprite: 'sheep', at: [7, 59], range: 2 },
-      { sprite: 'cat', at: [47, 44.6], range: 1.5, flee: true, cond: 'before:ch9_start' }, { sprite: 'dog', at: [97.5, 60.5], range: 1.5, cond: 'before:ch4_gorazd_dead' },
+      { sprite: 'cat', at: [47, 44.6], range: 1.5, flee: true, cond: 'before:c9_silence' }, { sprite: 'dog', at: [97.5, 60.5], range: 1.5, cond: 'before:c4_gorazd_dead' },
       { sprite: 'crow', at: [80.5, 25], range: 3, flee: true }, { sprite: 'crow', at: [14, 20], range: 2, flee: true }, { sprite: 'chicken2', at: [62, 60], range: 2, flee: true }
     ]
   };

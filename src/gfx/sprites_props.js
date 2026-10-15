@@ -65,8 +65,11 @@ BTS.PropSprites = (function () {
       });
     });
     sprite('tree_poplar', 28, 96, function (p) {
-      trunk(p, 14, 70, 95, 3, BARK);
-      crown(p, 14, 44, 10, 40, LEAF, 7, 26);
+      trunk(p, 14, 74, 95, 3, BARK);
+      for (var k = 0; k < 9; k++) { var cy = 10 + k * 8, w = 4 + Math.sin(k / 8 * Math.PI) * 6; crown(p, 14 + (k % 2 ? 1 : -1), cy, w, 7, LEAF, 70 + k, 7); }
+    });
+    sprite('licitar', 32, 12, function (p) {
+      for (var i = 0; i < 4; i++) { var cx = 4 + i * 8, cy = 6; for (var y = 0; y < 9; y++) for (var x = -4; x <= 4; x++) { var hx = Math.abs(x), yy = y - 2; if ((yy < 0 && (Math.pow(hx - 2, 2) + Math.pow(yy + 0.5, 2) < 4.5)) || (yy >= 0 && hx < 4 - yy * 0.7)) p.px(cx + x, cy + y - 4, [176, 30, 34]); } p.px(cx - 1, cy - 2, [240, 230, 210]); p.px(cx + 1, cy, [240, 230, 210]); p.px(cx, cy - 1, [90, 160, 80]); p.px(cx - 2, cy + 1, [240, 200, 60]); }
     });
     sprite('tree_pine', 48, 88, function (p) {
       trunk(p, 24, 70, 87, 4, BARK);
