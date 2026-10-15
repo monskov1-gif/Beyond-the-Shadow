@@ -100,5 +100,32 @@ BTS.Test = (function () {
     BTS.Story.observe(e); return 'ok';
   };
   T.link = function (a, b) { return BTS.Journal.tryLink(a, b); };
+  /* bot for the chapter 6 tail: walks via pathing, keeps ~8 units behind, freezes when she stops */
+  T.stalkBot = function () {
+    return new Promise(function (res) {
+      var iv = setInterval(function () {
+        if (BTS.State.d.beat !== 'c6_follow') { clearInterval(iv); res('done'); return; }
+        if (BTS.Cutscene.running || BTS.Dialogue.active) return;
+        var W = BTS.World, p = W.player, j = W.get('jaglika'); if (!j) return;
+        var d = Math.hypot(p.x - j.x, p.z - j.z);
+        if (!j.path) { p.path = null; return; }       // she stopped: freeze
+        if (d > 9) { var path = W.findPath(p.x, p.z, j.x, j.z); if (path && path.length) { path.pop(); p.path = path.length ? path : null; p.pathSpeed = 1; } }
+        else p.path = null;
+      }, 100);
+    });
+  };
+  T.pressKey = function (code) { window.dispatchEvent(new KeyboardEvent('keydown', { code: code })); setTimeout(function () { window.dispatchEvent(new KeyboardEvent('keyup', { code: code })); }, 60); };
+  /* bot for the rite: wait near the circling head and strike only while the shadow is frozen */
+  T.riteBot = function () {
+    return new Promise(function (res) {
+      var iv = setInterval(function () {
+        if (BTS.State.d.beat !== 'c10_rite') { clearInterval(iv); res('done'); return; }
+        if (BTS.Cutscene.running || BTS.Dialogue.active || !BTS.Rite || !BTS.Rite.get()) return;
+        var R = BTS.Rite.get(), p = BTS.World.player, h = R.head, d = Math.hypot(p.x - h[0], p.z - h[1]);
+        if (R.freeze > 0) { if (d < 1.4) { p.path = null; T.pressKey('KeyE'); } else p.path = [[h[0], h[1]]]; }
+        else if (d > 2.5) { p.path = [[h[0], h[1]]]; p.pathSpeed = 1; }
+      }, 80);
+    });
+  };
   return T;
 })();

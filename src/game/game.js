@@ -35,7 +35,7 @@ BTS.Game = (function () {
     BTS.Env.set({ time: 'night', weather: 'fog', horror: 0.15, interior: false }, true);
     BTS.Env.fadeBlack = 0; BTS.Env.fadeGoal = 0;
     var s = BTS.World.spot('menu_cam');
-    BTS.Camera.cinematic({ target: [s.x, 2, s.z], dist: 46, pitch: 0.5, time: 0.01 });
+    BTS.Camera.cinematic({ target: [s.x, 2, s.z], dist: 34, pitch: 0.5, time: 0.01 });
     BTS.Story.populateMenu();
     BTS.Music.set('menu', 2);
   };
@@ -167,7 +167,8 @@ BTS.Game = (function () {
     if (W.loc && p && W.loc.areas) W.loc.areas.forEach(function (a) { var b = a.box; if (p.x > b[0] && p.x < b[2] && p.z > b[1] && p.z < b[3]) BTS.State.reveal(a.id); });
     if (W.loc && W.loc.def.mapArea) BTS.State.reveal(W.loc.def.mapArea);
     BTS.Env.update(dt, BTS.Camera.target);
-    BTS.Camera.update(dt, p && !p.hidden ? [p.x, p.y, p.z] : (BTS.Camera.goal || null));
+    var ft = BTS.Camera.followTarget || (p && !p.hidden ? p : null);
+    BTS.Camera.update(dt, ft ? [ft.x, ft.y, ft.z] : (BTS.Camera.goal || null));
     BTS.Particles.update(dt, BTS.Camera);
     if (BTS.Ambience) BTS.Ambience.update(dt);
     U.updateHUD();

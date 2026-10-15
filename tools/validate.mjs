@@ -1,0 +1,32 @@
+// node tools/validate.mjs — static checks of localization and data (runs the game in a headless page)
+import { chromium } from '/opt/node22/lib/node_modules/playwright/index.mjs';
+import path from 'path';
+const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
+const b = await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
+const p = await b.newPage();
+const errs = []; p.on('pageerror', e => errs.push(e.message));
+await p.addInitScript(() => localStorage.setItem('bts.settings.v1', JSON.stringify({ language: 'ru' })));
+await p.goto('file://' + root + '/index.html');
+await p.waitForFunction(() => window.BTS && BTS.Game && BTS.Game.mode === 'menu', null, { timeout: 60000 });
+const r = await p.evaluate(() => {
+  const dv = BTS.Dialogue.validate();
+  const refs = dv.keys.slice();
+  BTS.Story.beats.forEach(b => { if (b.obj) refs.push(b.obj); if (b.chapterCard) refs.push(b.chapterCard); if (b.chapterSub) refs.push(b.chapterSub); refs.push('chap.' + b.chapter);
+    (b.interact || []).forEach(i => { if (i.label) refs.push(i.label); if (i.verb) refs.push(i.verb); if (i.dlg && !BTS.Data.dialogues[i.dlg]) dv.errors.push('beat ' + b.id + ' interact missing dialogue ' + i.dlg); (i.clue ? [].concat(i.clue) : []).forEach(c => { if (!BTS.Data.clues[c]) dv.errors.push('beat ' + b.id + ' unknown clue ' + c); }); (i.item ? [].concat(i.item) : []).forEach(c => { if (!BTS.Data.items[c]) dv.errors.push('beat ' + b.id + ' unknown item ' + c); }); if (i.then && !BTS.Story.hasBeat(i.then)) dv.errors.push('beat ' + b.id + ' then unknown ' + i.then); });
+    (b.triggers || []).forEach(t => { if (t.then && !BTS.Story.hasBeat(t.then)) dv.errors.push('trigger then unknown ' + t.then); });
+    if (b.after && !BTS.Story.hasBeat(b.after)) dv.errors.push('after unknown ' + b.after);
+    if (b.observe) Object.keys(b.observe).forEach(k => { var o = b.observe[k]; if (o.then && !BTS.Story.hasBeat(o.then)) dv.errors.push('observe then ' + o.then); });
+  });
+  Object.keys(BTS.Data.talk).forEach(n => BTS.Data.talk[n].forEach(t => { if (!BTS.Data.dialogues[t.dlg]) dv.errors.push('talk ' + n + ' missing dialogue ' + t.dlg); if (t.then && !BTS.Story.hasBeat(t.then)) dv.errors.push('talk then ' + t.then); }));
+  Object.keys(BTS.Data.clues).forEach(c => { refs.push(BTS.Data.clues[c].title, BTS.Data.clues[c].text); if (BTS.Data.clues[c].date) refs.push('date.' + BTS.Data.clues[c].date); });
+  Object.keys(BTS.Data.items).forEach(c => { refs.push(BTS.Data.items[c].name, BTS.Data.items[c].desc); if (BTS.Data.items[c].use) refs.push(BTS.Data.items[c].use); });
+  BTS.Data.deductions.forEach(d => { [d.a, d.b, d.result].forEach(c => { if (!BTS.Data.clues[c]) dv.errors.push('deduction unknown clue ' + c); }); if (d.thought) refs.push(d.thought); });
+  Object.keys(BTS.Locations).forEach(id => { const L = BTS.Locations[id]; refs.push(L.nameKey); (L.examine || []).forEach(x => { refs.push(x.label); if (!BTS.Data.dialogues[x.dlg]) dv.errors.push('examine missing dialogue ' + x.dlg); }); (L.exits || []).forEach(x => { if (x.lockedDlg && !BTS.Data.dialogues[x.lockedDlg]) dv.errors.push('locked dlg missing ' + x.lockedDlg); }); });
+  const v = BTS.I18N.validate(refs);
+  return { errors: dv.errors, missingRef: v.missingRef, missingEn: v.missingEn, missingRu: v.missingRu, emptyRu: v.emptyRu, emptyEn: v.emptyEn, keys: Object.keys(BTS.I18N.dicts.ru).length, beats: BTS.Story.beats.length, dialogues: Object.keys(BTS.Data.dialogues).length };
+});
+console.log(JSON.stringify(r, null, 1));
+console.log('page errors:', errs);
+await b.close();
+const bad = r.errors.length + r.missingRef.length + r.missingEn.length + r.missingRu.length + r.emptyRu.length + r.emptyEn.length + errs.length;
+process.exit(bad ? 1 : 0);

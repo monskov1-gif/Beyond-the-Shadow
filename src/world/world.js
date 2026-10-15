@@ -40,15 +40,15 @@ BTS.World = (function () {
     W.heightAt = st.def.walkHeight || st.heightAt;
     W.nav = st.nav;
     W.statics = st.statics;
-    W.entities = []; W.interactables = []; W.triggers = [];
+    W.entities = []; W.interactables = []; W.triggers = []; W.extraRender = null; W.speedMul = 1;
     W.interior = !!st.def.interior;
     BTS.Env.set({ interior: W.interior });
     BTS.Env.setLights(st.lights.map(function (l) { var c = {}; for (var k in l) c[k] = l[k]; return c; }));
     BTS.Particles.clear();
     st.emitters.forEach(function (e) { var c = {}; for (var k in e) c[k] = e[k]; BTS.Particles.addEmitter(c); });
     var cp = st.def.camera || {};
-    if (W.interior && !cp.dist) cp.dist = 30;
-    BTS.Renderer.zoom = (cp.dist || 44) / 44; BTS.Renderer.resize();
+    if (W.interior && !cp.dist) cp.dist = 21;
+    BTS.Renderer.zoom = (cp.dist || 26) / 44; BTS.Renderer.resize();
     BTS.Camera.setPreset(cp, true);
     var b = st.def.camBounds || st.def.bounds;
     BTS.Camera.bounds = [b[0] + (cp.padX || 6), b[1] + (cp.padZ0 || 4), b[2] - (cp.padX || 6), b[3] - (cp.padZ1 || 2)];
@@ -200,7 +200,7 @@ BTS.World = (function () {
       if (!reg) continue;
       var tint = e.tint;
       if (e.alpha < 1) tint = [(tint ? tint[0] : 1), (tint ? tint[1] : 1), (tint ? tint[2] : 1)];
-      R.pushSprite(reg, e.x, e.y, e.z + 0.02, { tint: tint, flip: e.spriteFlip, scale: e.scale, tilt: e.anim ? 0.18 : 0.05 });
+      R.pushSprite(reg, e.x, e.y, e.z + 0.02, { tint: tint, flip: e.spriteFlip, scale: e.scale, tilt: e.anim ? 0.18 : 0.05, emissive: e.emissive, mat: e.anim ? undefined : (e.emissive ? undefined : BTS.MAT.DEFAULT) });
     }
     // animated statics: flames, hanging lanterns
     for (i = 0; i < W.statics.length; i++) {
@@ -230,6 +230,7 @@ BTS.World = (function () {
       R.pushParticle(2, BTS.Atlas.get('sparkle'), it.x, it.y + (it.hy || 0.9) + Math.sin(t * 2 + i) * 0.05, it.z, 0.22, [1.0, 0.9, 0.6, a]);
     }
     BTS.Shadows.render(R, env, W.entities, W);
+    if (W.extraRender) W.extraRender(R, env);
   };
 
   return W;

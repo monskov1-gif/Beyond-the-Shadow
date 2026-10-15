@@ -114,11 +114,20 @@ BTS.Story = (function () {
     var ldef = W.loc.def;
     Object.keys(BTS.Data.npcs).forEach(function (id) {
       var p = S.placement(id);
-      if (!p || p.loc !== loc) return;
-      var at = typeof p.at === 'string' ? W.spot(p.at) : (p.at ? { x: p.at[0], z: p.at[1] } : null);
+      if (!p || (p.loc !== loc && p.loc !== '*')) return;
+      var at = p.loc === '*' ? { x: W.player.x + 0.9, z: W.player.z + 0.7 } : typeof p.at === 'string' ? W.spot(p.at) : (p.at ? { x: p.at[0], z: p.at[1] } : null);
+      if (p.loc === '*' && W.blocked(at.x, at.z, 0.25)) at = { x: W.player.x, z: W.player.z + 0.6 };
       if (!at) return;
       var e = BTS.Game.spawnNPC(id, [at.x, at.z], { act: p.act || 'idle', dir: p.dir || at.dir, radius: p.radius, sheet: p.sheet, stage: p.stage, beast: p.beast, noTalk: p.noTalk, follow: p.follow });
       if (p.anim) e.anim.lock = p.anim;
+    });
+    // static story props (mourning objects, new graves...)
+    (b && b.props || []).concat((BTS.Data.globalProps || []).filter(function (g) { return S.inRange(g.beats); })).forEach(function (pr, i) {
+      if (pr.loc !== loc) return;
+      var at = typeof pr.at === 'string' ? W.spot(pr.at) : { x: pr.at[0], z: pr.at[1] }; if (!at) return;
+      var e = new BTS.Entity({ id: 'prop' + i, sprite: pr.sprite, x: at.x, z: at.z, shadow: false });
+      e.solid = false; e.lift = pr.y || 0; e.scale = pr.scale; e.emissive = pr.emissive; e.persistent = false;
+      W.addEntity(e);
     });
     // crowd extras (fair etc.)
     (b && b.extras || []).forEach(function (x, i) { if (x.loc !== loc) return; var at = typeof x.at === 'string' ? W.spot(x.at) : { x: x.at[0], z: x.at[1] }; if (!at) return; var e = new BTS.Entity({ id: 'extra' + i, kind: 'npc', sheet: x.sheet, x: at.x, z: at.z, dir: x.dir || 'down', speed: 1.4 }); e.brain = new BTS.Brain('villager'); e.brain.setTask({ at: [at.x, at.z], act: x.act || 'idle', dir: x.dir, radius: x.radius || 3 }, e, true); W.addEntity(e); if (x.talk !== false) W.addInteract({ id: 'talkx' + i, ent: e, r: 1.4, verb: 'verb.talk', label: 'name.villager', hy: 1.9, action: function () { S.talkExtra(x, e); } }); });
