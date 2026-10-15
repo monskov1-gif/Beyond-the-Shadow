@@ -60,12 +60,16 @@ BTS.LocationBuilder = function (def) {
         if (variants[t]) name = variants[t][Math.floor(BTS.M.hash(bx * 3.1, bz * 7.7) * variants[t].length)];
         var h00 = H(x, z), h10 = H(x + 1, z), h11 = H(x + 1, z + 1), h01 = H(x, z + 1);
         var isWater = t === 'water';
-        if (isWater) { h00 = h10 = h11 = h01 = o.waterLevel === undefined ? -0.35 : o.waterLevel; }
+        var wl = o.waterLevel === undefined ? -0.35 : o.waterLevel;
+        if (isWater) { name = 'mud'; h00 = Math.min(h00, wl - 0.3); h10 = Math.min(h10, wl - 0.3); h11 = Math.min(h11, wl - 0.3); h01 = Math.min(h01, wl - 0.3); }
         var cols = [[x, z + 1], [x + 1, z + 1], [x + 1, z], [x, z]].map(function (p) { return self.groundTint(p[0], p[1], t); });
         var u0 = x / 2, v0 = z / 2;
         var nrm = BTS.M.norm3([h00 - h10 + h01 - h11, 2, h00 - h01 + h10 - h11]);
-        (isWater ? water : mb).quad([[x, h01, z + 1], [x + 1, h11, z + 1], [x + 1, h10, z], [x, h00, z]], nrm,
-          [[u0, v0 + 0.5], [u0 + 0.5, v0 + 0.5], [u0 + 0.5, v0], [u0, v0]], name, null, isWater ? MAT.WATER : MAT.GROUND, cols);
+        mb.quad([[x, h01, z + 1], [x + 1, h11, z + 1], [x + 1, h10, z], [x, h00, z]], nrm,
+          [[u0, v0 + 0.5], [u0 + 0.5, v0 + 0.5], [u0 + 0.5, v0], [u0, v0]], name, null, MAT.GROUND, cols);
+        // smooth water surface: plane over water tiles and their neighbours; terrain above it hides the overlap
+        var nearWater = Math.min(h00, h10, h11, h01) < wl;
+        if (nearWater) water.quad([[x, wl, z + 1], [x + 1, wl, z + 1], [x + 1, wl, z], [x, wl, z]], [0, 1, 0], [[u0, v0 + 0.5], [u0 + 0.5, v0 + 0.5], [u0 + 0.5, v0], [u0, v0]], 'water', null, MAT.WATER);
       }
       var c = this.addChunk(mb, { id: 'ground' }); if (c) c.castShadow = false;
       var w = this.addChunk(water, { id: 'water' }); if (w) w.castShadow = false;

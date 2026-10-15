@@ -67,6 +67,8 @@ BTS.World = (function () {
     return st;
   };
 
+  W.light = function (id) { return BTS.Env.lights.filter(function (l) { return l.id === id; })[0]; };
+  W.static = function (id) { return W.statics.filter(function (s) { return s.id === id; })[0]; };
   W.spot = function (name) { var s = W.loc && W.loc.spots[name]; if (!s) BTS.Log.warn('missing spot', name, W.locId); return s; };
   W.addEntity = function (e) { e.y = W.heightAt(e.x, e.z); W.entities.push(e); return e; };
   W.removeEntity = function (id) { W.entities = W.entities.filter(function (e) { return e.id !== id; }); };
@@ -195,6 +197,12 @@ BTS.World = (function () {
       var s = W.statics[i];
       if (s.night && !(env.lampOn > 0.25)) continue;
       if (s.off) continue;
+      if (s.beam) {
+        var ba = s.day ? Math.max(0, 1 - env.lampOn * 1.2) * 0.2 : 0.2;
+        if (env.weather !== 'clear') ba *= 0.5;
+        if (ba > 0.005) R.pushFx(2, s.beam, BTS.Atlas.get('beam_grad'), [s.col[0], s.col[1], s.col[2], ba]);
+        continue;
+      }
       var sc = s.scale || 1;
       if (s.flicker) sc *= 0.92 + 0.12 * Math.sin(t * 17 + i * 3.1) * Math.sin(t * 5 + i);
       R.pushSprite(BTS.Atlas.get(s.sprite), s.x, s.y, s.z, { scale: sc, emissive: s.emissive, tilt: 0 });
