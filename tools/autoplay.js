@@ -39,7 +39,7 @@
         default: p = Promise.resolve('unknown action ' + act[0]);
       }
     } catch (e) { p = Promise.resolve('error ' + e.message); }
-    p.then(function (r) { log(step.beat, JSON.stringify(act.slice(0, 2)), '->', r); BTS.Auto.log.push([step.beat, act[0], act[1], String(r)]); if (String(r).indexOf('no-') === 0) { BTS.Auto.error = 'action failed ' + act + ' ' + r; BTS.Auto.done = true; } busy = false; waitUntil = performance.now() + 250; });
+    Promise.resolve(p).then(function (r) { log(step.beat, JSON.stringify(act.slice(0, 2)), '->', r); BTS.Auto.log.push([step.beat, act[0], act[1], String(r)]); if (String(r).indexOf('no-') === 0 && !BTS.AutoTolerant) { BTS.Auto.error = 'action failed ' + act + ' ' + r; BTS.Auto.done = true; } busy = false; waitUntil = performance.now() + 250; });
   }
   setInterval(tick, 60);
 })();

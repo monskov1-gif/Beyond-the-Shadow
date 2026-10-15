@@ -30,7 +30,7 @@ const pass = after.ok && after.beat === before.beat && after.loc === before.loc 
 const corrupt = await p.evaluate(() => { localStorage.setItem('bts.save.3', '{"v":3,"sum":"x","body":"{}"}'); return BTS.Save.read('3').error; });
 console.log('corrupt slot ->', corrupt);
 // continue playing a few beats after load
-await p.evaluate(() => { BTS.App.timeScale = 2; });
+await p.evaluate(() => { BTS.App.timeScale = 2; BTS.AutoTolerant = true; });  // steps done before the save are gone after loading
 await auto();
 let seen = 0, last = after.beat; const t1 = Date.now();
 while (Date.now() - t1 < 900000 && seen < cont) { await p.waitForTimeout(2000); const s = await p.evaluate(() => ({ beat: BTS.State.d.beat, err: BTS.Auto.error })); if (s.err) { console.log('continue error', s.err); break; } if (s.beat !== last) { seen++; last = s.beat; console.log('continued ->', s.beat); } }
