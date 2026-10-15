@@ -1,0 +1,11 @@
+<!doctype html><meta charset="utf-8"><body style="background:#333;margin:0">
+<script src="../src/core/core.js"></script>
+<script src="../src/gfx/atlas.js"></script>
+<script src="../src/gfx/textures.js"></script>
+<script src="../src/data/characters.js"></script>
+<script src="../src/gfx/sprites_chars.js"></script>
+<script>
+try{BTS.Textures.build();BTS.CharSprites.build();}catch(e){document.title='ERR '+e.stack;}
+var c=document.createElement('canvas');c.width=1024;c.height=1024;c.style.imageRendering='pixelated';c.style.width=(location.hash?location.hash.slice(1):2048)+'px';
+c.getContext('2d').drawImage(BTS.Atlas.canvas,0,0,1024,1024,0,0,1024,1024);document.body.appendChild(c);
+</script>
