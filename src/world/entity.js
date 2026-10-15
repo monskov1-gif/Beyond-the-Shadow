@@ -58,7 +58,8 @@ BTS.Animator = function (sheetId) {
   A.set = function (state) { if (this.state !== state) { this.state = state; this.t = 0; this.lastFrame = -1; } };
   A.clip = function (dir) {
     var s = this.lock || this.state;
-    var c = this.sheet && (this.sheet.anims[s + '_' + dir] || this.sheet.anims['idle_' + dir]);
+    var sh = BTS.CharSprites.sheets[BTS.CharSprites.variant(this.sheetId)] || this.sheet;
+    var c = sh && (sh.anims[s + '_' + dir] || sh.anims['idle_' + dir]);
     return c;
   };
   A.update = function (dt, dir) {

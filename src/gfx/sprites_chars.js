@@ -143,6 +143,14 @@ BTS.CharSprites = (function () {
       if (d.bagSide && dir === 'down') srect(p, x0 + w - 1, waist - 1, 3, 3, d.strap || [70, 50, 30]);
       if (d.backpack && dir === 'up') srect(p, x0 + 1, torsoTop + 1, w - 2, h - 1, d.backpack);
       if (d.backpack && dir === 'side') srect(p, x0 - 3, torsoTop + 1, 3, h - 1, d.backpack);
+      if (d.backpack && dir === 'down') { p.rect(x0 + 1, torsoTop, 1, h - 1, dk(d.backpack)); p.rect(x0 + w - 2, torsoTop, 1, h - 1, d.backpack); }
+      if (d.hood) {
+        if (dir === 'down') { p.rect(cx - 3, torsoTop, 7, 1, d.hood); p.px(cx - 3, torsoTop + 1, d.hood); p.px(cx + 3, torsoTop + 1, d.hood); p.rect(cx - 1, torsoTop + 1, 3, 1, dk(d.hood)); }
+        else if (dir === 'up') { if (!d.backpack) srect(p, cx - 3, torsoTop, 7, 3, d.hood); }
+        else p.rect(x0 - 1, torsoTop, 3, 2, d.hood);
+      }
+      if (d.zip && dir === 'down') { for (var zy = torsoTop + 1; zy < waist + (d.coat ? 2 : 0); zy++) p.px(cx, zy, (zy % 2) ? d.zip : C.mul(d.zip, 0.8)); }
+      if (d.beads && dir === 'down') { for (var bx = -2; bx <= 2; bx++) p.px(cx + bx, torsoTop + 1 + (Math.abs(bx) < 2 ? 1 : 0), (bx & 1) ? d.beads : lit(d.beads)); }
       if (d.camera && dir === 'down') { p.rect(cx - 1, torsoTop + 3, 3, 2, [30, 30, 34]); p.px(cx, torsoTop + 3, [120, 140, 160]); }
       if (d.collar && dir === 'down') { p.rect(cx - 1, torsoTop, 3, 1, d.collar); }
       if (d.cross && dir === 'down') { p.px(cx, torsoTop + 3, [200, 180, 90]); p.px(cx, torsoTop + 4, [200, 180, 90]); p.px(cx - 1, torsoTop + 4, [200, 180, 90]); p.px(cx + 1, torsoTop + 4, [200, 180, 90]); p.px(cx, torsoTop + 5, [200, 180, 90]); }
@@ -224,9 +232,12 @@ BTS.CharSprites = (function () {
         if (anim === 'talk' && f === 0) p.px(cx, eyeY + 2, [110, 50, 50]);
         else if (anim === 'fear' || anim === 'cower') p.px(cx, eyeY + 2, [70, 30, 30]);
         if (d.wrinkles) { p.px(cx - 3, eyeY + 2, dk(skin)); p.px(cx + 3, eyeY + 2, dk(skin)); }
-        if (d.glasses) { p.rect(cx - 3, eyeY, 2, 1, [40, 40, 50]); p.rect(cx + 2, eyeY, 2, 1, [40, 40, 50]); p.px(cx, eyeY, [40, 40, 50]); }
+        if (d.glasses) { var gc = d.glassesCol || [40, 40, 50]; p.rect(cx - 3, eyeY - 1, 3, 1, gc); p.rect(cx + 1, eyeY - 1, 3, 1, gc); p.px(cx - 3, eyeY, gc); p.px(cx + 3, eyeY, gc); p.px(cx, eyeY, gc); }
+        if (d.earring) { p.px(hx - 1, eyeY + 2, d.earring); p.px(hx + hw, eyeY + 2, d.earring); }
       } else if (dir === 'side') {
         p.px(hx + hw - 3, eyeY, d.eyes || [30, 24, 26]);
+        if (d.glasses) { p.rect(hx + hw - 4, eyeY - 1, 3, 1, d.glassesCol || [40, 40, 50]); p.px(hx + hw - 4, eyeY, d.glassesCol || [40, 40, 50]); }
+        if (d.earring) p.px(hx + 2, eyeY + 2, d.earring);
         p.px(hx + hw, eyeY + 1, skin);                      // nose
         if (d.wrinkles) p.px(hx + hw - 2, eyeY + 2, dk(skin));
       }
@@ -249,6 +260,41 @@ BTS.CharSprites = (function () {
         if (dir === 'up') { p.rect(L, hy, hw, hh, sc); for (var k = 0; k < 5; k++) p.rect(L + k, hy + hh + k, hw - k * 2, 1, dk(sc)); }
         if (d.scarfPattern) for (var q = L + 1; q < Rr; q += 3) p.px(q, hy + 1, d.scarfPattern);
         p.px(L + 2, hy, lit(sc));
+        return;
+      }
+      if (hs === 'turban') {          // tight wrapped head-cloth, ears showing
+        var tc = d.scarf;
+        hairRow(hy - 2, L + 2, Rr - 2, tc); hairRow(hy - 1, L + 1, Rr - 1, tc); hairRow(hy, L, Rr, tc); hairRow(hy + 1, L, Rr, tc);
+        if (dir === 'down') { hairRow(hy + 2, L, L + 2, tc); hairRow(hy + 2, Rr - 2, Rr, tc); p.rect(L + 3, hy - 1, 1, 3, dk(tc)); p.rect(Rr - 3, hy - 2, 1, 2, dk(tc)); }
+        else if (dir === 'side') { p.rect(L, hy + 2, 4, 3, tc); p.px(L + 2, hy - 1, dk(tc)); p.rect(L - 1, hy, 2, 3, dk(tc)); }
+        else { p.rect(L, hy, hw, 5, tc); p.rect(L + 2, hy + 1, hw - 4, 1, dk(tc)); p.rect(cx - 1, hy + 4, 3, 2, dk(tc)); }
+        p.px(L + 2, hy - 1, lit(tc));
+        return;
+      }
+      if (hs === 'bob') {             // rounded bob to the jaw with blunt bangs
+        hairRow(hy - 2, L + 2, Rr - 2); hairRow(hy - 1, L, Rr); hairRow(hy, L - 1, Rr + 1); hairRow(hy + 1, L - 1, Rr + 1);
+        if (dir === 'down') {
+          hairRow(hy + 2, L - 1, Rr + 1); hairRow(hy + 3, L, Rr);
+          p.rect(L - 1, hy + 3, 2, 6, hc); p.rect(Rr, hy + 3, 2, 6, dk(hc)); p.px(L - 1, hy + 9, dk(hc)); p.px(Rr + 1, hy + 9, dk(hc));
+        } else if (dir === 'side') {
+          hairRow(hy + 2, L - 1, Rr - 1); hairRow(hy + 3, L - 1, Rr - 3); p.rect(L - 1, hy + 4, 5, 5, hc); p.rect(L - 1, hy + 8, 4, 1, dk(hc));
+        } else { p.rect(L - 1, hy, hw + 2, hh, hc); p.rect(L - 1, hy + hh - 1, hw + 2, 1, dk(hc)); }
+        p.px(L + 2, hy - 1, lit(hc)); p.px(L + 3, hy - 1, lit(hc)); p.px(L + 4, hy, lit(hc));
+        return;
+      }
+      if (hs === 'shaggy') {          // thick black mop: bangs to the eyes, locks over the ears, tufts on top
+        hairRow(hy - 2, L + 1, Rr - 1); hairRow(hy - 1, L - 1, Rr + 1); hairRow(hy, L - 1, Rr + 1); hairRow(hy + 1, L - 1, Rr + 1);
+        p.px(L + 1, hy - 3, hc); p.px(L + 5, hy - 3, hc); p.px(Rr, hy - 2 - 1, hc);
+        if (dir === 'down') {
+          hairRow(hy + 2, L - 1, Rr + 1); hairRow(hy + 3, L, Rr);
+          for (var sx = L; sx <= Rr; sx++) if ((sx * 5 + 1) % 3 !== 0) p.px(sx, hy + 4, hc);           // ragged fringe at eye level
+          p.px(cx + 1, eyeY, hc); p.px(cx + 2, eyeY - 0, dk(hc));                                    // a lock over one eye
+          p.rect(L - 1, hy + 4, 2, 5, hc); p.rect(Rr, hy + 4, 2, 5, dk(hc)); p.px(L - 2, hy + 8, hc); p.px(Rr + 2, hy + 8, dk(hc));
+        } else if (dir === 'side') {
+          hairRow(hy + 2, L - 1, Rr); hairRow(hy + 3, L - 1, Rr - 1); p.px(Rr, hy + 4, hc);
+          p.rect(L - 1, hy + 4, 5, 5, hc); p.px(L - 2, hy + 8, hc); p.px(Rr + 1, hy, hc);
+        } else { p.rect(L - 1, hy, hw + 2, hh, hc); for (var tx = L - 1; tx <= Rr + 1; tx += 2) p.px(tx, hy + hh, hc); }
+        p.px(L + 2, hy - 1, lit(hc)); p.px(L + 6, hy, lit(hc));
         return;
       }
       if (hs === 'bald') {
@@ -372,5 +418,15 @@ BTS.CharSprites = (function () {
     BTS.Log.info('character sheets:', Object.keys(sheets).length);
   }
 
-  return { build: build, sheets: sheets, FW: FW, FH: FH, ANIMS: ANIMS };
+  /* story-driven look changes: Jaglika wears down as the autumn goes on (bright at the fair, gaunt from chapter 6),
+     except in the memory of nine years ago */
+  function variant(id) {
+    if (id !== 'jaglika' && id !== 'jaglika_needle') return id;
+    var S = BTS.Story, st = BTS.State && BTS.State.d;
+    if (!S || !st || !st.beat || !S.indexOf) return id;
+    var late = S.indexOf(st.beat) >= S.indexOf('c6_plan') && st.beat !== 'c8_memory';
+    return late && sheets[id + '_late'] ? id + '_late' : id;
+  }
+
+  return { build: build, sheets: sheets, FW: FW, FH: FH, ANIMS: ANIMS, variant: variant };
 })();

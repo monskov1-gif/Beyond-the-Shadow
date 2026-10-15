@@ -19,6 +19,8 @@ BTS.Portraits = (function () {
       var dx = (x - 32) / 34, dy = (y - 30) / 34, v = 1 - (dx * dx + dy * dy);
       p.px(x, y, [24 + v * 22, 20 + v * 18, 22 + v * 18]);
     }
+    var custom = BTS.PortraitsCustom && BTS.PortraitsCustom[id];
+    if (custom) { custom(p, expr, d); return finish(p); }
     // shoulders / clothes
     var sw = child ? 40 : 48;
     for (y = 48; y < 64; y++) { var w = sw + (y - 48) * 1.2; var x0 = Math.round(32 - w / 2); for (x = x0; x < x0 + w; x++) p.px(x, y, (x - x0) < 3 ? lit(top) : (x0 + w - x) < 4 ? C.mul(top, 0.75) : top); }
@@ -120,7 +122,10 @@ BTS.Portraits = (function () {
     else if (d.hat === 'brim') { p.rect(cx - hw - 8, cy - hh + 3, hw * 2 + 17, 3, C.mul(d.hatColor, 0.8)); p.rect(cx - hw, cy - hh - 5, hw * 2 + 1, 9, d.hatColor); }
     else if (d.hat === 'kamilavka') { p.rect(cx - hw, cy - hh - 9, hw * 2 + 1, 12, d.hatColor); p.rect(cx - hw, cy - hh - 9, hw * 2 + 1, 1, lit(d.hatColor, 1.6)); }
     else if (d.hat === 'wreath') { for (x = -hw - 2; x <= hw + 2; x++) { var yy2 = cy - hh + 2 + Math.round(Math.abs(x) * 0.25); p.px(cx + x, yy2, [70, 120, 60]); if (x % 3 === 0) p.px(cx + x, yy2 - 1, [[220, 70, 70], [240, 220, 120], [240, 240, 230], [190, 110, 170]][(x + 20) % 4]); } }
-    if (d.glasses) { p.rect(cx - 11, ey - 3, 8, 6, null); }
+    return finish(p);
+  }
+  function finish(p) {
+    var x, y;
     p.outline([12, 10, 12]);
     // frame
     for (x = 0; x < 64; x++) { p.px(x, 0, [90, 74, 56]); p.px(x, 63, [50, 40, 32]); }
@@ -132,6 +137,7 @@ BTS.Portraits = (function () {
   P.get = function (id, expr) {
     if (!id) return null;
     var base = id === 'jaglika_needle' ? 'jaglika' : id;
+    if (BTS.CharSprites.variant) base = BTS.CharSprites.variant(base);
     var def = BTS.Data.characters[base];
     if (!def || def.portrait === false) return null;
     expr = EXPR.indexOf(expr) >= 0 ? expr : 'neutral';
