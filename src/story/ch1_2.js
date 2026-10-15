@@ -138,7 +138,7 @@
     { choice: [['c1', 'draw'], ['c2', 'hand']] },
     { label: 'draw' }, ['*', '6'], ['dj', '7'], ['zajko', '8', { p: 'sad' }], { goto: 'v' },
     { label: 'hand' }, ['*', '9'], ['zajko', '10', { p: 'sad' }],
-    { label: 'v' }, ['zajko', '11', { p: 'scared', shake: true }], ['>', '12'], ['>', '13'], ['zajko', '14', { p: 'scared' }], ['*', '15'], ['>', '16']]);
+    { label: 'v' }, ['zajko', '11', { p: 'scared', shake: true }], ['>', '12'], ['>', '13'], ['zajko', '14', { p: 'scared' }], ['*', '15', { sfx: 'water_splash' }], ['>', '16']]);
   D('c1_home', [['>', '1'], ['>', '2']]);
   D('c1_storm_a', [['*', '1'], ['>', '2']]);
   D('c1_storm_b', [['>', '1'], ['>', '2']]);
@@ -150,7 +150,7 @@
   D('c2_pecko_church', [['pecko', '1', { p: 'sad' }], ['pecko', '2', { p: 'sad' }]]);
   D('c2_gvozdin_church', [['gvozdin', '1', { p: 'tired' }]]);
   D('c2_herbs', [['jaglika', '1'], ['jaglika', '2'], ['pecko', '3', { p: 'sad' }], ['*', '4'], ['>', '5'], ['>', '6']]);
-  D('c2_smithy_talk', [['gvozdin', '1', { p: 'tired' }], ['gvozdin', '2'], ['*', '3', { sfx: 'anvil' }], ['>', '4'], ['*', '5', { sfx: 'anvil' }], ['*', '6'], ['>', '7'], ['*', '8', { sfx: 'metal', shake: true }], ['gvozdin', '9', { p: 'scared' }], ['dj', '10'], ['gvozdin', '11', { p: 'tired' }], ['gvozdin', '12', { p: 'sad' }], ['>', '13']]);
+  D('c2_smithy_talk', [['gvozdin', '1', { p: 'tired', sfx: 'chop' }], ['gvozdin', '2'], ['*', '3', { sfx: 'anvil' }], ['>', '4'], ['*', '5', { sfx: 'anvil' }], ['*', '6'], ['>', '7'], ['*', '8', { sfx: 'metal', shake: true }], ['gvozdin', '9', { p: 'scared' }], ['dj', '10'], ['gvozdin', '11', { p: 'tired' }], ['gvozdin', '12', { p: 'sad' }], ['>', '13']]);
   D('c2_pecko_bakery', [['pecko', '1', { p: 'blank' }], ['>', '2'], ['pecko', '3', { p: 'blank' }], ['>', '4']]);
   D('c2_milka_news', [['*', '1'], ['milka', '2', { p: 'sad' }], ['milka', '3', { p: 'sad' }], ['milka', '4'], ['>', '5'], ['milka', '6', { p: 'worried' }], ['milka', '7'],
     { choice: [['c1', 'a'], ['c2', 'b']] }, { label: 'a' }, ['dj', '8'], ['milka', '9', { p: 'sad' }], { goto: 'e' }, { label: 'b' }, ['*', '10'], ['milka', '11', { p: 'sad' }],

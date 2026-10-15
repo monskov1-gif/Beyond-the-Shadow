@@ -59,6 +59,8 @@ BTS.Config = (function () {
     effects: 2,              // 0 low, 1 medium, 2 high
     fullscreen: false,
     subtitles: true,
+    uiScale: 1,              // multiplier on top of the automatic screen-size scale
+    touchControls: 0,        // 0 auto (touch devices), 1 always, 2 never
     devMode: false,
     keys: {
       up: ['KeyW', 'ArrowUp'], down: ['KeyS', 'ArrowDown'], left: ['KeyA', 'ArrowLeft'], right: ['KeyD', 'ArrowRight'],

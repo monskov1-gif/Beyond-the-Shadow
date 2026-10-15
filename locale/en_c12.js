@@ -70,7 +70,7 @@ BTS.Locale.en_parts.push({
     c2_gvozdin_church: { 1: 'Go, Đorđe. Go. Don’t look at this.' },
     c2_herbs: {
       1: 'Such grief, mistress. Such grief.', 2: 'Take these. Herbs. For sleep. When you sleep, grief is lighter.',
-      3: 'Thank you… thank you, grandmother.', 4: 'The old woman in the black headscarf presses a bundle of herbs into Pečko’s hands. Her fingers linger on Pečko’s hand.',
+      3: 'Thank you… thank you, granny.', 4: 'The old woman in the black headscarf presses a bundle of herbs into Pečko’s hands. Her fingers linger on Pečko’s hand.',
       5: 'Something glinted in her sleeve. Thin. Like a needle.', 6: 'It’s the same old woman. She was at the gate. She was at the well. Now — here.'
     },
     c2_smithy_talk: {

@@ -147,6 +147,8 @@ BTS.Screens = (function () {
         try { if (v) document.documentElement.requestFullscreen(); else if (document.fullscreenElement) document.exitFullscreen(); } catch (e) { }
         C.set('fullscreen', v);
       });
+      option(box, 'ui_size', [[0.8, 'set.size_s'], [1, 'set.size_m'], [1.15, 'set.size_l'], [1.3, 'set.size_xl']], function () { return C.get('uiScale'); }, function (v) { C.set('uiScale', v); BTS.Touch.applyScale(); });
+      option(box, 'touch', [[0, 'set.scale_auto'], [1, 'set.on'], [2, 'set.off']], function () { return C.get('touchControls'); }, function (v) { C.set('touchControls', v); BTS.Touch.refresh(); });
       option(box, 'scale', [[0, 'set.scale_auto'], [270, 'set.scale_270'], [360, 'set.scale_360'], [450, 'set.scale_450'], [540, 'set.scale_540']], function () { return C.get('pixelScale'); }, function (v) { C.set('pixelScale', v); BTS.Renderer.resize(); });
       option(box, 'effects', [[0, 'set.fx_low'], [1, 'set.fx_medium'], [2, 'set.fx_high']], function () { return C.get('effects'); }, function (v) { C.set('effects', v); });
       if (BTS.Game.query && BTS.Game.query.get('dev')) option(box, 'dev', [[false, 'set.off'], [true, 'set.on']], function () { return C.get('devMode'); }, function (v) { C.set('devMode', v); });

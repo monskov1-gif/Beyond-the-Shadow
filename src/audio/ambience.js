@@ -78,6 +78,6 @@ BTS.Ambience = (function () {
     if (P.fire) every('pop', 0.3, 1.5, function () { var f = P.firePos || c; A.play('fire_pop', { x: f[0], z: f[2] === undefined ? f[1] : f[2], vol: 0.6, caption: false }); });
     if (horror > 0.45) every('whisper', 9, 22, function () { A.play('whisper', { vol: horror }); });
   };
-  BTS.Events.on('lightning', function (delay) { if (A.ready) A.play('thunder', { delay: delay, vol: BTS.Env.interior ? 0.5 : 1 }); });
+  BTS.Events.on('lightning', function (delay) { if (A.ready) A.play('thunder', { delay: delay, vol: BTS.Env.interior ? 0.5 : 1, caption: BTS.Dialogue && BTS.Dialogue.active ? false : undefined }); });
   return Amb;
 })();

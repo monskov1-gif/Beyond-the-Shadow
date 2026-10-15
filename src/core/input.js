@@ -1,7 +1,7 @@
 /* Input: keyboard/mouse/gamepad -> named actions, with rebinding. */
 'use strict';
 BTS.Input = (function () {
-  var I = { down: {}, pressed: {}, released: {}, mouse: { x: 0, y: 0, down: false, clicked: false }, gamepad: null, lastDevice: 'kb', capture: null };
+  var I = { touch: { axis: [0, 0], down: {}, pressed: {} }, down: {}, pressed: {}, released: {}, mouse: { x: 0, y: 0, down: false, clicked: false }, gamepad: null, lastDevice: 'kb', capture: null };
   var keyState = {}, keyPressed = {};
   var padPrev = {};
   var ACTIONS = ['up', 'down', 'left', 'right', 'run', 'interact', 'cancel', 'journal', 'map', 'inventory', 'observe', 'pause'];
@@ -45,16 +45,18 @@ BTS.Input = (function () {
       var ks = keysFor(a), d = false, p = false;
       for (var i = 0; i < ks.length; i++) { if (keyState[ks[i]]) d = true; if (keyPressed[ks[i]]) p = true; }
       if (pad[a]) { d = true; if (!padPrev[a]) p = true; }
+      if (I.touch) { if (I.touch.down[a]) d = true; if (I.touch.pressed[a]) p = true; }
       I.released[a] = I.down[a] && !d;
       I.down[a] = d; I.pressed[a] = p;
     });
     padPrev = pad;
   };
-  I.endFrame = function () { keyPressed = {}; I.mouse.clicked = false; };
+  I.endFrame = function () { keyPressed = {}; I.mouse.clicked = false; if (I.touch) I.touch.pressed = {}; };
   I.consume = function (a) { I.pressed[a] = false; };
   I.axis = function () {
     var x = (I.down.right ? 1 : 0) - (I.down.left ? 1 : 0), z = (I.down.down ? 1 : 0) - (I.down.up ? 1 : 0);
     if (I.padAxis && (I.padAxis[0] || I.padAxis[1])) { x = I.padAxis[0]; z = I.padAxis[1]; }
+    if (I.touch && (I.touch.axis[0] || I.touch.axis[1])) { x = I.touch.axis[0]; z = I.touch.axis[1]; }
     var l = Math.hypot(x, z); if (l > 1) { x /= l; z /= l; }
     return [x, z];
   };

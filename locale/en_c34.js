@@ -3,7 +3,7 @@
 BTS.Locale.en_parts.push({
   sub: { c3: 'September 1. Đorđe is alone in the house on the hill', c4: 'September 8. The third day of rain', c4_gorazd: 'September 11. Dawn', c4_jessica: 'September 15' },
   obj: {
-    c3_start: 'Reread the sketchbook at the desk', c3_graves: 'The graveyard by the church: find the three new crosses and their dates', c3_link: 'Journal (J) → “Link two entries”: connect the old woman’s appearance with the date of death — for Zajko and for Gvozdin, then link the two hypotheses',
+    c3_start: 'Reread the sketchbook at the desk', c3_graves: 'The graveyard by the church: find the three new crosses and their dates', c3_link: 'Journal (J) → “Link two entries”: link the old woman’s visits to the deaths of Zajko and Gvozdin, then link both hypotheses',
     c3_sightings: 'Ask around: where was Jaglika seen in August? (Granny Milka by her house, Stana by the guesthouse)', c3_predict: 'Journal: link “The pattern” with the new observations',
     c3_warn: 'Warn Gorazd (his yard, east) and Jessica (by the guesthouse)',
     c4_start: 'Find out what is wrong with Gorazd (his yard in the east of the village)', c4_gorazd_in: 'Gorazd’s house: the letter on the table, the mirror, the door frame; watch his shadow (F)',

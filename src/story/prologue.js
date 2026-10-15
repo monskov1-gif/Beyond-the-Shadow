@@ -145,7 +145,7 @@
   D('p_zajko_wait', [['zajko', '1', { p: 'smile' }], ['>', '2']]);
   D('p_zajko_ready', [['zajko', '1', { p: 'smile' }]], 0);
   D('p_game', [
-    ['*', '1'], ['zajko', '2', { p: 'smile' }], ['zajko', '3'], ['>', '4'], ['zajko', '5', { p: 'smile' }],
+    ['*', '1', { sfx: 'laugh' }], ['zajko', '2', { p: 'smile' }], ['zajko', '3'], ['>', '4'], ['zajko', '5', { p: 'smile' }],
     { choice: [['c1', 'try'], ['c2', 'no']] },
     { label: 'try' }, ['*', '6'], ['>', '7'], ['>', '8', { do: { anim: ['djordje', 'cower'] } }], ['*', '9'], ['zajko', '10', { p: 'worried' }], ['dj', '11'], ['zajko', '12'], { set: 'tried_game' }, { goto: 'go' },
     { label: 'no' }, ['dj', '13'], ['zajko', '14', { p: 'smile' }],

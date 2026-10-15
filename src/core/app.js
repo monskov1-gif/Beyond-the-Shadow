@@ -41,6 +41,7 @@ BTS.App = (function () {
     if (A.timeScale !== undefined) dt *= A.timeScale;
     A.dt = dt; A.time += dt; A.frame++;
     try {
+      if (BTS.Touch) BTS.Touch.update();
       BTS.Input.update();
       A.update(dt);
       A.render(dt);

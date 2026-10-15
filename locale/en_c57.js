@@ -6,9 +6,9 @@ BTS.Locale.en_parts.push({
   obj: {
     c5_proof: 'Talk to Lisa and show her the evidence: the plan, Jessica’s photograph, the needles',
     c5_guestbook: 'Take Lisa to Stana’s guesthouse — to the guestbook',
-    c6_plan: 'At night, go with Lisa to the hiding place by Jaglika’s house (by the fence on the west side of the village)',
+    c6_plan: 'At night, take Lisa to the hiding place by Jaglika’s fence (west)',
     c6_follow: 'Follow Jaglika. Don’t get too close and don’t fall behind. When she turns round — stand still',
-    c7_inside: 'Search Jaglika’s house: herbs, ampoules, the storeroom with needles; in the dark room — light the candelabra and read the notes',
+    c7_inside: 'Search Jaglika’s house: herbs, ampoules, needles; light the candelabra in the dark room',
     c7_hide: 'Hide! Behind the sacks in the storeroom'
   },
   dlg: {

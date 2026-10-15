@@ -87,7 +87,7 @@ BTS.Locale.en_parts.push({
       6: 'Đorđe steps into the ring. His shadow stretches from his feet into the dark.', 7: 'It’s long. Three times longer than me. It reaches toward where it’s dark.',
       8: 'I can’t. I can’t look at it.', 9: 'Đorđe steps out of the ring, hands over his ears.',
       10: 'Hey, hey. It’s fine. It’s all fine. You did great for trying.', 11: 'I did great.', 12: 'You did great. Now watch how it’s done!',
-      13: 'No.', 14: 'Okay, okay. Then watch. You’re the best watcher.',
+      13: 'No.', 14: 'Okay, okay. Then watch. You’re our chief watcher.',
       15: 'You don’t play with your shadow…', 16: 'Granny Milka’s voice — from somewhere in the dark beyond the fire.',
       17: 'Got you!'
     },

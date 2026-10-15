@@ -196,7 +196,7 @@ BTS.UI = (function () {
       var x = it.ent ? it.ent.x : it.x, z = it.ent ? it.ent.z : it.z, y = (it.ent ? it.ent.y : it.y) + (it.hy || 1.6) + 0.6;
       var sp = BTS.Camera.toScreen(x, y, z);
       if (sp) {
-        var key = BTS.Input.lastDevice === 'pad' ? 'A' : BTS.Input.keyName(BTS.Config.get('keys').interact[0]);
+        var key = BTS.Input.lastDevice === 'touch' || (BTS.Touch && BTS.Touch.enabled && BTS.Input.lastDevice !== 'kb') ? '✋' : BTS.Input.lastDevice === 'pad' ? 'A' : BTS.Input.keyName(BTS.Config.get('keys').interact[0]);
         var html = '<b>' + esc(key) + '</b> ' + esc(t(it.verb || 'verb.examine')) + (it.label ? ' · ' + esc(t(it.label)) : '');
         if (U.prompt._html !== html) { U.prompt.innerHTML = html; U.prompt._html = html; }
         var pw = U.prompt.offsetWidth || 120, vw = window.innerWidth;
@@ -209,7 +209,7 @@ BTS.UI = (function () {
     U.hud.classList.toggle('off', !game);
     U.objective.classList.toggle('hidden', !!BTS.Cutscene.running || BTS.Dialogue.active);
     U.captions.style.bottom = (BTS.Dialogue.active ? (U.dlg.offsetHeight + 40) : 60) + 'px';
-    if (game && !BTS.Cutscene.running && !BTS.Dialogue.active) {
+    if (game && !BTS.Cutscene.running && !BTS.Dialogue.active && !(BTS.Touch && BTS.Touch.enabled)) {
       var ks = BTS.Config.get('keys'), kn = BTS.Input.keyName;
       var pad = BTS.Input.lastDevice === 'pad';
       var hk = (pad ? 'Y' : esc(kn(ks.journal[0]))) + ' ' + esc(t('ui.journal')) + ' · ' + (pad ? 'Back' : esc(kn(ks.map[0]))) + ' ' + esc(t('ui.map')) + ' · ' + (pad ? 'LT' : esc(kn(ks.inventory[0]))) + ' ' + esc(t('ui.inventory')) + ' · ' + (pad ? 'X' : esc(kn(ks.observe[0]))) + ' ' + esc(t('ui.observe')) + ' · ' + (pad ? 'Start' : esc(kn(ks.pause[0]))) + ' ' + esc(t('ui.pause'));

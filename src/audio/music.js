@@ -220,6 +220,11 @@ BTS.Music = (function () {
   Mu.STATES = Object.keys(STATES);
 
   Mu.init = function () { Mu.timer = setInterval(Mu.schedule, 100); if (Mu.pending) Mu.set(Mu.pending); };
+  /* background tabs throttle setInterval to ~1 s: schedule further ahead while hidden */
+  document.addEventListener('visibilitychange', function () {
+    LOOK = document.hidden ? 2.5 : 1.0;
+    if (document.hidden) Mu.schedule();
+  });
   Mu.set = function (state, fade) {
     if (!STATES[state]) { BTS.Log.warn('unknown music state', state); return; }
     if (!A.ready) { Mu.pending = state; return; }

@@ -173,16 +173,20 @@
       npcs: { lisa: { loc: 'village', at: [84.5, 85.6], act: 'idle', dir: 'up' }, jaglika: { loc: 'village', at: [96.5, 81.5], act: 'idle', dir: 'left', noTalk: true } },
       hideAll: true, keep: ['lisa', 'jaglika'],
       scene: function (C) {
-        var W = BTS.World, j = C.ent('jaglika'), shades;
+        var W = BTS.World, j = C.ent('jaglika'), shades, relT = null;
         W.extraRender = null;
         C.musicCut(); C.timeScale(0.35); C.sfx('shadow_tear', {}); C.shake(1.4);
         if (j) { j.shadow.beast = 0; j.shadow.visible = false; j.anim.lock = 'fear'; }
         return C.say('c11_pierce').then(function () {
-          C.timeScale(1); C.sfx('shadow_release', {}); C.music('release', 0.5);
+          C.timeScale(1); C.sfx('shadow_release', {}); C.music('release', 0.5); relT = BTS.Audio.now();
           shades = spawnShades(j.x, j.z, 18, 1.2);
           chase(shades, [j.x, j.z], 3.5);
           return C.cam({ target: [93, 1, 81], dist: 28, time: 1.5 });
         }).then(function () { return C.say('c11_shades'); }).then(function () { return C.wait(3); })
+          .then(function () {   // let at least ~10 s of the release choir sound before the chase cuts in
+            var left = BTS.Audio.ready && relT !== null ? 10 - (BTS.Audio.now() - relT) : 0;
+            return left > 0 ? C.wait(left) : null;
+          })
           .then(function () {
             C.anim('jaglika', null); C.music('chase', 2); C.env({ weather: 'rain' });
             BTS.Camera.followTarget = j; C.camRelease();
@@ -190,6 +194,7 @@
             var step = function (k) {
               if (k >= route.length) return Promise.resolve();
               chase(shades, route[Math.max(0, k - 1)], 2.5);
+              if (k === 3) C.sfx('scream_far', {});
               return C.walk('jaglika', route[k], { run: true, direct: true }).then(function () { return step(k + 1); });
             };
             j.speed = 3.6;

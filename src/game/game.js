@@ -11,6 +11,7 @@ BTS.Game = (function () {
     BTS.Renderer.uploadAtlas();
     BTS.I18N.load();
     BTS.UI.init();
+    BTS.Touch.init();
     BTS.World.prebuild(['village']);
     BTS.Events.on('footstep', onFootstep);
     BTS.Events.on('location', function (id, def) {

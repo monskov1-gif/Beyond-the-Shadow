@@ -84,7 +84,7 @@ BTS.SFX = (function () {
   S.transition = function (t, o) { var f = burst(t, { reverb: 0.4 }, 'ui', 300, 1.2, 'bandpass', 0.4, 0.18, 0.6, 'pink'); if (f) f.frequency.exponentialRampToValueAtTime(2200, t + 0.8); return 1; };
   S.sketch = function (t, o) { for (var i = 0; i < 6; i++) burst(t + i * 0.09 + rnd(0, 0.04), { reverb: 0.1 }, 'ui', rnd(3000, 5000), 2, 'bandpass', 0.01, 0.12, 0.06); return 0.7; };
   S.voice = function (t, o) {   // dialogue murmur blip (pitch per speaker), subtle
-    var out = A.out('voice', { reverb: 0.15, vol: o.vol || 1 }); if (!out) return 0.05;
+    var out = A.out(o.bus || 'voice', { reverb: 0.15, vol: o.vol || 1, x: o.x, z: o.z, range: o.range }); if (!out) return 0.05;
     var f = 180 * (o.pitch || 1) * rnd(0.92, 1.12);
     var g = A.gain(0, out), bp = A.filter('bandpass', f * 4, 3, g);
     A.osc('sawtooth', f, t, 0.08, bp);
@@ -159,9 +159,9 @@ BTS.SFX = (function () {
     return 1;
   };
   S.drip = function (t, o) { tone(t, o, 'ambience', 'sine', rnd(1800, 2600), 0.001, 0.1 * (o.vol || 1), 0.06, rnd(900, 1200)); return 0.1; };
-  S.murmur = function (t, o) { var n = 3 + Math.floor(Math.random() * 5), p0 = rnd(0.8, 1.3); for (var i = 0; i < n; i++) S.voice(t + i * rnd(0.08, 0.15), { pitch: p0 * rnd(0.9, 1.1), vol: (o.vol || 1) * 0.5 }); return n * 0.12; };
-  S.laugh = function (t, o) { var p0 = rnd(1, 1.5); for (var i = 0; i < 4; i++) S.voice(t + i * 0.11, { pitch: p0 * (1.2 - i * 0.05), vol: (o.vol || 1) * 0.6 }); return 0.5; };
-  S.cats.drip = 'ambient'; S.cats.murmur = 'ambient'; S.cats.laugh = 'ambient';
+  S.murmur = function (t, o) { var n = 3 + Math.floor(Math.random() * 5), p0 = rnd(0.8, 1.3); for (var i = 0; i < n; i++) S.voice(t + i * rnd(0.08, 0.15), { pitch: p0 * rnd(0.9, 1.1), vol: (o.vol || 1) * 0.5 * 0.45, x: o.x, z: o.z, range: 45, bus: 'ambience' }); return n * 0.12; };
+  S.laugh = function (t, o) { var p0 = rnd(1, 1.5); for (var i = 0; i < 4; i++) S.voice(t + i * 0.11, { pitch: p0 * (1.2 - i * 0.05), vol: (o.vol || 1) * 0.6 * 0.45, x: o.x, z: o.z, range: 45, bus: 'ambience' }); return 0.5; };
+  S.cats.drip = 'drip'; S.cats.murmur = 'ambient'; S.cats.laugh = 'ambient';
   S.fire_pop = function (t, o) { burst(t, o, 'sfx', 2500, 2, 'bandpass', 0.001, (o.vol || 1) * 0.5, 0.03); return 0.05; };
   S.match = function (t, o) { burst(t, o, 'sfx', 3000, 1, 'highpass', 0.01, 0.4, 0.2); burst(t + 0.15, o, 'sfx', 800, 0.5, 'lowpass', 0.2, 0.25, 0.8, 'pink'); return 1; };
 
@@ -179,13 +179,13 @@ BTS.SFX = (function () {
     var dur = o.dur || rnd(1.2, 2.4);
     var pan = o.pan === undefined ? rnd(-0.8, 0.8) : o.pan;
     var dest = A.panner(pan, A.bus.sfx);
-    var g = A.gain(0, dest); var s = A.gain(1.5, A.reverbSend); g.connect(s);
+    var g = A.gain(0, dest); var s = A.gain(1.5, A.send.sfx); g.connect(s);
     var bp = A.filter('bandpass', 1500, 8, g), bp2 = A.filter('bandpass', 2600, 10, g);
     A.noiseSrc('white', t, dur, bp); A.noiseSrc('white', t, dur, bp2);
     var tt = t, formants = [[600, 1700], [400, 2300], [800, 1200], [300, 2600], [500, 1900]];
     g.gain.setValueAtTime(0.0001, t);
     while (tt < t + dur) { var f = formants[Math.floor(Math.random() * formants.length)]; bp.frequency.setTargetAtTime(f[0] * 2, tt, 0.02); bp2.frequency.setTargetAtTime(f[1], tt, 0.02); g.gain.setTargetAtTime(Math.random() < 0.25 ? 0.0001 : 0.09 * (o.vol || 1), tt, 0.015); tt += rnd(0.07, 0.16); }
-    g.gain.setTargetAtTime(0.0001, t + dur, 0.03);
+    g.gain.setTargetAtTime(0.0001, t + dur - 0.15, 0.03);
     return dur;
   };
   S.cats.whisper = 'horror';
@@ -201,7 +201,7 @@ BTS.SFX = (function () {
 
   /* ---------- shadows ---------- */
   S.shadow_detach = function (t, o) { var f = burst(t, { vol: 0.6, reverb: 1.5 }, 'sfx', 200, 4, 'bandpass', 0.8, 0.5, 0.5, 'pink'); if (f) f.frequency.exponentialRampToValueAtTime(1400, t + 1.2); tone(t, { vol: 0.4, reverb: 1 }, 'sfx', 'sine', 60, 0.5, 0.4, 0.8, 45); return 1.4; };
-  S.shadow_move = function (t, o) { var out = A.out('sfx', { x: o.x, z: o.z, vol: (o.vol || 1) * 0.5, reverb: 1.2 }); if (!out) return 1.2; var g = A.gain(0, out), bp = A.filter('bandpass', 320, 2, g); A.noiseSrc('pink', t, 1.2, bp); var l = A.ctx.createOscillator(); l.frequency.value = 7; var lg = A.gain(0.25, g.gain); l.connect(lg); l.start(t); l.stop(t + 1.2); A.env(g.gain, t, 0.3, 0.35, 0.4, 0.4); return 1.2; };
+  S.shadow_move = function (t, o) { var out = A.out('sfx', { x: o.x, z: o.z, vol: (o.vol || 1) * 0.5, reverb: 1.2 }); if (!out) return 1.2; var g = A.gain(0, out), trem = A.gain(0.75, g), bp = A.filter('bandpass', 320, 2, trem); A.noiseSrc('pink', t, 1.2, bp); var l = A.ctx.createOscillator(); l.frequency.value = 7; var lg = A.gain(0.25, trem.gain); l.connect(lg); l.start(t); l.stop(t + 1.2); A.env(g.gain, t, 0.3, 0.35, 0.4, 0.4); return 1.2; };
   S.cats.shadow_move = 'shadow';
   S.shadow_stretch = function (t, o) { var out = A.out('sfx', { vol: 0.4, reverb: 1.4 }); if (!out) return 2; var g = A.gain(0, out), lp = A.filter('lowpass', 600, 6, g); var osc = A.osc('sawtooth', 82, t, 2, lp); osc.frequency.exponentialRampToValueAtTime(55, t + 1.8); lp.frequency.linearRampToValueAtTime(260, t + 1.8); A.env(g.gain, t, 0.4, 0.5, 0.8, 0.7); return 2; };
   S.shadow_tear = function (t, o) { burst(t, { vol: 1, reverb: 2 }, 'sfx', 1200, 0.5, 'bandpass', 0.002, 1.0, 0.6); burst(t, { vol: 1, reverb: 2 }, 'sfx', 3000, 1, 'highpass', 0.001, 0.7, 0.15); tone(t, { vol: 0.9, reverb: 2 }, 'sfx', 'sine', 70, 0.005, 1.0, 2.5, 30); return 3; };

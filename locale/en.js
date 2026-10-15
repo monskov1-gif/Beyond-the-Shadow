@@ -21,8 +21,10 @@ BTS.Locale.en = {
     subtitles: 'Sound captions', on: 'on', off: 'off', video: 'Display', fullscreen: 'Fullscreen', scale: 'Resolution / pixel scale',
     scale_auto: 'auto', scale_270: '270 lines (large)', scale_360: '360 lines', scale_450: '450 lines', scale_540: '540 lines (small)',
     effects: 'Effects quality', fx_low: 'low', fx_medium: 'medium', fx_high: 'high', dev: 'Developer mode (FPS)',
+    ui_size: 'Interface size', size_s: 'small', size_m: 'normal', size_l: 'large', size_xl: 'extra large', touch: 'Touch controls',
     controls: 'Controls', press_key: '…press a key (Esc to cancel)', reset_keys: 'Reset keys'
   },
+  touch: { act: 'Act', observe: 'Shadow', run: 'Run', rotate: 'Turn your device sideways to see more of the village.' },
   key: { up: 'Up', down: 'Down', left: 'Left', right: 'Right', run: 'Run', interact: 'Act / continue', observe: 'Watch a shadow', journal: 'Journal', map: 'Map', inventory: 'Items', pause: 'Pause / back' },
   verb: { examine: 'Examine', talk: 'Talk', enter: 'Enter', go: 'Go', take: 'Take', open: 'Open', sit: 'Sit', hide: 'Hide', use: 'Use', read: 'Read', listen: 'Listen', look: 'Look', pray: 'Stand a while', leave: 'Leave' },
   jr: {
