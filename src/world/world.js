@@ -173,7 +173,9 @@ BTS.World = (function () {
       if (!ch.fadeable || !ch.base || !p) continue;
       var B = ch.base, reach = (B[4] - W.heightAt(p.x, p.z)) * 1.25 + 0.5;
       var behind = p.x > B[0] - 0.7 && p.x < B[2] + 0.7 && p.z < B[1] + 0.3 && p.z > B[1] - reach;
-      ch.fadeGoal = behind ? 0.28 : 1;
+      // houses between the player and the bottom of the frame are softened too, so roofs don't blot out the foreground
+      var front = !behind && ch.min && ch.min[2] > p.z + 0.8 && ch.min[2] < p.z + 9 && ch.max[0] > p.x - 7 && ch.min[0] < p.x + 7;
+      ch.fadeGoal = behind ? 0.2 : (front ? 0.55 : 1);
       ch.fade = M.damp(ch.fade, ch.fadeGoal, 6, dt);
     }
   };

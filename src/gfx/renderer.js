@@ -129,9 +129,9 @@ BTS.Renderer = (function () {
     gl.uniform1f(u.uFogHeight, env.fogHeight || 0);
     gl.uniform1f(u.uFogStart, cam.dist * 0.72);
     gl.uniform3fv(u.uCamPos, cam.eye);
-    gl.uniform1f(u.uWet, env.wet);
+    gl.uniform1f(u.uWet, env.interior ? 0 : env.wet);
     gl.uniform1f(u.uWindowGlow, env.windowGlow);
-    gl.uniform1f(u.uFlash, env.flash);
+    gl.uniform1f(u.uFlash, env.interior ? env.flash * 0.3 : env.flash);
     gl.uniform1f(u.uDesat, env.desat || 0);
     gl.uniform3fv(u.uTint, env.tint || [1, 1, 1]);
     var lights = env.activeLights || [];

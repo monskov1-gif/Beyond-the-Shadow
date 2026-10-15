@@ -156,7 +156,7 @@
       hideAll: true, keep: ['lisa', 'jaglika'],
       onPopulate: function (loc, W) {
         if (loc !== 'village') return;
-        BTS.Env.lights.forEach(function (l) { if (Math.hypot(l.x - 90.5, l.z - 82.3) < 1) l.off = false; }); W.statics.forEach(function (s) { if (s.fire || s.pool) s.off = false; });
+        BTS.Env.lights.forEach(function (l) { if (Math.hypot(l.x - 90.5, l.z - 82.3) < 1) { l.off = false; l.radius = 15; l.intensity = 2.9; } }); W.statics.forEach(function (s) { if (s.fire || s.pool) s.off = false; });
       },
       scene: function (C) {
         C.intensity(0.2);

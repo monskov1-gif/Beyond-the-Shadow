@@ -160,10 +160,10 @@ BTS.Env = (function () {
       cand.push(L);
     }
     // readability light around the focus point when it gets dark (never hide important objects)
-    var dark = E.interior ? 0.35 : M.clamp(E.lampOn * 1.1, 0, 1);
+    var dark = E.interior ? 0.5 : M.clamp(E.lampOn * 1.1, 0, 1);
     if (dark > 0.05 && focus) {
       E.fillLight = E.fillLight || { kind: 'fill', radius: 12, important: true };
-      var fl = E.fillLight, k2 = dark * (E.interior ? 0.25 : 0.55);
+      var fl = E.fillLight, k2 = dark * (E.interior ? 0.4 : 0.55);
       fl.x = focus[0]; fl.y = focus[1] + 4.5; fl.z = focus[2] + 1.5;
       fl.cur = [0.55 * k2, 0.62 * k2, 0.85 * k2]; fl.score = -1000;
       cand.push(fl);
