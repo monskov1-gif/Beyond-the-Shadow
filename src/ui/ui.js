@@ -173,10 +173,10 @@ BTS.UI = (function () {
     var e = el('div', 'toast ' + (kind || ''), esc(text), U.toasts);
     setTimeout(function () { e.classList.add('out'); }, 3600);
     setTimeout(function () { e.remove(); }, 4300);
-    while (U.toasts.children.length > 4) U.toasts.firstChild.remove();
+    while (U.toasts.children.length > 3) U.toasts.firstChild.remove();
   };
   U.caption = function (key, o) {
-    if (!BTS.Config.get('subtitles')) return;
+    if (!BTS.Config.get('subtitles') && !(o && o.force)) return;
     if (o && o.x !== undefined && BTS.Camera) { var c = BTS.Camera.target; if (Math.hypot(o.x - c[0], o.z - c[2]) > (o.range || 60) * 0.8) return; }
     var e = el('div', 'cap', '[' + esc(t(key)) + ']', U.captions);
     setTimeout(function () { e.classList.add('out'); }, 2600);

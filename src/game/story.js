@@ -66,7 +66,7 @@ BTS.Story = (function () {
     };
     if (needLoad) {
       if (b.chapterCard && !State.done('card:' + id)) {
-        State.markDone('card:' + id);
+        State.markDone('card:' + id); S.cardActive = true;
         BTS.Env.fadeBlack = 1; BTS.Env.fadeGoal = 1;
         BTS.Game.enterLocation(b.loc, b.spawn, true);
         card().then(function () { BTS.Env.fadeTo(0, 0.8); run(); });

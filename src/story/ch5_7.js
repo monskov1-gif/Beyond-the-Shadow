@@ -33,7 +33,7 @@
       if (d < 3.2) fail(W, 'c6_too_close');
     } else if (st.phase === 'pause') {
       j.anim.set('idle');
-      if (st.t > 0.1 && !st.warned) { st.warned = true; BTS.UI.caption('cap.stop'); BTS.Audio.play('breath', { vol: 0.6 }); }
+      if (st.t > 0.1 && !st.warned) { st.warned = true; BTS.UI.caption('cap.stop', { force: true }); BTS.Env.flash = Math.max(BTS.Env.flash, 0.15); BTS.Audio.play('breath', { vol: 0.6 }); }
       if (st.t > 1.1) { st.phase = 'look'; st.t = 0; j.faceTo(p.x, p.z); BTS.Audio.play('whisper', { vol: 0.4, dur: 1.2 }); }
     } else if (st.phase === 'look') {
       j.anim.set('idle'); j.faceTo(p.x, p.z);
@@ -96,7 +96,7 @@
         stalkTick(dt, W);
         if (S.flag('stalk_done') && !S.done('c6_window_go')) { S.markDone('c6_window_go'); BTS.Story.goto('c6_window', true); }
       },
-      blockExit: { south: 'block_night', west: 'block_night', djordje: 'block_lisa' }
+      blockExit: { south: 'block_night', west: 'block_night', djordje: 'block_lisa', zajko: 'block_lisa', kafana: 'block_lisa', guest: 'block_lisa', church: 'block_lisa', gorazd: 'block_lisa', tihomir: 'block_lisa', jaglika: 'block_lisa' }
     },
     { id: 'c6_window', chapter: 'ch6', obj: null, music: 'jaglika',
       npcs: { lisa: { loc: 'village', at: [72.2, 43.6], act: 'idle', dir: 'up' }, jaglika: { loc: 'village', at: [74.7, 42.3], act: 'idle', dir: 'up', noTalk: true, stage: 2 }, tihomir: null },
@@ -140,7 +140,7 @@
       ],
       tick: function (dt, W) {
         if (W.locId === 'jaglika_house' && S.flag('candle_lit')) { var L = W.light('jag_candelabra'), F = W.static('jag_candelabra_flame'); if (L) L.intensity = 1.0; if (F) F.off = false; }
-        when('c7_return', 'item:jaglika_list&clue:fact_medicines&clue:fact_needles', function (C) {
+        if (W.locId === 'jaglika_house') when('c7_return', 'item:jaglika_list&clue:fact_medicines&clue:fact_needles', function (C) {
           C.sfx('footsteps_other', { x: 3, z: 9 }); C.horror(0.6);
           return C.say('c7_steps').then(function () { C.flag('must_hide'); });
         }, 'c7_hide')();

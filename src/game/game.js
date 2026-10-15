@@ -15,7 +15,7 @@ BTS.Game = (function () {
     BTS.Events.on('footstep', onFootstep);
     BTS.Events.on('location', function (id, def) {
       if (BTS.Ambience) BTS.Ambience.setProfile(def.ambience || {});
-      if (G.started && def.nameKey && !BTS.Cutscene.running) BTS.UI.showBanner(BTS.t(def.nameKey));
+      if (G.started && def.nameKey && !BTS.Cutscene.running && !BTS.Story.cardActive) BTS.UI.showBanner(BTS.t(def.nameKey));
     });
     document.getElementById('boot').style.display = 'none';
     var q = new URLSearchParams(location.search);

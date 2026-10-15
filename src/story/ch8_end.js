@@ -156,6 +156,7 @@
       hideAll: true, keep: ['lisa', 'jaglika'],
       onPopulate: function (loc, W) {
         if (loc !== 'village') return;
+        if (R) W.extraRender = riteRender;
         BTS.Env.lights.forEach(function (l) { if (Math.hypot(l.x - 90.5, l.z - 82.3) < 1) { l.off = false; l.radius = 15; l.intensity = 2.9; } }); W.statics.forEach(function (s) { if (s.fire || s.pool) s.off = false; });
       },
       scene: function (C) {
@@ -164,6 +165,7 @@
           .then(function () { C.shadow('jaglika', { beast: 0.95 }); C.sfx('shadow_tear', {}); C.shake(0.8); C.intensity(0.6); return C.say('c10_grow'); })
           .then(function () { riteStart(BTS.World); C.intensity(0.8); });
       },
+      blockExit: { west: 'block_night', south: 'block_night', djordje: 'block_night', zajko: 'block_night', kafana: 'block_night', guest: 'block_night', church: 'block_night', gorazd: 'block_night', tihomir: 'block_night', jaglika: 'block_night' },
       tick: function (dt, W) { if (!R && W.get('jaglika') && S.done('scene:c10_rite')) riteStart(W); riteTick(dt, W); BTS.Music.intensity = Math.min(1, 0.6 + (R ? R.t / 90 : 0)); }
     },
     /* ================= CHAPTER 11 ================= */
