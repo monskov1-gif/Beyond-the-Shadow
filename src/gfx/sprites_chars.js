@@ -95,10 +95,13 @@ BTS.CharSprites = (function () {
     function skirt() {
       var len = base - legTop - 1;
       if (anim === 'sit' || anim === 'kneel') len = Math.max(3, base - legTop - 1);
+      var side = dir === 'side', sh = side ? Math.min(hunch, 2) : 0;
       for (var y = 0; y < len; y++) {
-        var w = tw + Math.floor(y / 2) + (dir === 'side' ? -1 : 0);
+        // A-line that stays close to the body: front/back view flares by at most 2px,
+        // profile is the torso's side width and flares forward a little when walking
+        var w = side ? (tw - 2) + Math.min(1, Math.floor(y / 4)) : tw + Math.min(2, Math.floor(y / 3));
         var sway = walk && y > len - 4 ? (f === 0 ? 1 : f === 2 ? -1 : 0) : 0;
-        var x0 = cx - Math.ceil(w / 2) + sway + (dir === 'side' ? 0 : 0);
+        var x0 = side ? cx - Math.floor((tw - 2) / 2) + sh + (sway > 0 ? sway : 0) : cx - Math.ceil(w / 2) + sway;
         p.rect(x0, waist + y, w, 1, bot);
         p.px(x0, waist + y, lit(bot)); p.px(x0 + w - 1, waist + y, dk(bot));
         if (d.skirtBand && y === len - 2) p.rect(x0, waist + y, w, 1, d.skirtBand);
