@@ -157,6 +157,8 @@
       onPopulate: function (loc, W) {
         if (loc !== 'village') return;
         if (R) W.extraRender = riteRender;
+        // a cold key light on Jaglika so the target of the rite reads against the storm
+        if (!BTS.Env.lights.some(function (l) { return l.id === 'rite_jag'; })) BTS.Env.lights.push({ id: 'rite_jag', x: 97.5, y: 2.4, z: 83.2, color: [0.55, 0.65, 0.95], radius: 6, intensity: 1.3, kind: 'lamp', flicker: 0, important: true });
         BTS.Env.lights.forEach(function (l) { if (Math.hypot(l.x - 90.5, l.z - 82.3) < 1) { l.off = false; l.radius = 15; l.intensity = 2.9; } }); W.statics.forEach(function (s) { if (s.fire || s.pool) s.off = false; });
       },
       scene: function (C) {
@@ -174,7 +176,7 @@
       npcs: { lisa: { loc: 'village', at: [84.5, 85.6], act: 'idle', dir: 'up' }, jaglika: { loc: 'village', at: [96.5, 81.5], act: 'idle', dir: 'left', noTalk: true } },
       hideAll: true, keep: ['lisa', 'jaglika'],
       scene: function (C) {
-        BTS.Camera.setPreset({ dist: 26 });
+        BTS.Camera.setPreset({ dist: 21 });
         var W = BTS.World, j = C.ent('jaglika'), shades, relT = null;
         W.extraRender = null;
         C.musicCut(); C.timeScale(0.35); C.sfx('shadow_tear', {}); C.shake(1.4);

@@ -335,7 +335,7 @@
       K.candle(3.7, 0, 6.6, { scale: 1.6, radius: 5, intensity: 1.1 }); K.candle(6.3, 0, 8.4, { scale: 1.6, radius: 5, intensity: 1.1 });
       L.light(5, 3.0, 3.6, [1, 0.7, 0.4], 5, 0.8, 'fire', 0.12);
       // chandelier (horos)
-      L.statics.push({ sprite: 'lantern_hang', x: 5, y: 2.6, z: 6.5, scale: 1.8, emissive: true });
+      L.statics.push({ sprite: 'lantern_hang', x: 5, y: 2.6, z: 6.5, scale: 1.8 }); L.light(5, 2.4, 6.6, [1, 0.72, 0.42], 4, 0.5, 'fire', 0.1);
       K.door(5, 14);
       L.spot('door_in', 5, 12.8, 'up'); L.spot('altar', 5, 3.6, 'up'); L.spot('sava_spot', 5, 2.6, 'down'); L.spot('candles', 3.0, 12.6, 'up'); L.spot('bier', 5, 7.5, 'down');
       L.spot('mourner1', 3.4, 9.0, 'up'); L.spot('mourner2', 6.6, 9.2, 'up'); L.spot('mourner3', 4.2, 10.4, 'up'); L.spot('mourner4', 7.2, 10.6, 'up'); L.spot('mourner5', 2.4, 7.6, 'right'); L.spot('default', 5, 12, 'up');

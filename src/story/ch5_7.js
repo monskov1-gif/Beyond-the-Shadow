@@ -151,13 +151,14 @@
       interact: [{ loc: 'jaglika_house', id: 'hide', at: [9.2, 6.6], label: 'it.hide', verb: 'verb.hide', hint: true, r: 1.6, run: function (C) {
         C.place('player', [9.4, 7.3], 'right'); C.anim('player', 'cower');
         C.spawn('jaglika', 'jag_return', { dir: 'up', noTalk: true, stage: 2 });
+        C.cam({ target: [7.6, 0.6, 6.4], dist: 16, time: 1.2 });   // frame the hiding place, the lamp and the wall together
         C.sfx('door_open', {});
         return C.wait(0.8).then(function () { return C.walk('jaglika', [5.4, 5.0]); })
           .then(function () { return C.say('c7_hidden_a'); })
           .then(function () { C.shadow('jaglika', { wall: { x: 8.0, z: 0.2, y: 0 }, beast: 0.25 }); C.sfx('shadow_move', {}); return C.say('c7_hidden_b'); })
           .then(function () { C.sfx('door_knock', {}); return C.say('c7_knock'); })
           .then(function () { return C.walk('jaglika', [3, 7.4]); }).then(function () { C.face('jaglika', 'down'); return C.say('c7_lisa_door'); })
-          .then(function () { C.anim('player', null); return C.walk('player', 'door_in', { run: true }); })
+          .then(function () { C.anim('player', null); C.camRelease(); return C.walk('player', 'door_in', { run: true }); })
           .then(function () { return C.fade(1, 1.2); });
       }, then: 'c7_after' }]
     },
