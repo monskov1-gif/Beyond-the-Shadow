@@ -23,6 +23,7 @@ BTS.UI = (function () {
     U.hud = el('div', 'hud', null, U.root);
     U.objective = el('div', 'objective', null, U.hud);
     U.banner = el('div', 'banner', null, U.hud);
+    if (BTS.NameTags) BTS.NameTags.init(U.hud);
     U.prompt = el('div', 'prompt', null, U.hud);
 
     U.captions = el('div', 'captions', null, U.hud);
@@ -42,7 +43,8 @@ BTS.UI = (function () {
     U.toasts = el('div', 'toasts', null, U.root);
     makePaper();
     bindDialogue();
-    BTS.Events.on('language', function () { U.refresh(); });
+    BTS.Events.on('language', function (l) { setLang(); U.refresh(); });
+    setLang();
     BTS.Events.on('clue', function (id, def, promoted) {
       var key = promoted ? 'ui.toast_promoted' : def.cat === 'hyp' ? 'ui.toast_hyp' : def.cat === 'fact' ? 'ui.toast_fact' : 'ui.toast_obs';
       U.toast(t(key, { name: t(def.title) }), 'clue');
@@ -50,10 +52,13 @@ BTS.UI = (function () {
     });
     BTS.Events.on('item', function (id, added) { if (added) { U.toast(t('ui.toast_item', { name: t(BTS.Data.items[id].name) }), 'item'); BTS.Audio.play('pickup'); } });
     BTS.Events.on('saved', function (slot) { U.toast(t(slot === 'auto' ? 'ui.toast_autosaved' : 'ui.toast_saved'), 'save'); if (slot !== 'auto') BTS.Audio.play('save'); });
-    BTS.Events.on('map', function (area) { if (BTS.Game && BTS.Game.started) U.toast(t('ui.toast_map', { name: t('area.' + area) }), 'map'); });
+    BTS.Events.on('map', function (area) { if (BTS.Game && BTS.Game.started) { U.toast(t('ui.toast_map', { name: t(area.indexOf('p_') === 0 ? 'map.' + area : 'area.' + area) }), 'map'); BTS.Audio.play('paper', {}); } });
     document.addEventListener('mousemove', function () { document.body.classList.remove('kbnav'); });
     document.addEventListener('keydown', function () { document.body.classList.add('kbnav'); });
   };
+
+  /* <html lang> follows the game language: CSS uses it to tune the display fonts, which only cover Latin */
+  function setLang() { var l = (BTS.I18N && BTS.I18N.lang) || 'ru'; document.documentElement.lang = l; }
 
   /* procedural paper texture for panels (data URL in a CSS variable) */
   function makePaper() {
@@ -184,8 +189,13 @@ BTS.UI = (function () {
     while (U.captions.children.length > 3) U.captions.firstChild.remove();
   };
   U.letterbox = function (on) { U.root.classList.toggle('cine', !!on); };
+  /* chapter card: "Глава 7. Дом Яглики" / "Prologue. The Fair" is split into a small kicker and a big title */
   U.chapterTitle = function (key, subKey) {
-    U.card.innerHTML = '<div class="ct">' + esc(t(key)) + '</div>' + (subKey ? '<div class="cs">' + esc(t(subKey)) + '</div>' : '');
+    var full = t(key), m = /^([^.]{2,24})\.\s+(.+)$/.exec(full);
+    var kick = m ? m[1] : '', head = m ? m[2] : full;
+    U.card.innerHTML = '<div class="cbox">' + (kick ? '<div class="ck">' + esc(kick) + '</div>' : '') +
+      '<div class="ct">' + esc(head) + '</div><div class="corn"><i></i><b></b><i></i></div>' +
+      (subKey ? '<div class="cs">' + esc(t(subKey)) + '</div>' : '') + '</div>';
     U.card.classList.remove('show'); void U.card.offsetWidth; U.card.classList.add('show');
     return new Promise(function (res) { setTimeout(function () { U.card.classList.remove('show'); setTimeout(res, 900); }, 3600); });
   };
@@ -208,6 +218,7 @@ BTS.UI = (function () {
     var game = BTS.Game && BTS.Game.started && !U.stack.length;
     U.hud.classList.toggle('off', !game);
     U.objective.classList.toggle('hidden', !!BTS.Cutscene.running || BTS.Dialogue.active);
+    if (BTS.NameTags) BTS.NameTags.update(BTS.App.dt);
     U.captions.style.bottom = (BTS.Dialogue.active ? (U.dlg.offsetHeight + 40) : 60) + 'px';
     if (game && !BTS.Cutscene.running && !BTS.Dialogue.active && !(BTS.Story && BTS.Story.cardActive) && !(BTS.Touch && BTS.Touch.enabled)) {
       var ks = BTS.Config.get('keys'), kn = BTS.Input.keyName;

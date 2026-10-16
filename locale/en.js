@@ -13,12 +13,13 @@ BTS.Locale.en = {
     toast_obs: 'New observation: {name}', toast_fact: 'Confirmed fact: {name}', toast_hyp: 'New hypothesis: {name}', toast_promoted: 'Entry confirmed: {name}',
     toast_item: 'Received: {name}', toast_saved: 'Game saved', toast_autosaved: 'Autosave', toast_map: 'Added to the map: {name}',
     goodbye: 'Thank you for playing', goodbye_text: 'You can close this browser tab. Progress and settings are saved.', back_to_menu: 'Back to the main menu',
-    made_with: 'custom engine · WebGL2 · WebAudio', the_end: 'The End'
+    made_with: 'custom engine · WebGL2 · WebAudio', the_end: 'The End',
+    tagline: 'A folk-horror mystery', menu_hint: '↑ ↓ to choose · Enter to confirm', no_save: 'No saves yet'
   },
   set: {
     language: 'Язык / Language', lang_ru: 'Русский', lang_en: 'English', audio: 'Sound', master: 'Master volume', music: 'Music', sfx: 'Effects', ambience: 'Ambience', ui: 'Interface',
     text: 'Text', text_speed: 'Text speed', speed_slow: 'slow', speed_normal: 'normal', speed_fast: 'fast', speed_instant: 'instant',
-    subtitles: 'Sound captions', on: 'on', off: 'off', video: 'Display', fullscreen: 'Fullscreen', scale: 'Resolution / pixel scale',
+    subtitles: 'Sound captions', names: 'Names above characters', on: 'on', off: 'off', video: 'Display', fullscreen: 'Fullscreen', scale: 'Resolution / pixel scale',
     scale_auto: 'auto', scale_270: '270 lines (large)', scale_360: '360 lines', scale_450: '450 lines', scale_540: '540 lines (small)',
     effects: 'Effects quality', fx_low: 'low', fx_medium: 'medium', fx_high: 'high', dev: 'Developer mode (FPS)',
     ui_size: 'Interface size', size_s: 'small', size_m: 'normal', size_l: 'large', size_xl: 'extra large', touch: 'Touch controls',
@@ -35,7 +36,8 @@ BTS.Locale.en = {
     link_fail: 'Đorđe stares at the two entries for a long time. No — together they don’t say anything yet. (Not sure what to link? Press “?”.)', link_known: 'Đorđe has already written this connection down.', link_notyet: 'Something is missing. One more confirmation is needed.',
     current: 'Now', hint_try: 'Hint: link “{a}” and “{b}”. Tap both entries — they are highlighted.', hint_half: 'Hint: “{a}” connects to something you haven’t found yet. Follow your goal — the clue will turn up.', hint_none: 'Nothing to link right now. You need new clues. Goal: {obj}'
   },
-  map: { legend: '← → village / outskirts. The red dot is Đorđe.', unknown: 'This place is not on the map yet.', you: 'Đorđe', north: 'N ↑' },
+  map: { legend: '← → village / outskirts. The red dot is Đorđe; pins mark places the story has led you to.', unknown: 'This place is not on the map yet.', you: 'Đorđe', north: 'N ↑',
+    p_djordje: 'Đorđe’s house', p_zajko: 'Zlatko and Jablan’s house', p_kafana: 'Dragan’s kafana', p_church: 'The church', p_gorazd: 'Gorazd’s house', p_guest: 'Stana’s guesthouse', p_tihomir: 'Tihomir’s house', p_jaglika: 'Jaglika’s hut' },
   inv: { empty: 'Empty pockets.', state: 'Condition:', use: 'Useful for:' },
   cap: { bell: 'A bell tolls', thunder: 'Thunder', whisper: 'Indistinct whispering', dog: 'A dog barks', knock: 'Knocking', tear: 'A crack, like cloth tearing', release: 'A sigh of many voices', scream: 'A distant scream', crow: 'A crow caws', shutter: 'A shutter bangs', steps: 'Someone’s footsteps' },
   name: {

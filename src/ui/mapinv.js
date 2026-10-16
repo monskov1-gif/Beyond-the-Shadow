@@ -6,6 +6,38 @@ BTS.MapUI = (function () {
   var t = function (k, p) { return BTS.t(k, p); };
   var M = { page: 'village' };
 
+  /* houses that get a labelled marker once the story has led Đorđe to them.
+     Revealed by the exit's story flag, by visiting the interior, or by walking into an area. */
+  M.places = [
+    { id: 'p_djordje', house: 'h_djordje', at: [55, 11], always: true },
+    { id: 'p_zajko', house: 'h_zajko', at: [32, 38.5], flag: 'zajko_house_open', loc: 'zajko_house' },
+    { id: 'p_kafana', house: 'h_kafana', at: [45.5, 38.5], loc: 'kafana', area: 'center' },
+    { id: 'p_church', house: 'h_church', at: [87, 22.5], flag: 'church_open', loc: 'church' },
+    { id: 'p_gorazd', house: 'h_gorazd', at: [91.5, 56.5], flag: 'gorazd_open', loc: 'gorazd_house' },
+    { id: 'p_guest', house: 'h_guest', at: [64, 37], flag: 'guest_open', loc: 'guesthouse' },
+    { id: 'p_tihomir', house: 'h_tihomir', at: [76.5, 39.5], flag: 'tihomir_open', loc: 'tihomir_house' },
+    { id: 'p_jaglika', house: 'h_jaglika', at: [11, 22.5], flag: 'jaglika_open', loc: 'jaglika_house' }
+  ];
+  function placeKnown(pl) {
+    var S = BTS.State;
+    return pl.always || (pl.flag && S.flag(pl.flag)) || (pl.loc && BTS.World.locId === pl.loc) || (pl.area && S.d.map[pl.area]);
+  }
+  /* mark newly known places; the first pass over a fresh / loaded state is silent (no toast flood) */
+  var checkedState = null;
+  M.checkPlaces = function () {
+    var S = BTS.State, d = S.d;
+    if (!d || !d.map) return;
+    var silent = checkedState !== d || !(BTS.Game && BTS.Game.started);
+    checkedState = d;
+    M.places.forEach(function (pl) {
+      if (d.map[pl.id] || !placeKnown(pl)) return;
+      if (silent) d.map[pl.id] = true; else S.reveal(pl.id);
+    });
+  };
+  BTS.Events.on('flag', function () { if (BTS.Game && BTS.Game.started) M.checkPlaces(); });
+  BTS.Events.on('location', function () { if (BTS.Game && BTS.Game.started) M.checkPlaces(); });
+  BTS.Events.on('map', function (a) { if (a.indexOf('p_') !== 0 && BTS.Game && BTS.Game.started) M.checkPlaces(); });
+
   M.open = function () {
     if (U.isOpen('map')) return;
     BTS.Audio.play('map_open');
@@ -34,6 +66,7 @@ BTS.MapUI = (function () {
   M.draw = function (cv, page) {
     var g = cv.getContext('2d'), w = cv.width, h = cv.height;
     var st = BTS.World.cache[page];
+    M.checkPlaces();
     g.fillStyle = '#d6cbb0'; g.fillRect(0, 0, w, h);
     for (var i = 0; i < 2500; i++) { g.fillStyle = 'rgba(110,90,60,' + Math.random() * 0.07 + ')'; g.fillRect(Math.random() * w, Math.random() * h, 2, 2); }
     if (!st) { g.fillStyle = '#433'; g.font = '16px Georgia'; g.fillText(t('map.unknown'), 30, 40); return; }
@@ -72,6 +105,8 @@ BTS.MapUI = (function () {
       g.fillStyle = 'rgba(214,203,176,.75)'; g.fillRect(cx - 3, cy - 12, tw + 6, 16);
       g.fillStyle = 'rgba(40,30,25,.95)'; g.fillText(label, cx, cy);
     });
+    // discovered houses: tinted roof + pin + label under the house
+    if (page === 'village') M.drawPlaces(g, st, P, sc);
     // player marker
     var W = BTS.World, pl = W.player, mp = null;
     if (W.locId === page && pl) mp = [pl.x, pl.z];
@@ -85,6 +120,40 @@ BTS.MapUI = (function () {
     g.strokeStyle = 'rgba(60,45,35,.8)'; g.lineWidth = 3; g.strokeRect(6, 6, w - 12, h - 12);
     // compass
     g.font = 'bold 13px Georgia'; g.fillStyle = 'rgba(60,45,35,.9)'; g.fillText(t('map.north'), w - 34, 28);
+  };
+  M.drawPlaces = function (g, st, P, sc) {
+    var shapes = {};
+    st.mapShapes.forEach(function (s) { if (s.t === 'house' && s.id) shapes[s.id] = s; });
+    var boxes = [];
+    M.places.forEach(function (pl) {
+      if (!BTS.State.d.map[pl.id]) return;
+      var sh = shapes[pl.house], a, c;
+      if (sh) { a = P(sh.box[0], sh.box[1]); c = P(sh.box[2], sh.box[3]); }
+      else { a = P(pl.at[0] - 2.5, pl.at[1] - 2); c = P(pl.at[0] + 2.5, pl.at[1] + 2); }
+      g.fillStyle = 'rgba(140,58,40,.55)'; g.fillRect(a[0], a[1], c[0] - a[0], c[1] - a[1]);
+      g.strokeStyle = 'rgba(70,20,15,.9)'; g.lineWidth = 1.5; g.strokeRect(a[0], a[1], c[0] - a[0], c[1] - a[1]);
+      boxes.push({ pl: pl, cx: (a[0] + c[0]) / 2, top: a[1], bot: c[1] });
+    });
+    g.font = 'bold 12px Georgia';
+    var placed = [];
+    boxes.forEach(function (b) {
+      var label = t('map.' + b.pl.id), tw = g.measureText(label).width + 10, th = 17;
+      var x = Math.max(10, Math.min(g.canvas.width - tw - 10, b.cx - tw / 2)), y = b.bot + 4;
+      // keep labels from piling on top of each other: try below, then above the house
+      var hit = function (yy) { return placed.some(function (r) { return x < r[0] + r[2] && x + tw > r[0] && yy < r[1] + r[3] && yy + th > r[1]; }); };
+      if (hit(y)) y = b.top - th - 4;
+      if (hit(y)) y = b.bot + 4 + th;
+      placed.push([x, y, tw, th]);
+      // pin
+      g.beginPath(); g.moveTo(b.cx, (b.top + b.bot) / 2 + 1); g.lineTo(b.cx - 4, (b.top + b.bot) / 2 - 7); g.lineTo(b.cx + 4, (b.top + b.bot) / 2 - 7); g.closePath();
+      g.fillStyle = 'rgba(120,25,20,.95)'; g.fill();
+      g.beginPath(); g.arc(b.cx, (b.top + b.bot) / 2 - 8, 4, 0, 7); g.fill();
+      g.beginPath(); g.arc(b.cx, (b.top + b.bot) / 2 - 8, 1.5, 0, 7); g.fillStyle = '#e9dcc0'; g.fill();
+      // paper tag
+      g.fillStyle = 'rgba(238,228,204,.93)'; g.fillRect(x, y, tw, th);
+      g.strokeStyle = 'rgba(110,40,30,.75)'; g.lineWidth = 1; g.strokeRect(x + 0.5, y + 0.5, tw - 1, th - 1);
+      g.fillStyle = 'rgba(70,22,16,1)'; g.fillText(label, x + 5, y + 13);
+    });
   };
   return M;
 })();
