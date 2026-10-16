@@ -159,27 +159,73 @@
     BTS.Locations[id] = o;
   }
 
-  /* ============ Đorđe's house ============ */
+  /* ============ Đorđe's house: the family home of Pečko (baker) and Gvozdin (smith) ============
+     row of rooms (west → east): parents' bedroom | hall with the back door and the pantry corner |
+     kitchen with the bread oven (front door from the terrace) | family room ("kuća") | Đorđe's room */
   interior('djordje_house', {
-    nameKey: 'loc.djordje_house', bounds: [-1, -1, 19, 10], camBounds: [4, 2, 14, 7], mapParent: 'village', mapPos: [55, 12],
+    nameKey: 'loc.djordje_house', bounds: [-11.2, -1, 19, 10], camBounds: [-7.4, 2, 14, 7], mapParent: 'village', mapPos: [55, 12],
+    surface: function (x) { return x > -4.2 && x < 4.3 ? 'stone' : 'wood'; },
     build: function (L) {
       var K = new Kit(L);
-      K.floor(0, 0, 18, 9, 'floor_wood');
-      K.shell(0, 0, 18, 9, 'wall_int_white', { doors: [3.5] });
+      K.floor(-10.2, 0, -4.2, 9, 'floor_wood_dark'); K.floor(-4.2, 0, 0, 9, 'floor_brick'); K.floor(0, 0, 4.3, 9, 'floor_stone'); K.floor(4.3, 0, 18, 9, 'floor_wood');
+      K.shell(-10.2, 0, 18, 9, 'wall_int_white', { doors: [3.5] });
+      K.partition(-4.2, 0, 9, 5.2, 7.0, 'wall_int_white');
+      K.partition(0, 0, 9, 2.8, 4.6, 'wall_int_white');
+      K.partition(4.3, 0, 9, 4.6, 7.4, 'wall_int_white');
       K.partition(10, 0, 9, 4.6, 6.6, 'wall_int_white');
-      // living room / kitchen
+
+      /* --- parents' bedroom --- */
+      K.bed(-7.2, 1.75, 2.1, 2.7, 'blanket');
+      K.mb.box(-7.2, 0.45, 0.55, 1.9, 0.14, 0.45, { all: 'cloth_white' }, { mat: MAT.CLOTH });   // second pillow
+      [-8.65, -5.75].forEach(function (x) { K.mb.box(x, 0, 0.55, 0.55, 0.6, 0.5, { all: 'wood_dark', top: 'cloth_white' }, { mat: MAT.WOOD }); L.box(x - 0.28, 0.3, x + 0.28, 0.8, 'nightstand'); });
+      K.candle(-5.75, 0.6, 0.6, { scale: 0.8, radius: 3.2, intensity: 0.55 });
+      K.decal(-9.55, 1.6, 0, 0.6, 0.72, 'icon_corner'); L.statics.push({ sprite: 'kandilo', x: -9.55, y: 1.05, z: 0.3, scale: 1.1 });
+      L.statics.push({ sprite: 'flame', x: -9.55, y: 1.42, z: 0.32, scale: 0.28, emissive: true, flicker: true, fire: true }); L.light(-9.5, 1.5, 0.8, [1, 0.45, 0.3], 2.6, 0.45, 'fire', 0.2);
+      K.window(-4.95 - 0.5, 0, { side: 'back', y: 1.3, w: 0.8 });
+      K.wardrobe(-9.8, 5.3, 0.75, 2.0, 'e');
+      K.chest(-7.2, 3.55);                                                       // dowry chest at the foot of the bed
+      K.mb.box(-9.75, 0, 7.9, 0.8, 0.95, 1.3, { all: 'wood_light', top: 'cloth_white' }, { mat: MAT.WOOD }); L.box(-10.2, 7.25, -9.35, 8.55, 'dresser');
+      K.sideDecal(-10.16, 1.2, 7.9, 0.7, 0.9, 'window_plain', 'e');              // mirror over the dresser
+      K.prop('photo_frame', -9.7, 7.7, { y: 0.95, scale: 0.8 });
+      K.prop('basket', -5.0, 3.0, { collide: 0.25 });                           // Pečko's knitting
+      K.sideDecal(-4.36, 1.0, 2.0, 0.9, 1.2, 'cloth_white', 'w');               // her apron on a peg
+      K.sideDecal(-4.36, 1.0, 3.2, 0.8, 1.3, 'cloth_dark', 'w');                // his leather apron
+      K.rug(-7.0, 5.6, 3.6, 2.0, 'rug_kilim');
+      K.lamp(-7.0, 4.2, 5.5);
+
+      /* --- hall: coats, the back door to the yard, the pantry corner --- */
+      K.prop('coat_rack', -3.6, 0.55, { collide: 0.28 });
+      K.decal(-2.0, 0, 0, 0.95, 1.9, 'door_grey', MAT.WOOD); K.mb.box(-2.0, 1.9, 0.08, 1.2, 0.12, 0.12, { all: 'wood_beam' }, { mat: MAT.WOOD });
+      K.mb.box(-0.75, 0, 0.45, 1.1, 0.42, 0.42, { all: 'wood_light' }, { mat: MAT.WOOD }); L.box(-1.3, 0.24, -0.2, 0.66, 'bench');
+      K.prop('bucket', -1.0, 0.5, { y: 0.42, scale: 0.9 });
+      K.shelf(-3.25, 8.35, 1.6, 'shelf_jars', 1.9);                           // pantry: preserves (zimnica)
+      K.prop('peppers', -1.9, 8.6, { y: 1.3, mat: MAT.CLOTH }); K.prop('peppers', -1.5, 8.6, { y: 1.4, mat: MAT.CLOTH, flip: true });
+      K.prop('sack_flour', -0.7, 8.1, { collide: 0.28 }); K.prop('barrel', -1.5, 7.5, { collide: 0.3 }); K.prop('cheese_shelf', -2.6, 8.55, { y: 1.95 });
+      K.lamp(-2.1, 4.2, 4.5);
+
+      /* --- kitchen: stove, Pečko's bread oven, kneading trough, cupboard --- */
       K.stove(1.2, 1.0);
-      K.cupboard(3.6, 0.45, 2.0);
+      K.cupboard(3.15, 0.45, 1.9);
+      K.breadOven(1.1, 6.9, 0.85);
+      K.prop('kneading_trough', 3.3, 2.3, { collide: 0.45 });
+      K.prop('bread', 3.3, 2.25, { y: 0.72, scale: 0.6 });
+      K.prop('peel', 2.15, 8.35);
+      K.prop('sack_flour', 0.55, 5.1, { collide: 0.28 }); K.prop('sack_flour', 0.5, 4.5, { flip: true });
+      K.prop('herbs_hang', 2.3, 0.25, { y: 1.9, mat: MAT.CLOTH }); K.prop('peppers', 0.4, 0.3, { y: 1.3, mat: MAT.CLOTH });
+      K.prop('basket', 1.2, 3.2, { collide: 0.25 });
+
+      /* --- family room --- */
       K.table(5.6, 4.3, 2.0, 1.1, { cloth: 'cloth_white' }); K.chair(4.8, 3.4); K.chair(6.4, 3.4); K.chair(5.6, 5.3, false);
-      K.rug(5.4, 6.3, 4, 2);
+      K.prop('jug', 4.9, 4.1, { y: 0.8 });
+      K.rug(7.0, 6.5, 4.2, 2);
       K.decal(8.2, 1.7, 0, 0.6, 0.72, 'icon_corner', MAT.DEFAULT); K.candle(8.2, 1.3, 0.25, { radius: 2.8, intensity: 0.5 });
-      K.decal(6.8, 1.6, 0, 0.5, 0.62, 'photo_frame');
-      K.window(1.6 + 4.5, 0, { side: 'back', y: 1.3 });
+      K.decal(9.35, 1.6, 0, 0.5, 0.62, 'photo_frame');
+      K.window(6.1, 0, { side: 'back', y: 1.3 });
+      K.mb.box(9.5, 0, 2.5, 0.8, 0.45, 2.4, { all: 'wood_dark', top: 'rug_kilim' }, { mat: MAT.WOOD }); K.mb.box(9.82, 0.45, 2.5, 0.16, 0.5, 2.4, { all: 'rug_plain' }, { mat: MAT.CLOTH }); L.box(9.1, 1.3, 9.85, 3.7, 'sofa');
       K.chest(8.7, 7.6);
-      K.prop('herbs_hang', 2.3, 0.25, { y: 1.9, mat: MAT.CLOTH });
-      K.prop('basket', 1.2, 3.2, { collide: 0.25 }); K.prop('jug', 4.4, 4.1, { y: 0.8 });
       K.lamp(5.6, 4.2, 6.5);
-      // Đorđe's room
+
+      /* --- Đorđe's room --- */
       K.bed(16.5, 2.0, 1.4, 2.8, 'blanket');
       K.table(12.4, 1.0, 2.2, 0.9); K.chair(12.4, 2.0, false);
       K.prop('papers', 12.0, 1.0, { y: 0.8 }); K.prop('books', 13.0, 0.9, { y: 0.8, scale: 0.6 });
@@ -187,21 +233,25 @@
       K.window(13.6, 0, { side: 'back', y: 1.3, w: 1.1 });
       K.rug(13.8, 5.6, 2, 2, 'rug_plain');
       K.prop('cradle_toy', 17.1, 3.3, { y: 0.45 });
-      K.decal(11.2, 1.3, 0, 1.1, 0.85, 'pinned_notes');       // his drawings pinned on the wall
+      K.decal(11.2, 1.3, 0, 1.1, 0.85, 'pinned_notes');                         // his drawings pinned on the wall
+      K.sideDecal(10.14, 1.0, 2.6, 1.6, 1.15, 'pinned_notes', 'e');             // notes board: sketches, a map of the village
+      K.wardrobe(17.5, 6.6, 0.8, 1.6, 'w', 2.0);
       K.candle(12.9, 0.8, 1.1, { radius: 3.4, intensity: 0.7 });
       K.door(3.5, 9);
-      L.spot('bed', 15.5, 4.2, 'down'); L.spot('desk', 12.4, 2.4, 'up'); L.spot('window', 13.6, 1.4, 'up'); L.spot('kitchen', 5.6, 6.6, 'up'); L.spot('table', 4.6, 5.2, 'up');
+      L.spot('bed', 15.5, 4.2, 'down'); L.spot('desk', 12.4, 2.4, 'up'); L.spot('window', 13.6, 1.4, 'up'); L.spot('table', 4.6, 5.2, 'up');
+      L.spot('kitchen', 2.6, 4.9, 'left'); L.spot('hall', -2.1, 5.0, 'up'); L.spot('pantry', -2.4, 6.9, 'down'); L.spot('parents_room', -7.0, 6.6, 'up');
+      L.spot('oven', 2.4, 6.9, 'left');
       L.spot('door_in', 3.5, 7.6, 'up'); L.spot('chest', 8.7, 6.7, 'down'); L.spot('stove', 1.6, 2.4, 'up'); L.spot('default', 5, 7, 'up');
       L.spot('baka_chair', 6.4, 3.8, 'down'); L.spot('lisa_table', 6.4, 5.4, 'left');
     },
     exits: [{ id: 'out', at: [3.5, 8.6], to: 'village', spawn: 'djordje_door', label: 'loc.village', verb: 'verb.go' }],
     examine: [
       { id: 'x_dj_icon', at: [8.2, 1.0], label: 'it.icon', dlg: 'x_dj_icon' },
-      { id: 'x_dj_photo', at: [6.8, 1.0], label: 'it.family_photo', dlg: 'x_dj_photo' },
+      { id: 'x_dj_photo', at: [9.35, 1.0], label: 'it.family_photo', dlg: 'x_dj_photo' },
       { id: 'x_dj_stove', at: [1.6, 2.2], label: 'it.stove', dlg: 'x_dj_stove' },
       { id: 'x_dj_drawings', at: [11.2, 1.0], label: 'it.drawings', dlg: 'x_dj_drawings' },
       { id: 'x_dj_shelf', at: [15.2, 1.0], label: 'it.shelf', dlg: 'x_dj_shelf' },
-      { id: 'x_dj_cupboard', at: [3.6, 1.2], label: 'it.cupboard', dlg: 'x_dj_cupboard' },
+      { id: 'x_dj_cupboard', at: [3.15, 1.2], label: 'it.cupboard', dlg: 'x_dj_cupboard' },
       { id: 'x_dj_rabbit', at: [17.1, 3.6], label: 'it.toy', dlg: 'x_dj_rabbit', when: 'c2_funeral..' }
     ]
   });
