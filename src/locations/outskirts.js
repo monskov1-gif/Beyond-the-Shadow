@@ -7,7 +7,7 @@
   var PATHS = [
     { pts: [[96, 20], [84, 21], [74, 17], [62, 18], [50, 15], [40, 12], [31, 11]], w: 2.0, t: 'dirt' },       // forest path to the lookout
     { pts: [[62, 18], [60, 28], [52, 36], [46, 44]], w: 1.8, t: 'dirt' },                                       // down through the fields to the mill
-    { pts: [[96, 58.5], [80, 56], [70, 58], [56, 62], [40, 64]], w: 2.4, t: 'dirt' }                            // south road along the river
+    { pts: [[96, 54], [88, 52.5], [88, 61.5], [80, 61], [70, 59], [56, 62], [40, 64]], w: 2.4, t: 'dirt' }   // south road: from the village edge over the bridge, then along the far bank
   ];
   function segDist(px, pz, a, b) { var dx = b[0] - a[0], dz = b[1] - a[1], l2 = dx * dx + dz * dz; var t = l2 ? M.clamp(((px - a[0]) * dx + (pz - a[1]) * dz) / l2, 0, 1) : 0; return Math.hypot(px - a[0] - dx * t, pz - a[1] - dz * t); }
   function polyDist(x, z, pts) { var d = 1e9; for (var i = 0; i < pts.length - 1; i++) d = Math.min(d, segDist(x, z, pts[i], pts[i + 1])); return d; }
@@ -100,15 +100,15 @@
       L.emitter({ type: 'fireflies', x: 50, y: 0.2, z: 50, rate: 2, area: [70, 14], night: true, fx: true });
       L.emitter({ type: 'leaves', x: 50, y: 0, z: 14, rate: 2, area: [80, 16], fx: true });
       L.box(-2, 0, 3.5, 74); L.box(96.5, 0, 102, 17.5); L.box(96.5, 22.5, 102, 55.5); L.box(96.5, 60.5, 102, 74); L.box(0, -2, 100, 4.5); L.box(0, 69.5, 100, 76);
-      L.spot('from_village_w', 94, 20, 'left'); L.spot('from_village_s', 93.5, 58.5, 'left'); L.spot('default', 90, 21, 'left');
-      L.spot('field_mid', 40, 36, 'down'); L.spot('field_end', 22, 34); L.spot('river_bank', 60, 46.5, 'down'); L.spot('bridge', 88, 54, 'down'); L.spot('forest_mid', 74, 18.5, 'left'); L.spot('pit', 30, 36);
+      L.spot('from_village_w', 94, 20, 'left'); L.spot('from_village_s', 93, 54, 'left'); L.spot('default', 90, 21, 'left');
+      L.spot('field_mid', 40, 36, 'down'); L.spot('field_end', 22, 34); L.spot('river_bank', 60, 44, 'down'); L.spot('bridge', 88, 54, 'down'); L.spot('forest_mid', 74, 18.5, 'left'); L.spot('pit', 30, 36);
       L.area('forest', 40, 4, 96, 24); L.area('viewpoint', 20, 4, 40, 20); L.area('fields', 16, 24, 70, 41); L.area('river', 4, 41, 96, 62); L.area('mill', 38, 40, 52, 50);
       belt(-24, -20, 124, 0, 50, ['tree_pine', 'tree_oak']); belt(-24, 0, 0, 96, 40, ['tree_pine', 'tree_oak']); belt(100, 0, 124, 96, 40, ['tree_oak', 'tree_pine']); belt(-24, 74, 124, 96, 30, ['tree_oak', 'tree_poplar']);
       L.ground(-24, -20, 124, 96, { waterLevel: -0.8 });
     },
     exits: [
       { id: 'to_village_w', at: [95.2, 20], to: 'village', spawn: 'from_outskirts_w', label: 'loc.village', verb: 'verb.go', door: false },
-      { id: 'to_village_s', at: [95.2, 58.5], to: 'village', spawn: 'from_outskirts_s', label: 'loc.village', verb: 'verb.go', door: false }
+      { id: 'to_village_s', at: [95.2, 54], to: 'village', spawn: 'from_outskirts_s', label: 'loc.village', verb: 'verb.go', door: false }
     ],
     examine: [
       { id: 'x_os_cross', at: [63.5, 17], label: 'it.stone_cross', dlg: 'x_os_cross' },
