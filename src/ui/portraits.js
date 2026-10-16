@@ -11,7 +11,7 @@ BTS.Portraits = (function () {
   P.EXPR = EXPR;
   var S = 120; P.SIZE = S;
   var NONE = -1e9;
-  var LIGHT = nrm([-0.6, -0.55, 0.58]);
+  var LIGHT = nrm([-0.62, -0.4, 0.68]);
   var HALF = nrm([LIGHT[0], LIGHT[1], LIGHT[2] + 1]);
   var BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5];
 
@@ -48,7 +48,7 @@ BTS.Portraits = (function () {
     };
   }
   /* ellipsoid primitive {c:[X,Y,Z], r:[a,b,c], rot:[yaw,pitch,roll], clip:fn(X,Y,Z)} compiled for a frame */
-  function E(c, r, o) { o = o || {}; return { c: c, r: r, rot: o.rot, clip: o.clip }; }
+  function E(c, r, o) { o = o || {}; return { c: c, r: r, rot: o.rot, clip: o.clip, k: o.k }; }
   function compile(F, e) {
     var A = e.rot ? mm(F.R, rot(e.rot[0], e.rot[1], e.rot[2])) : F.R;
     var w = F.w(e.c[0], e.c[1], e.c[2]);
@@ -56,7 +56,7 @@ BTS.Portraits = (function () {
     function m(i, j) { return A[i][0] * d[0] * A[j][0] + A[i][1] * d[1] * A[j][1] + A[i][2] * d[2] * A[j][2]; }
     var mr = Math.max(e.r[0], e.r[1], e.r[2]) * F.s + 1;
     return { cx: w[0], cy: w[1], cz: w[2], m00: m(0, 0), m01: m(0, 1), m02: m(0, 2), m11: m(1, 1), m12: m(1, 2), m22: m(2, 2),
-      x0: Math.floor(w[0] - mr), x1: Math.ceil(w[0] + mr), y0: Math.floor(w[1] - mr), y1: Math.ceil(w[1] + mr), clip: e.clip, F: F };
+      x0: Math.floor(w[0] - mr), x1: Math.ceil(w[0] + mr), y0: Math.floor(w[1] - mr), y1: Math.ceil(w[1] + mr), clip: e.clip, F: F, k: e.k === undefined ? null : e.k * F.s };
   }
   function hit(p, x, y) {
     if (x < p.x0 || x > p.x1 || y < p.y0 || y > p.y1) return NONE;
@@ -100,10 +100,15 @@ BTS.Portraits = (function () {
     bx0 = Math.max(0, bx0); by0 = Math.max(0, by0); bx1 = Math.min(S - 1, bx1); by1 = Math.min(S - 1, by1);
     for (var y = by0; y <= by1; y++) for (var x = bx0; x <= bx1; x++) {
       var zz = NONE;
-      for (var j = 0; j < prims.length; j++) { var h = hit(prims[j], x, y); if (h > NONE) zz = smax(zz, h, k); }
+      for (var j = 0; j < prims.length; j++) { var h = hit(prims[j], x, y); if (h > NONE) zz = smax(zz, h, prims[j].k || k); }
       if (zz <= NONE) continue;
       var l = F.l(x + 0.5, y + 0.5, zz);
-      if (pt.mask && !pt.mask(l[0], l[1], l[2], x, y)) continue;
+      if (pt.mask) {
+        var mv = pt.mask(l[0], l[1], l[2], x, y);
+        if (!mv || mv <= 0) continue;
+        // hair and cloth edges thin out toward their border instead of ending in a step
+        if (pt.taper && typeof mv === 'number') { var tq = Math.min(1, mv / (pt.taperW || 0.12)); zz -= pt.taper * F.s * (1 - tq * tq * (3 - 2 * tq)); }
+      }
       if (pt.disp) zz += pt.disp(l[0], l[1], l[2], x, y) * F.s;
       var i = y * S + x;
       z[i] = zz + zoff; loc[i * 3] = l[0]; loc[i * 3 + 1] = l[1]; loc[i * 3 + 2] = l[2];
@@ -144,14 +149,14 @@ BTS.Portraits = (function () {
       var dif = clamp((nl + 0.3) / 1.3, 0, 1);
       // cast shadow by marching the height field toward the light
       var sh = 0;
-      if (pt.noShadow !== true) for (var st = 2; st < 22; st++) {
+      if (pt.noShadow !== true && !window.__NOSH) for (var st = 2; st < 22; st++) {
         var sx = Math.round(x + sdx * st), sy = Math.round(y + sdy * st);
         if (sx < 0 || sy < 0 || sx >= S || sy >= S) break;
         var j2 = sy * S + sx;
         if (top[j2] >= 0 && parts[top[j2]].cast !== false && Z[j2] > z0 + rise * st + 1.5) { sh = 1; break; }
       }
       var cav = Math.max(0, Zb[i] - Z[i]);
-      var occ = 1 - Math.min(0.45, cav * 0.045);
+      var occ = window.__NOAO ? 1 : 1 - Math.min(0.45, cav * 0.045);
       var v = (0.16 + 0.84 * dif * (sh ? 0.42 : 1)) * occ;
       // cool rim from the back right
       if (nv[0] > 0.45 && M.rim) v += M.rim * 0.25 * (nv[0] - 0.45);
@@ -253,13 +258,13 @@ BTS.Portraits = (function () {
   /* ---------------- the head ---------------- */
   /* face types: proportions in head units (half head width = 1, eye line at Y = 0) */
   var FACES = {
-    man:    { cran: 1.0, fw: 1.0, jawX: 0.56, jawY: 0.8, jawR: 1.0, chinY: 1.3, chinW: 0.3, brow: 0.16, nose: 1.0, noseW: 1.0, lip: 1.0, lipW: 1.0, eye: 1.0, neck: 0.5, sh: 1.08, age: 0, fem: 0, mouthY: 0.9, noseY: 0.6, chinZ: 0.5 },
-    woman:  { cran: 0.98, fw: 0.94, jawX: 0.46, jawY: 0.78, jawR: 0.85, chinY: 1.24, chinW: 0.24, brow: 0.07, nose: 0.88, noseW: 0.85, lip: 1.2, lipW: 0.95, eye: 1.08, neck: 0.4, sh: 0.9, age: 0, fem: 1, mouthY: 0.86, noseY: 0.57, chinZ: 0.46 },
-    boy:    { cran: 1.0, fw: 0.94, jawX: 0.46, jawY: 0.7, jawR: 0.85, chinY: 1.14, chinW: 0.26, brow: 0.05, nose: 0.78, noseW: 0.85, lip: 1.05, lipW: 0.9, eye: 1.12, neck: 0.38, sh: 0.8, age: 0, fem: 0.3, mouthY: 0.8, noseY: 0.52, chinZ: 0.44, child: 1 },
-    girl:   { cran: 1.0, fw: 0.92, jawX: 0.44, jawY: 0.7, jawR: 0.8, chinY: 1.12, chinW: 0.24, brow: 0.04, nose: 0.75, noseW: 0.8, lip: 1.15, lipW: 0.9, eye: 1.15, neck: 0.36, sh: 0.76, age: 0, fem: 1, mouthY: 0.79, noseY: 0.5, chinZ: 0.42, child: 1 },
-    small:  { cran: 1.04, fw: 0.95, jawX: 0.42, jawY: 0.6, jawR: 0.8, chinY: 0.98, chinW: 0.26, brow: 0.0, nose: 0.6, noseW: 0.8, lip: 1.1, lipW: 0.85, eye: 1.25, neck: 0.34, sh: 0.66, age: 0, fem: 0.6, mouthY: 0.7, noseY: 0.42, chinZ: 0.42, child: 2 },
-    old:    { cran: 0.98, fw: 0.94, jawX: 0.48, jawY: 0.82, jawR: 0.9, chinY: 1.26, chinW: 0.25, brow: 0.08, nose: 0.96, noseW: 0.92, lip: 0.85, lipW: 0.95, eye: 0.98, neck: 0.4, sh: 0.88, age: 1, fem: 1, mouthY: 0.9, noseY: 0.6, chinZ: 0.45 },
-    oldman: { cran: 1.0, fw: 1.0, jawX: 0.55, jawY: 0.82, jawR: 1.0, chinY: 1.3, chinW: 0.3, brow: 0.15, nose: 1.08, noseW: 1.05, lip: 0.8, lipW: 1.0, eye: 0.95, neck: 0.46, sh: 1.0, age: 1, fem: 0, mouthY: 0.92, noseY: 0.62, chinZ: 0.48 }
+    man:    { cran: 1.0, fw: 1.0, jawX: 0.56, jawY: 0.8, jawR: 1.0, chinY: 1.3, chinW: 0.3, brow: 0.16, nose: 1.0, noseW: 1.0, lip: 1.0, lipW: 1.0, eye: 1.0, neck: 0.62, sh: 1.08, age: 0, fem: 0, mouthY: 0.9, noseY: 0.6, chinZ: 0.5 },
+    woman:  { cran: 0.98, fw: 0.94, jawX: 0.46, jawY: 0.78, jawR: 0.85, chinY: 1.24, chinW: 0.24, brow: 0.07, nose: 0.88, noseW: 0.85, lip: 1.2, lipW: 0.95, eye: 1.08, neck: 0.5, sh: 0.9, age: 0, fem: 1, mouthY: 0.86, noseY: 0.57, chinZ: 0.46 },
+    boy:    { cran: 1.0, fw: 0.94, jawX: 0.46, jawY: 0.7, jawR: 0.85, chinY: 1.14, chinW: 0.26, brow: 0.05, nose: 0.78, noseW: 0.85, lip: 1.05, lipW: 0.9, eye: 1.12, neck: 0.48, sh: 0.8, age: 0, fem: 0.3, mouthY: 0.8, noseY: 0.52, chinZ: 0.44, child: 1 },
+    girl:   { cran: 1.0, fw: 0.92, jawX: 0.44, jawY: 0.7, jawR: 0.8, chinY: 1.12, chinW: 0.24, brow: 0.04, nose: 0.75, noseW: 0.8, lip: 1.15, lipW: 0.9, eye: 1.15, neck: 0.46, sh: 0.76, age: 0, fem: 1, mouthY: 0.79, noseY: 0.5, chinZ: 0.42, child: 1 },
+    small:  { cran: 1.04, fw: 0.95, jawX: 0.42, jawY: 0.6, jawR: 0.8, chinY: 0.98, chinW: 0.26, brow: 0.0, nose: 0.6, noseW: 0.8, lip: 1.1, lipW: 0.85, eye: 1.25, neck: 0.44, sh: 0.66, age: 0, fem: 0.6, mouthY: 0.7, noseY: 0.42, chinZ: 0.42, child: 2 },
+    old:    { cran: 0.98, fw: 0.94, jawX: 0.48, jawY: 0.82, jawR: 0.9, chinY: 1.26, chinW: 0.25, brow: 0.08, nose: 0.96, noseW: 0.92, lip: 0.85, lipW: 0.95, eye: 0.98, neck: 0.5, sh: 0.88, age: 1, fem: 1, mouthY: 0.9, noseY: 0.6, chinZ: 0.45 },
+    oldman: { cran: 1.0, fw: 1.0, jawX: 0.55, jawY: 0.82, jawR: 1.0, chinY: 1.3, chinW: 0.3, brow: 0.15, nose: 1.08, noseW: 1.05, lip: 0.8, lipW: 1.0, eye: 0.95, neck: 0.58, sh: 1.0, age: 1, fem: 0, mouthY: 0.92, noseY: 0.62, chinZ: 0.48 }
   };
   P.FACES = FACES;
 
@@ -275,34 +280,34 @@ BTS.Portraits = (function () {
   function headParts(F, f, ex) {
     var sw = f.fw, st = f.stout, ga = f.gaunt;
     var cranY = f.child === 2 ? -0.5 : f.child ? -0.44 : -0.38;
+    var cs = f.chinY / 1.3, KF = { k: 0.07 };
     var prims = [
-      E([0, cranY, -0.1], [0.98 * f.cran, 1.0 * f.cran, 1.05 * f.cran]),                  // cranium
-      E([0, 0.3, 0.06], [0.8 * sw + st * 0.08, 0.95 * (f.chinY / 1.3), 0.8]),               // mid face
-      E([-f.jawX - st * 0.08, f.jawY, -0.05], [0.3 * f.jawR + st * 0.1, 0.42, 0.45]),      // jaw angles
-      E([f.jawX + st * 0.08, f.jawY, -0.05], [0.3 * f.jawR + st * 0.1, 0.42, 0.45]),
-      E([0, f.chinY - 0.18, f.chinZ + 0.02], [f.chinW + st * 0.08, 0.2, 0.26]),           // chin
-      E([-0.47, 0.18, 0.5 - ga * 0.03], [0.3, 0.2, 0.3]), E([0.47, 0.18, 0.5 - ga * 0.03], [0.3, 0.2, 0.3]), // cheekbones
-      E([0, -0.25, 0.7], [0.62, 0.12 + f.brow * 0.3, 0.2 + f.brow * 0.25]),                // brow ridge
-      E([0, f.noseY * 0.38, 0.84], [0.085 * f.noseW, 0.34 * f.nose, 0.12], { rot: [0, -0.32, 0] }),       // nose bridge
-      E([0, f.noseY - 0.08, 0.86 + 0.1 * f.nose], [0.115 * f.noseW, 0.105, 0.115]),       // nose tip
-      E([-0.12 * f.noseW, f.noseY - 0.03, 0.84], [0.085 * f.noseW, 0.07, 0.08]),          // nostril wings
-      E([0.12 * f.noseW, f.noseY - 0.03, 0.84], [0.085 * f.noseW, 0.07, 0.08]),
-      E([0, f.mouthY - 0.04, 0.6], [0.42, 0.3, 0.33]),                                      // muzzle
-      E([0, f.mouthY - 0.045, 0.87], [0.21 * f.lipW, 0.05 * f.lip, 0.08]),                  // upper lip
-      E([0, f.mouthY + 0.06, 0.86], [0.18 * f.lipW, 0.06 * f.lip, 0.085])                   // lower lip
+      E([0, cranY, -0.12], [0.96 * f.cran, 1.0 * f.cran, 1.08 * f.cran]),                            // cranium
+      E([0, 0.34, 0.08], [0.8 * sw + st * 0.06, 1.02 * cs, 0.8]),                                     // face mass
+      E([0, f.jawY * cs, 0.0], [f.jawX + 0.18 + st * 0.14, 0.5 * cs + st * 0.05, 0.62]),              // jaw
+      E([0, f.chinY - 0.2, f.chinZ + 0.05], [f.chinW + st * 0.06, 0.2, 0.26], { k: 0.14 }),          // chin
+      E([0, -0.27, 0.66], [0.6, 0.1 + f.brow * 0.3, 0.2 + f.brow * 0.3], { k: 0.12 }),                // brow ridge
+      E([0, f.noseY * 0.4, 0.84], [0.08 * f.noseW, 0.34 * f.nose, 0.13], { rot: [0, -0.3, 0], k: 0.08 }), // nose bridge
+      E([0, f.noseY - 0.08, 0.88 + 0.1 * f.nose], [0.11 * f.noseW, 0.1, 0.11], KF),                  // nose tip
+      E([-0.12 * f.noseW, f.noseY - 0.03, 0.83], [0.085 * f.noseW, 0.07, 0.08], KF),                 // nostril wings
+      E([0.12 * f.noseW, f.noseY - 0.03, 0.83], [0.085 * f.noseW, 0.07, 0.08], KF),
+      E([0, f.mouthY - 0.05, 0.56], [0.38, 0.3, 0.34], { k: 0.15 }),                                  // muzzle
+      E([0, f.mouthY - 0.04, 0.85], [0.24 * f.lipW, 0.055 * f.lip, 0.07], KF),                       // upper lip
+      E([0, f.mouthY + 0.065, 0.84], [0.2 * f.lipW, 0.065 * f.lip, 0.075], KF)                       // lower lip
     ];
-    if (st) { // full cheeks, double chin
-      prims.push(E([-0.52, 0.6, 0.35], [0.38, 0.4, 0.42]), E([0.52, 0.6, 0.35], [0.38, 0.4, 0.42]));
-      prims.push(E([0, f.chinY + 0.02, 0.18], [0.5, 0.26, 0.42]));
+    if (ga) prims.push(E([-0.5, 0.12, 0.42], [0.25, 0.16, 0.3]), E([0.5, 0.12, 0.42], [0.25, 0.16, 0.3])); // cheekbones
+    if (st) { // full cheeks, jowls and a double chin
+      prims.push(E([-0.45, 0.6, 0.25], [0.3 + st * 0.1, 0.36, 0.42]), E([0.45, 0.6, 0.25], [0.3 + st * 0.1, 0.36, 0.42]));
+      prims.push(E([0, f.chinY + 0.04, 0.12], [0.5, 0.26, 0.44]));
     }
     var my = f.mouthY, ny = f.noseY;
     var head = {
-      name: 'head', F: F, mat: 'skin', k: 0.1, prims: prims,
+      name: 'head', F: F, mat: 'skin', k: 0.22, prims: prims,
       disp: function (X, Y, Z) {
         if (Z < -0.2) return 0;
         var ax = Math.abs(X), d = 0;
-        d -= (0.07 + ga * 0.03) * g2((ax - 0.36) / 0.21, (Y + 0.02) / 0.15);                // eye sockets
-        d += 0.025 * g2((ax - 0.36) / 0.13, (Y - 0.01) / 0.07);                             // eyeballs
+        d -= (0.05 + ga * 0.03) * g2((ax - 0.37) / 0.17, (Y + 0.08) / 0.1);                // eye sockets
+        d += 0.025 * g2((ax - 0.39) / 0.15, (Y - 0.01) / 0.08);                             // eyeballs
         d -= (0.035 + ga * 0.05) * g2((ax - 0.8) / 0.16, (Y + 0.38) / 0.26);                // temples
         d -= ga * 0.07 * g2((ax - 0.56) / 0.14, (Y - 0.58) / 0.2);                          // hollow cheeks
         d -= 0.012 * g2(X / 0.035, (Y - (ny + my) / 2) / 0.07);                             // philtrum
@@ -318,9 +323,9 @@ BTS.Portraits = (function () {
       }
     };
     var ear = { name: 'ear', F: F, mat: 'skin', k: 0.05, prims: [
-      E([-0.93, 0.17, -0.12], [0.11, 0.3, 0.23], { rot: [-0.25, 0, -0.12] }), E([0.93, 0.17, -0.12], [0.11, 0.3, 0.23], { rot: [0.25, 0, 0.12] })
+      E([-0.92, 0.12, -0.15], [0.11, 0.3, 0.22], { rot: [-0.25, 0, -0.12] }), E([0.92, 0.12, -0.15], [0.11, 0.3, 0.22], { rot: [0.25, 0, 0.12] })
     ], lineGap: 1.5 };
-    var neck = { name: 'neck', F: F, mat: 'skin', k: 0.1, prims: [E([0, 1.5, -0.22], [f.neck + f.stout * 0.15, 1.0, f.neck * 0.95 + f.stout * 0.1])], vmul: 0.92 };
+    var neck = { name: 'neck', F: F, mat: 'skin', k: 0.1, prims: [E([0, 1.5, -0.3], [f.neck + f.stout * 0.15, 0.95, f.neck * 1.1 + f.stout * 0.1], { rot: [0, -0.15, 0] })], vmul: 0.92 };
     return { head: head, ear: ear, neck: neck };
   }
 
@@ -344,9 +349,9 @@ BTS.Portraits = (function () {
     var irisC = spec.eyes || [70, 60, 50];
     var hairC = spec.browCol || spec.hairCol || [60, 40, 30];
     var ink = C.mix(C.mul(skinM.ramp[0], 0.45), [20, 12, 22], 0.5);
-    var eyeS = f.eye, ew = 0.165 * eyeS, eyeX = 0.36 + (f.child ? -0.01 : 0), open = ex.open * (spec.lidOpen || 1);
-    var hu0 = 0.075 * eyeS * open, hl0 = 0.045 * eyeS * Math.min(1.2, 0.6 + open * 0.4);
-    var irisR = 0.072 * eyeS * (f.child ? 1.08 : 1);
+    var eyeS = f.eye, ew = 0.19 * eyeS, eyeX = 0.39 + (f.child ? -0.01 : 0), open = ex.open * (spec.lidOpen || 1);
+    var hu0 = 0.08 * eyeS * open, hl0 = 0.048 * eyeS * Math.min(1.2, 0.6 + open * 0.4);
+    var irisR = 0.082 * eyeS * (f.child ? 1.08 : 1);
     var lookX = (ex.look || 0) + (spec.look || 0), lookY = (ex.lookY || 0) + (spec.lookY || 0);
     var lidLow = (spec.heavyLids || 0) + (ex.flat ? 0.25 : 0);
     var sclera = ex.dull ? [196, 192, 186] : [232, 226, 218], scleraD = C.mul(sclera, 0.78);
@@ -435,10 +440,10 @@ BTS.Portraits = (function () {
     });
 
     // mouth: lips shaded with the lip material, parting line shaped by the expression
-    var my = f.mouthY, mw = 0.205 * f.lipW * (1 + (ex.smile ? 0.12 : 0) - (ex.tight ? 0.08 : 0));
+    var my = f.mouthY, mw = 0.27 * f.lipW * (1 + (ex.smile ? 0.12 : 0) - (ex.tight ? 0.08 : 0));
     var curve = ex.curve + (spec.mouthCurve || 0);
     var openA = ex.mouthOpen ? 0.05 + (ex.open2 ? 0.02 : 0) : (ex.smile && spec.teeth ? 0.025 : 0);
-    var upH = 0.045 * f.lip * (ex.tight ? 0.6 : 1), loH = 0.06 * f.lip * (ex.tight ? 0.6 : 1);
+    var upH = 0.06 * f.lip * (ex.tight ? 0.6 : 1), loH = 0.075 * f.lip * (ex.tight ? 0.6 : 1);
     eachVisible(ctx, head, function (x, y, X, Y, Z) {
       if (Z < 0.3) return;
       var u = X / mw; if (Math.abs(u) > 1.2) return;

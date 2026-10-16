@@ -237,7 +237,7 @@
     { label: 'q' }, { choice: [['c1', 'shoes', { once: true }], ['c2', 'tools', { once: true }], ['c3', 'beam']] },
     { label: 'shoes' }, ['>', '2'], { goto: 'q' },
     { label: 'tools' }, ['>', '3'], { goto: 'q' },
-    { label: 'beam' }, ['*', '4'], ['>', '5'], ['gvozdin', '6', { p: 'angry' }], ['*', '7', { sfx: 'fire_burst' }], ['gvozdin', '8'], ['*', '9'], ['>', '10'], { clue: 'obs_smithy_needle' }, { set: 'sm_done' }]);
+    { label: 'beam' }, ['*', '4'], ['>', '5'], ['gvozdin', '6', { p: 'angry' }], ['*', '7', { sfx: 'fire_pop' }], ['gvozdin', '8'], ['*', '9'], ['>', '10'], { clue: 'obs_smithy_needle' }, { set: 'sm_done' }]);
   D('c2_smithy_wait', [['gvozdin', '1', { p: 'tired', sfx: 'anvil' }], ['>', '2']]);
   D('c2_smithy_talk', [['gvozdin', '1', { p: 'tired', sfx: 'chop' }], ['gvozdin', '2'], ['*', '3', { sfx: 'anvil' }], ['>', '4'], ['*', '5', { sfx: 'anvil' }], ['*', '6'], ['>', '7'], ['*', '8', { sfx: 'metal', shake: true }], ['gvozdin', '9', { p: 'scared' }], ['dj', '10'], ['gvozdin', '11', { p: 'tired' }], ['gvozdin', '12', { p: 'sad' }], ['>', '13'], ['>', '14']]);
   D('c2_pecko_bakery', [['pecko', '1', { p: 'blank' }], ['>', '2'], ['pecko', '3', { p: 'tired' }], ['>', '4']]);

@@ -177,14 +177,14 @@
       (function () {
         var steps = [[[58.6, 33.2], [48.5, 30]], [[48.5, 30], [59.5, 25.5]], [[59.5, 25.5], [51.2, 22.4]]];
         steps.forEach(function (sg) {
-          for (var t = 0.2; t < 0.85; t += 0.16) {
+          for (var t = 0.3; t < 0.8; t += 0.24) {
             var x = sg[0][0] + (sg[1][0] - sg[0][0]) * t, z = sg[0][1] + (sg[1][1] - sg[0][1]) * t, dx = sg[1][0] - sg[0][0], dz = sg[1][1] - sg[0][1], l = Math.hypot(dx, dz);
             var nx = -dz / l * 0.8, nz = dx / l * 0.8, mb = L.propMB(x, z);
             L.beam(mb, x - nx, height(x - nx, z - nz) + 0.06, z - nz, x + nx, height(x + nx, z + nz) + 0.06, z + nz, 0.14, 'bark');
           }
         });
       })();
-      ['tree_spruce_young', 'tree_birch', 'tree_spruce2', 'tree_oak2', 'tree_spruce_young'].forEach(function (k, n) { var pts = [[62.4, 30.5], [45.2, 27.2], [63.6, 22.6], [46.0, 34.6], [57.2, 37.6]]; L.tree(k, pts[n][0], pts[n][1]); });
+      ['tree_spruce_young', 'tree_birch', 'tree_spruce2', 'tree_spruce_young', 'tree_spruce_young'].forEach(function (k, n) { var pts = [[62.4, 30.5], [45.2, 27.2], [63.6, 22.6], [53.0, 35.6], [57.2, 37.6]]; L.tree(k, pts[n][0], pts[n][1]); });
 
       /* ---------- church (ref photo 4) & churchyard ---------- */
       var ch = L.house({ id: 'h_church', x: 87, z: 22.5, w: 5.4, d: 8, h: 4.0, wall: 'wall_stone', base: 'wall_stone_grey', baseH: 0.3, roof: 'roof_slab', roofType: 'gable_z', rise: 2.2, overhang: 0.25, door: { side: 's', at: 0, tile: 'door_arch' }, windows: [{ side: 'e', at: -1.5, y: 2.0, w: 0.5, h: 0.8, tile: 'window_plain' }, { side: 'w', at: -1.5, y: 2.0, w: 0.5, h: 0.8, tile: 'window_plain' }], lit: true, lived: false, noDrip: true, mapLabel: 'area.church' });
@@ -219,7 +219,7 @@
       graves.forEach(function (g, k) { L.billboard(k % 3 === 0 ? 'headstone' : 'cross_grave', g[0], g[1], { mat: BTS.MAT.STONE, collide: 0.25, scale: 1.1 }); });
       L.spot('grave_zajko', 92, 30.5); L.spot('grave_pecko', 90.5, 31.2); L.spot('grave_gvozdin', 89, 31.6); L.spot('grave_gorazd', 85.3, 31.2); L.spot('grave_jessica', 83.8, 31); L.spot('grave_tihomir', 95.2, 31);
       L.spot('churchyard', 86.5, 30.5, 'up');
-      L.tree('tree_pine', 79, 16); L.tree('tree_pine', 96, 32); L.tree('tree_birch', 95.5, 16); L.tree('tree_dead', 78.5, 28.5);
+      L.tree('tree_spruce', 79, 16); L.tree('tree_spruce2', 96, 32); L.tree('tree_spruce_young', 97.2, 20.5); L.tree('tree_spruce', 78.6, 23.6, { scale: 0.9 }); L.tree('tree_birch', 95.5, 16); L.tree('tree_dead', 78.5, 28.5);
       L.scatter(['grass_tall', 'flowers_wild', 'grass_tuft'], 78, 15, 97, 33, 60, { avoid: function (x, z) { return Math.abs(x - 87) < 3.5 && z > 18; } });
       L.lanternPost(84, 34.8, { radius: 5 });
 
@@ -329,6 +329,23 @@
           L.statics.push({ sprite: 'lantern_paper', x: p[0], y: ly, z: p[1] + 0.12, scale: 1.3, emissive: true, night: true });
           L.light(p[0], ly + 0.2, p[1] + 0.5, [1, 0.6, 0.35], 5.5, 0.8, 'lamp', 0.06);
         });
+        // garlands with little flags and flowers from the maypole out to the posts, and between the posts
+        var POSTS = [[70, 70], [76, 68], [83, 69], [96, 68.8], [101, 72], [100, 80], [78, 84]];
+        var top = [px, y0 + 8.1, pz + 0.05];
+        var FL = [['bunt_red', 'bunt_blue', 'bunt_white'], ['bunt_yellow', 'bunt_red', 'bunt_green', 'bunt_white'], ['bunt_white', 'bunt_red', 'bunt_blue', 'bunt_yellow']];
+        POSTS.forEach(function (p, i5) { L.bunting(top, [p[0], height(p[0], p[1]) + 2.85, p[1]], { flags: FL[i5 % 3], sag: 1.1 }); });
+        for (var i6 = 0; i6 < POSTS.length - 2; i6++) { var a5 = POSTS[i6], b5 = POSTS[i6 + 1]; L.bunting([a5[0], height(a5[0], a5[1]) + 2.8, a5[1]], [b5[0], height(b5[0], b5[1]) + 2.8, b5[1]], { flags: FL[(i6 + 1) % 3], sag: 0.6 }); }
+        // stall awnings get short garlands too
+        [[73, 72], [79, 70.2], [91.5, 70.5], [98, 74]].forEach(function (st) { var sy = height(st[0], st[1]); L.bunting([st[0] - 1.3, sy + 2.3, st[1] + 0.75], [st[0] + 1.3, sy + 2.3, st[1] + 0.75], { flags: FL[0], sag: 0.25, flagEvery: 0.4, flowerEvery: 0.7 }); });
+        // the Serbian flag on a pole at the fair entrance
+        (function () {
+          var fx2 = 68.4, fz2 = 69.9, fy = height(fx2, fz2), m3 = L.propMB(fx2, fz2), q = 0.9999, fw = 2.25, fh = 1.5, ft = fy + 6.0;
+          m3.post(fx2, fy - 0.1, fz2, 6.3, 0.1, 'wood_beam', { mat: BTS.MAT.WOOD });
+          m3.box(fx2, fy + 6.2, fz2, 0.18, 0.12, 0.18, { all: 'metal' }, { mat: BTS.MAT.METAL });
+          var c0 = [1, 1, 1, 0.02], c1 = [1, 1, 1, 0.55];
+          m3.quad([[fx2 + 0.06, ft - fh, fz2 + 0.06], [fx2 + 0.06 + fw, ft - fh - 0.05, fz2 + 0.1], [fx2 + 0.06 + fw, ft - 0.05, fz2 + 0.1], [fx2 + 0.06, ft, fz2 + 0.06]], [0, 0.3, 1], [[0, q], [q, q], [q, 0], [0, 0]], 'flag_serbia', null, BTS.MAT.CLOTH, [c0, c1, c1, c0]);
+          L.circle(fx2, fz2, 0.15, 'pole');
+        })();
         L.brazier(70.6, 67.6); L.brazier(74.4, 67.2);     // entrance torches (ref photo 2)
         L.bench(76, 80, 2.4); L.bench(96, 84.5, 2.4); L.bench(80.5, 85.5, 2.4, false);
         L.billboard('cart', 102, 79, { mat: BTS.MAT.WOOD, collide: 1 });
@@ -342,7 +359,12 @@
 
       /* ---------- Jaglika's house: isolated at the forest edge ---------- */
       var jg = L.house({ id: 'h_jaglika', x: 11, z: 22.5, w: 5.4, d: 4.4, h: 2.5, wall: 'wall_stone_dark', base: 'wall_stone_dark', baseH: 0.4, roof: 'roof_shingle', rise: 2.6, door: { side: 's', at: 0.9, tile: 'door_dark' }, windows: [{ side: 's', at: -1.4, w: 0.7, h: 0.7, tile: 'window_plain' }, { side: 'e', at: 0.5, w: 0.6, h: 0.6, tile: 'window_plain' }], chimney: [-1.8, -0.8], tint: [0.85, 0.85, 0.9, 0], mapLabel: 'area.jaglika' });
-      L.spot('jaglika_door', jg.doorWorld[0], jg.doorWorld[1] + 0.2); L.spot('jaglika_gate', 12.5, 29.5, 'up'); L.spot('jaglika_watch', 19.5, 31.5, 'left');
+      L.spot('jaglika_door', jg.doorWorld[0], jg.doorWorld[1] + 0.2);
+      // back door to the woods (the interior's 'back' exit lands here)
+      L.propMB(10, 20).decal(10.0, jg.floor, 22.5 - 2.2, 0.9, 1.8, 'n', 'door_dark', BTS.MAT.WOOD);
+      L.propMB(10, 20).box(10.0, height(10, 19.7) - 0.15, 19.95, 1.1, jg.floor - height(10, 19.7) + 0.13, 0.6, { all: 'stone_block' }, { mat: BTS.MAT.STONE });
+      L.spot('jaglika_back', 10.0, 19.0, 'up');
+      L.tree('tree_spruce2', 6.8, 19.2); L.tree('tree_spruce', 15.4, 16.2, { scale: 1.1 }); L.tree('tree_spruce_young', 8.4, 16.6); L.spot('jaglika_gate', 12.5, 29.5, 'up'); L.spot('jaglika_watch', 19.5, 31.5, 'left');
       L.fence([[6, 26.5], [6, 29], [11.6, 29]], { h: 1.2, rails: 3 }); L.fence([[13.4, 29], [17, 29], [17, 19]], { h: 1.2, rails: 3 });
       L.billboard('herbs_hang', 9.4, 25.2, { y: 1.3, mat: BTS.MAT.CLOTH, wind: 0.3 });
       L.billboard('tree_dead', 16.5, 18, { scale: 1.2 }); L.circle(16.5, 18, 0.4);
@@ -359,29 +381,68 @@
       (function () { var x = 100.5, z = 78, y = height(x, z), mb = L.propMB(x, z); mb.post(x - 0.9, y, z, 1.0, 0.08, 'wood_dark', { mat: BTS.MAT.WOOD }); mb.post(x + 0.9, y, z, 1.0, 0.08, 'wood_dark', { mat: BTS.MAT.WOOD }); mb.box(x, y + 0.85, z, 1.9, 0.05, 0.05, { all: 'metal' }, { mat: BTS.MAT.METAL }); mb.box(x, y + 0.65, z, 1.0, 0.4, 0.4, { all: 'wood_light' }, { mat: BTS.MAT.DEFAULT }); L.billboard('bonfire', x, z + 0.1, { mat: BTS.MAT.WOOD }); L.light(x, y + 0.6, z + 0.4, [1, 0.5, 0.2], 4, 0.9, 'fire', 0.3); L.statics.push({ sprite: 'flame', x: x, y: y + 0.1, z: z + 0.15, scale: 1.2, emissive: true, flicker: true, fire: true }); L.emitter({ type: 'smoke', x: x, y: y + 1.2, z: z, rate: 1.5 }); L.box(x - 1, z - 0.4, x + 1, z + 0.4); })();
       /* ---------- forest belts & boundaries ---------- */
       var tr = BTS.RNG(5);
-      function belt(x0, z0, x1, z1, n, kinds) { for (var q = 0; q < n; q++) { var x = x0 + tr() * (x1 - x0), z = z0 + tr() * (z1 - z0); if (roadAt(x, z) || BTS.Physics.pointBlocked(x, z, 1.0, L.colliders)) continue; L.tree(tr.pick(kinds), x, z, { scale: 1 + tr() * 0.3 }); } }
-      belt(0, 0, 112, 6, 34, ['tree_pine', 'tree_oak', 'tree_pine', 'tree_birch']);
-      belt(0, 6, 7, 86, 46, ['tree_pine', 'tree_oak', 'tree_dead', 'tree_pine']);
-      belt(104, 6, 112, 90, 36, ['tree_oak', 'tree_pine', 'tree_poplar']);
+      function belt(x0, z0, x1, z1, n, kinds) { for (var q = 0; q < n; q++) { var x = x0 + tr() * (x1 - x0), z = z0 + tr() * (z1 - z0); if (roadAt(x, z) || creekD(x, z) < 2.4 || BTS.Physics.pointBlocked(x, z, 1.0, L.colliders)) continue; L.tree(tr.pick(kinds), x, z, { scale: 1 + tr() * 0.3 }); } }
+      belt(0, 0, 112, 6, 38, ['tree_spruce', 'tree_oak', 'tree_pine', 'tree_spruce2', 'tree_birch']);
+      belt(0, 6, 7, 86, 50, ['tree_spruce', 'tree_oak', 'tree_dead', 'tree_pine', 'tree_spruce2']);
+      belt(104, 6, 112, 90, 38, ['tree_oak', 'tree_spruce', 'tree_poplar', 'tree_spruce2']);
       belt(0, 93, 60, 99, 8, ['tree_oak', 'tree_birch']);
-      belt(7, 6, 30, 18, 14, ['tree_pine', 'tree_oak2']);
-      belt(66, 6, 104, 14, 14, ['tree_oak', 'tree_pine']);
+      belt(7, 6, 30, 18, 16, ['tree_spruce', 'tree_oak2', 'tree_spruce2']);
+      belt(66, 6, 104, 14, 16, ['tree_oak', 'tree_spruce', 'tree_spruce2']);
+      // trees inside the village: yards, the square, the lanes, along the creek
+      (function () {
+        var spotsXZ = Object.keys(L.spots).map(function (k) { return L.spots[k]; });
+        function plant(kind, x, z, sc) {
+          if (roadAt(x, z) || creekD(x, z) < 2.4 || BTS.Physics.pointBlocked(x, z, 1.1, L.colliders)) return;
+          for (var k = 0; k < spotsXZ.length; k++) if (Math.hypot(spotsXZ[k].x - x, spotsXZ[k].z - z) < 1.8) return;
+          L.tree(kind, x, z, { scale: sc || 1 });
+        }
+        [[24.5, 33.5, 'tree_spruce2'], [33.6, 31.8, 'tree_walnut'], [47.6, 25.2, 'tree_spruce_young'], [72.8, 31.2, 'tree_spruce'], [74.2, 21.4, 'tree_spruce2'],
+         [12.5, 43.2, 'tree_birch'], [17.5, 51.4, 'tree_plum'], [35.2, 52.8, 'tree_oak2'], [44.2, 54.0, 'tree_spruce2'], [57.8, 53.4, 'tree_birch'], [66.4, 52.6, 'tree_walnut'],
+         [77.6, 52.2, 'tree_spruce_young'], [86.6, 52.4, 'tree_plum'], [99.6, 50.8, 'tree_spruce2'], [24.4, 76.4, 'tree_oak2'], [35.5, 75.2, 'tree_spruce_young'], [47.2, 79.6, 'tree_spruce2'],
+         [58.6, 80.6, 'tree_oak'], [63.6, 76.8, 'tree_spruce'], [14.2, 80.2, 'tree_birch'], [9.5, 45.0, 'tree_spruce2'], [102.6, 46.2, 'tree_walnut'], [64.8, 14.6, 'tree_spruce2'], [36.0, 17.2, 'tree_spruce'],
+         [29.6, 22.4, 'tree_spruce_young'], [21.6, 20.2, 'tree_spruce2'], [92.4, 46.0, 'tree_plum'], [73.8, 62.4, 'tree_birch'], [31.8, 60.4, 'tree_spruce_young']].forEach(function (t) { plant(t[2], t[0], t[1]); });
+      })();
       belt(36, 74, 50, 86, 6, ['tree_oak2', 'tree_walnut']);
       // hard edges so the player never walks into the void
       L.box(-2, 0, 3.2, 92); L.box(106.8, 0, 114, 92); L.box(0, -2, 112, 4.5); L.box(0, 88.6, 112, 94);
-      L.box(9, 85.5, 40, 92, 'creek');
+      for (var cx2 = 3; cx2 < 107; cx2++) for (var cz2 = 80; cz2 < 89; cz2++) if (creekD(cx2 + 0.5, cz2 + 0.5) < 1.15 && Math.abs(cx2 + 0.5 - 53) > 1.4) L.box(cx2, cz2, cx2 + 1, cz2 + 1, 'creek');
       // vegetation scatter (avoid roads)
       L.scatter(['grass_tuft', 'grass_tuft2', 'grass_tall', 'flowers_wild', 'fern'], 4, 6, 106, 88, 900, { avoid: function (x, z) { return !!roadAt(x, z) || Math.hypot(x - 52, z - 47) < 5.5 || BTS.Physics.pointBlocked(x, z, 0.4, L.colliders); } });
-      L.scatter(['reeds'], 10, 84, 40, 87, 40, { wind: 0.8 });
+      L.scatter(['reeds'], 4, 80, 72, 89, 140, { wind: 0.8, avoid: function (x, z) { var d = creekD(x, z); return d < 1.2 || d > 2.4 || Math.abs(x - 53) < 2; } });
       L.scatter(['bush', 'bush_dark', 'hedge'], 7, 8, 104, 86, 40, { wind: 0.2, avoid: function (x, z) { return !!roadAt(x, z) || BTS.Physics.pointBlocked(x, z, 1.2, L.colliders) || (x > 66 && z > 66); } });
-      // footbridge over the creek on the south road
-      (function () { var mb = L.propMB(53, 87); mb.box(53, -0.2, 88, 3, 0.15, 3, { all: 'wood_light' }, { mat: BTS.MAT.WOOD }); })();
+      // wooden bridge over the creek on the south road: humped plank deck on piles, hand rails on both sides
+      (function () {
+        var bx = 53, z0 = 84.0, z1 = 88.55, mb = L.propMB(53, 86), ya = height(bx, z0), yb = height(bx, z1);
+        function deckY(z) { var t = M.clamp((z - z0) / (z1 - z0), 0, 1); return ya + (yb - ya) * t + 0.5 * Math.sin(Math.PI * t) + 0.06; }
+        for (var z = z0; z < z1 - 0.01; z += 0.3) { var y = deckY(z + 0.15); mb.box(bx + (M.hash(z, 3) - 0.5) * 0.08, y - 0.09, z + 0.15, 2.3, 0.09, 0.28, { all: 'wood_light' }, { mat: BTS.MAT.WOOD, units: 1.5 }); }
+        [-0.75, 0.75].forEach(function (o) { for (var z = z0; z < z1 - 0.3; z += 0.5) L.beam(mb, bx + o, deckY(z) - 0.16, z, bx + o, deckY(z + 0.5) - 0.16, z + 0.5, 0.16, 'wood_dark'); });
+        [[85.3], [87.3]].forEach(function (pz2) { [-1.05, 1.05].forEach(function (o) { mb.post(bx + o, -1.8, pz2[0], deckY(pz2[0]) + 1.75, 0.18, 'bark', { mat: BTS.MAT.WOOD }); }); });
+        [-1.12, 1.12].forEach(function (o) {
+          for (var z = z0 + 0.1; z <= z1; z += 0.75) mb.post(bx + o, deckY(z) - 0.05, z, 0.95, 0.1, 'wood_beam', { mat: BTS.MAT.WOOD });
+          for (var zz = z0 + 0.1; zz < z1 - 0.2; zz += 0.75) { var ze = Math.min(z1, zz + 0.75); L.beam(mb, bx + o, deckY(zz) + 0.92, zz, bx + o, deckY(ze) + 0.92, ze, 0.09, 'wood_beam'); L.beam(mb, bx + o, deckY(zz) + 0.45, zz, bx + o, deckY(ze) + 0.45, ze, 0.06, 'wood_dark'); }
+        });
+        L.pad(bx - 1.15, z0, bx + 1.15, z1, function (x, z) { return deckY(z); });
+        L.box(bx - 1.3, z0 + 0.15, bx - 1.06, z1 + 0.1, 'bridge'); L.box(bx + 1.06, z0 + 0.15, bx + 1.3, z1 + 0.1, 'bridge');
+        // signpost beyond the bridge where the road leaves the village
+        var sy2 = height(55.4, 90.2); mb.post(55.4, sy2 - 0.1, 90.2, 2.3, 0.12, 'wood_dark', { mat: BTS.MAT.WOOD });
+        mb.box(55.9, sy2 + 1.8, 90.22, 1.1, 0.24, 0.05, { all: 'wood_light' }, { mat: BTS.MAT.WOOD }); mb.box(54.95, sy2 + 1.45, 90.22, 1.0, 0.22, 0.05, { all: 'wood_light' }, { mat: BTS.MAT.WOOD });
+      })();
+      // wooden gate where the west path leaves the village for the forest (exit 'west')
+      (function () {
+        var gx = 5.6, mb = L.propMB(gx, 31), y1 = height(gx, 29.7), y2 = height(gx, 32.3), top = Math.max(y1, y2) + 2.5;
+        mb.post(gx, y1 - 0.15, 29.7, top - y1 + 0.15, 0.2, 'wood_dark', { mat: BTS.MAT.WOOD }); mb.post(gx, y2 - 0.15, 32.3, top - y2 + 0.15, 0.2, 'wood_dark', { mat: BTS.MAT.WOOD });
+        mb.box(gx, top - 0.05, 31, 0.24, 0.18, 3.2, { all: 'wood_beam' }, { mat: BTS.MAT.WOOD });
+        mb.gableRoof(gx, 31, 0.9, 3.4, top + 0.12, 0.45, 'roof_shingle', { mat: BTS.MAT.WOOD, axis: 'z', overhang: 0.12, gableTile: 'wood_dark' });
+        mb.billboard(gx + 0.05, top - 0.75, 31.0, 'cross_wood', { scale: 1.2, mat: BTS.MAT.WOOD });
+        L.circle(gx, 29.7, 0.2, 'gate'); L.circle(gx, 32.3, 0.2, 'gate');
+        L.fence([[gx, 32.5], [gx - 0.3, 35.5]], { h: 1.0, rails: 2 }); L.fence([[gx, 29.5], [gx - 0.2, 27.2]], { h: 1.0, rails: 2 });
+      })();
 
       /* ---------- spots for people & story ---------- */
       L.spot('menu_cam', 60, 44); L.spot('menu_npc0', 50, 50); L.spot('menu_npc1', 56, 52);
       L.spot('street_w', 16, 47.5, 'right'); L.spot('street_mid', 40, 47.5); L.spot('street_e', 82, 48, 'left');
       L.spot('lane_s', 49.5, 58, 'up'); L.spot('south_road', 53, 80, 'up'); L.spot('west_path', 11.5, 36, 'down');
-      L.spot('from_outskirts_w', 4.5, 31, 'right'); L.spot('from_outskirts_s', 53, 85.5, 'up');
+      L.spot('from_outskirts_w', 7.6, 31.1, 'right'); L.spot('from_outskirts_s', 53, 82.8, 'up');
       L.spot('default', 54, 49, 'down');
 
       /* ---------- map areas ---------- */
@@ -389,7 +450,7 @@
       L.area('east', 64, 34, 106, 66); L.area('south', 4, 66, 64, 89); L.area('fair', 64, 66, 106, 89); L.area('jaglika', 4, 12, 24, 34);
       L.area('slope', 22, 18, 76, 34);
       // far skirt: woods and hills beyond the playable map, fading into fog
-      belt(-24, -20, 136, 0, 60, ['tree_pine', 'tree_oak', 'tree_pine']); belt(-24, 0, 0, 112, 50, ['tree_pine', 'tree_oak']); belt(112, 0, 136, 112, 50, ['tree_oak', 'tree_pine', 'tree_poplar']); belt(-24, 100, 136, 112, 24, ['tree_oak', 'tree_birch']);
+      belt(-24, -20, 136, 0, 60, ['tree_spruce', 'tree_oak', 'tree_pine', 'tree_spruce2']); belt(-24, 0, 0, 112, 50, ['tree_spruce', 'tree_oak', 'tree_spruce2']); belt(112, 0, 136, 112, 50, ['tree_oak', 'tree_spruce', 'tree_poplar']); belt(-24, 100, 136, 112, 24, ['tree_oak', 'tree_birch']);
       L.ground(-24, -20, 136, 112);
     },
     exits: [
@@ -401,8 +462,8 @@
       { id: 'gorazd', at: 'gorazd_door', to: 'gorazd_house', spawn: 'door', label: 'loc.gorazd_house', cond: 'flag:gorazd_open', lockedDlg: 'locked_gorazd' },
       { id: 'tihomir', at: 'tihomir_door', to: 'tihomir_house', spawn: 'door', label: 'loc.tihomir_house', cond: 'flag:tihomir_open', lockedDlg: 'locked_tihomir' },
       { id: 'jaglika', at: 'jaglika_door', to: 'jaglika_house', spawn: 'door', label: 'loc.jaglika_house', cond: 'flag:jaglika_open', lockedDlg: 'locked_jaglika' },
-      { id: 'west', at: [4.5, 31], to: 'outskirts', spawn: 'from_village_w', label: 'loc.outskirts', verb: 'verb.go', door: false, cond: 'flag:outskirts_open', lockedDlg: 'locked_outskirts' },
-      { id: 'south', at: [53, 87.2], to: 'outskirts', spawn: 'from_village_s', label: 'loc.outskirts', verb: 'verb.go', door: false, cond: 'flag:outskirts_open', lockedDlg: 'locked_outskirts' }
+      { id: 'west', at: [4.2, 31], to: 'outskirts', spawn: 'from_village_w', label: 'loc.outskirts', verb: 'verb.go', door: false, cond: 'flag:outskirts_open', lockedDlg: 'locked_outskirts' },
+      { id: 'south', at: [53, 88.2], to: 'outskirts', spawn: 'from_village_s', label: 'loc.outskirts', verb: 'verb.go', door: false, cond: 'flag:outskirts_open', lockedDlg: 'locked_outskirts' }
     ],
     examine: [
       { id: 'x_well', at: [52, 49.4], label: 'it.well', dlg: 'x_well' },

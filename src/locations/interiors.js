@@ -6,9 +6,14 @@
   var RH = 3.0;  // room height
 
   /* room kit bound to a LocationBuilder */
-  function Kit(L) { this.L = L; this.mb = L.propMB(0, 0); }
+  /* oy: storey height offset — an upper floor gets its own mesh shifted up (see guesthouse); call done() for it */
+  function Kit(L, oy) {
+    this.L = L; this.oy = oy || 0;
+    if (this.oy) { this.mb = new BTS.MeshBuilder(); this.mb.oy = this.oy; this.own = true; } else this.mb = L.propMB(0, 0);
+  }
+  Kit.prototype.done = function () { if (this.own) this.L.addChunk(this.mb, { id: 'props' }); };
   Kit.prototype.floor = function (x0, z0, x1, z1, tile) {
-    var mb = new BTS.MeshBuilder();
+    var mb = new BTS.MeshBuilder(); mb.oy = this.oy;
     for (var z = z0; z < z1; z += 2) for (var x = x0; x < x1; x += 2) {
       var w = Math.min(2, x1 - x), d = Math.min(2, z1 - z);
       var k = 0.9 + BTS.M.hash(x, z) * 0.15;
@@ -21,8 +26,8 @@
     o = o || {};
     var mb = this.mb, L = this.L, h = o.h || RH, th = 0.3;
     mb.box((x0 + x1) / 2, 0, z0 - th / 2, x1 - x0 + th * 2, h, th, { all: tile, top: 'wood_dark' }, { mat: MAT.PLASTER, ao: 0.55 });
-    mb.box(x0 - th / 2, 0, (z0 + z1) / 2, th, h, z1 - z0, { all: tile, top: 'wood_dark' }, { mat: MAT.PLASTER, ao: 0.55 });
-    mb.box(x1 + th / 2, 0, (z0 + z1) / 2, th, h, z1 - z0, { all: tile, top: 'wood_dark' }, { mat: MAT.PLASTER, ao: 0.55 });
+    if (!o.noWest) mb.box(x0 - th / 2, 0, (z0 + z1) / 2, th, h, z1 - z0, { all: tile, top: 'wood_dark' }, { mat: MAT.PLASTER, ao: 0.55 });
+    if (!o.noEast) mb.box(x1 + th / 2, 0, (z0 + z1) / 2, th, h, z1 - z0, { all: tile, top: 'wood_dark' }, { mat: MAT.PLASTER, ao: 0.55 });
     // skirting + ceiling beam rim along the back wall
     mb.box((x0 + x1) / 2, 0, z0 + 0.04, x1 - x0, 0.25, 0.08, { all: 'wood_dark' }, { mat: MAT.WOOD });
     if (o.beams === true) for (var bx = x0 + 2; bx < x1; bx += 3) mb.box(bx, h - 0.2, (z0 + z1) / 2, 0.22, 0.22, z1 - z0, { all: 'wood_dark', s: false }, { mat: MAT.WOOD });
@@ -32,7 +37,8 @@
     gaps.forEach(function (g) { segs.push([cur, g - 0.7]); cur = g + 0.7; }); segs.push([cur, x1]);
     segs.forEach(function (s) { if (s[1] - s[0] > 0.1) mb.box((s[0] + s[1]) / 2, 0, z1 + th / 2, s[1] - s[0], 0.35, th, { all: tile, top: 'wood_dark' }, { mat: MAT.PLASTER, ao: 0.6 }); L.box(s[0], z1, s[1], z1 + th + 0.3); });
     L.box(x0 - th - 0.4, z0 - th - 0.4, x1 + th + 0.4, z0);
-    L.box(x0 - th - 0.4, z0, x0, z1 + 1); L.box(x1, z0, x1 + th + 0.4, z1 + 1);
+    if (!o.noWest) L.box(x0 - th - 0.4, z0, x0, z1 + 1);
+    if (!o.noEast) L.box(x1, z0, x1 + th + 0.4, z1 + 1);
     // exterior darkness skirt: a black floor margin so the room floats
     gaps.forEach(function (g) { mb.flat(g, -0.02, z1 + 0.9, 1.4, 1.4, 'floor_dirt', MAT.GROUND, [0.4, 0.4, 0.4, 0]); });
   };
@@ -51,9 +57,10 @@
     var ww = Math.max(1.6, (o.w || 1.0) * 1.6), wh = Math.max(1.3, (o.h || 1.0) * 1.3), y = Math.max(1.4, (o.y || 1.2) + 0.1);
     mb.decal(x, y, z + 0.02, ww, wh, face, o.tile || 'window_plain', MAT.GLASS);
     if (o.light !== false) {
-      L.light(x, y + 0.6, z + 1.0, o.color || [0.55, 0.62, 0.8], 5.5, o.intensity || 0.7, 'day', 0);
-      L.statics.push({ beam: [[x - ww * 0.42, y + wh * 0.45, z + 0.05], [x + ww * 0.42, y + wh * 0.45, z + 0.05], [x + ww * 0.75, 0.02, z + 2.8], [x - ww * 0.25, 0.02, z + 2.4]], col: [1, 0.92, 0.75], day: true });
-      L.emitter({ type: 'dust', x: x + 0.3, y: 0.3, z: z + 1.4, rate: 0.8, area: [1.2, 1.4], dayOnly: true, fx: true });
+      var oy = this.oy;
+      L.light(x, y + 0.6 + oy, z + 1.0, o.color || [0.55, 0.62, 0.8], 5.5, o.intensity || 0.7, 'day', 0);
+      L.statics.push({ beam: [[x - ww * 0.42, y + wh * 0.45 + oy, z + 0.05], [x + ww * 0.42, y + wh * 0.45 + oy, z + 0.05], [x + ww * 0.75, 0.02 + oy, z + 2.8], [x - ww * 0.25, 0.02 + oy, z + 2.4]], col: [1, 0.92, 0.75], day: true });
+      L.emitter({ type: 'dust', x: x + 0.3, y: 0.3 + oy, z: z + 1.4, rate: 0.8, area: [1.2, 1.4], dayOnly: true, fx: true });
     }
   };
   Kit.prototype.decal = function (x, y, z, w, h, tile, mat) { this.mb.decal(x, y, z + 0.02, w, h, 's', tile, mat || MAT.DEFAULT); };
@@ -100,21 +107,49 @@
     mb.decal(x, 0.15, z + 0.46, 0.7, 0.6, 's', 'stove_front', MAT.METAL);
     mb.post(x + 0.3, 1.0, z - 0.2, RH - 1.0, 0.2, 'metal', { mat: MAT.METAL });
     this.L.box(x - 0.6, z - 0.45, x + 0.6, z + 0.45, 'stove');
-    if (lit !== false) { this.L.light(x, 0.6, z + 0.9, [1, 0.5, 0.2], 4.5, 0.9, 'fire', 0.3); this.L.statics.push({ sprite: 'flame', x: x, y: 0.22, z: z + 0.48, scale: 0.7, emissive: true, flicker: true, fire: true }); }
+    if (lit !== false) { this.L.light(x, 0.6 + this.oy, z + 0.9, [1, 0.5, 0.2], 4.5, 0.9, 'fire', 0.3); this.L.statics.push({ sprite: 'flame', x: x, y: 0.22 + this.oy, z: z + 0.48, scale: 0.7, emissive: true, flicker: true, fire: true }); }
   };
   Kit.prototype.chest = function (x, z) { this.mb.box(x, 0, z, 1.1, 0.6, 0.6, { all: 'wall_planks_brown', top: 'wood_dark' }, { mat: MAT.WOOD, units: 1 }); this.mb.box(x, 0.25, z + 0.31, 0.14, 0.14, 0.03, { all: 'metal' }, { mat: MAT.METAL }); this.L.box(x - 0.55, z - 0.3, x + 0.55, z + 0.3, 'chest'); };
   Kit.prototype.candle = function (x, y, z, o) {
     o = o || {};
     this.mb.billboard(x, y, z, 'candle', { mat: MAT.DEFAULT, scale: o.scale || 1 });
-    this.L.statics.push({ sprite: 'flame', x: x, y: y + 0.28 * (o.scale || 1), z: z + 0.02, scale: 0.35 * (o.scale || 1), emissive: true, flicker: true, fire: true, off: o.off });
-    if (o.light !== false) return this.L.light(x, y + 0.6, z + 0.3, [1, 0.62, 0.3], o.radius || 3.6, o.intensity || 0.75, 'fire', 0.18);
+    this.L.statics.push({ sprite: 'flame', x: x, y: y + 0.28 * (o.scale || 1) + this.oy, z: z + 0.02, scale: 0.35 * (o.scale || 1), emissive: true, flicker: true, fire: true, off: o.off });
+    if (o.light !== false) return this.L.light(x, y + 0.6 + this.oy, z + 0.3, [1, 0.62, 0.3], o.radius || 3.6, o.intensity || 0.75, 'fire', 0.18);
   };
   Kit.prototype.lamp = function (x, z, radius) {   // hanging oil lamp
-    this.L.statics.push({ sprite: 'lantern_hang', x: x, y: RH - 0.9, z: z, scale: 1.4, emissive: true });
-    this.L.light(x, RH - 0.8, z + 0.3, [1, 0.66, 0.36], radius || 6, 0.95, 'fire', 0.06);
+    this.L.statics.push({ sprite: 'lantern_hang', x: x, y: RH - 0.9 + this.oy, z: z, scale: 1.4, emissive: true });
+    this.L.light(x, RH - 0.8 + this.oy, z + 0.3, [1, 0.66, 0.36], radius || 6, 0.95, 'fire', 0.06);
   };
   Kit.prototype.prop = function (name, x, z, o) { o = o || {}; this.mb.billboard(x, o.y || 0, z, name, { mat: o.mat === undefined ? MAT.DEFAULT : o.mat, scale: o.scale, flip: o.flip }); if (o.collide) this.L.circle(x, z, o.collide); };
   Kit.prototype.door = function (x, z, spot) { this.L.spot(spot || 'door', x, z - 0.6, 'up'); };
+  /* tall wardrobe (orman); face: side its doors open to */
+  Kit.prototype.wardrobe = function (x, z, w, d, face, h) {
+    var mb = this.mb; h = h || 2.2;
+    mb.box(x, 0, z, w, h, d, { all: 'wall_planks_brown', top: 'wood_dark' }, { mat: MAT.WOOD, units: 1.5 });
+    mb.box(x, h, z, w + 0.1, 0.12, d + 0.1, { all: 'wood_dark' }, { mat: MAT.WOOD });
+    var along = face === 'e' || face === 'w' ? d : w, fx = face === 'e' ? x + w / 2 : face === 'w' ? x - w / 2 : x, fz = face === 's' ? z + d / 2 : face === 'n' ? z - d / 2 : z;
+    var off = along / 4;
+    [-off, off].forEach(function (o) { mb.decal(fx + (face === 's' || face === 'n' ? o : 0), 0.15, fz + (face === 'e' || face === 'w' ? o : 0), along / 2 - 0.08, h - 0.35, face, 'door', MAT.WOOD); });
+    this.L.box(x - w / 2, z - d / 2, x + w / 2, z + d / 2, 'wardrobe');
+  };
+  /* domed bread oven (furuna) with a glowing mouth facing the camera */
+  Kit.prototype.breadOven = function (x, z, r) {
+    var mb = this.mb, L = this.L; r = r || 0.85;
+    L.cylinder(mb, x, 0, z, r + 0.08, 0.55, 10, 'wall_stone_grey', MAT.STONE);
+    L.cylinder(mb, x, 0.55, z, r, 0.45, 10, 'wall_plaster', MAT.STONE);
+    for (var k = 0; k < 3; k++) L.cylinder(mb, x, 1.0 + k * 0.18, z, r * (0.86 - k * 0.24), 0.18, 10, 'wall_plaster', MAT.STONE, { top: k === 2 ? 'wall_plaster' : null });
+    mb.decal(x, 0.6, z + r + 0.02, 0.55, 0.45, 's', 'stove_front', MAT.STONE);
+    L.circle(x, z, r + 0.12, 'oven');
+    L.light(x, 0.9 + this.oy, z + r + 0.5, [1, 0.48, 0.2], 3.6, 0.75, 'fire', 0.3);
+    L.statics.push({ sprite: 'flame', x: x, y: 0.62 + this.oy, z: z + r + 0.05, scale: 0.55, emissive: true, flicker: true, fire: true });
+  };
+  /* hanging curtain from (x0,z)-(x1,z) on a rod (facing the camera); collide: solid */
+  Kit.prototype.curtain = function (x0, x1, z, h, collide) {
+    var mb = this.mb;
+    mb.box((x0 + x1) / 2, 0.04, z, x1 - x0, h, 0.06, { all: 'curtain', top: false }, { mat: MAT.CLOTH, units: 1 });
+    this.L.beam(mb, x0 - 0.15, h + 0.08, z, x1 + 0.15, h + 0.08, z, 0.05, 'metal', { mat: MAT.METAL });
+    if (collide !== false) this.L.box(x0, z - 0.1, x1, z + 0.1, 'curtain');
+  };
 
   function interior(id, o) {
     o.id = id; o.interior = true; o.camera = o.camera || { padX: 0, padZ0: 0, padZ1: 0 };

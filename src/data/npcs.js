@@ -8,10 +8,10 @@
      back to the given coordinates, so a re-laid-out interior never leaves an NPC or interactable without a place. */
   function spotOf(name) { var W = BTS.World; return W && W.loc && W.loc.spots ? W.loc.spots[name] : null; }
   /* array-like [x, z] read lazily (for static placement / interactable data) */
-  BTS.SpotAt = function (name, fb) {
-    var o = { spot: name };
-    Object.defineProperty(o, '0', { get: function () { var s = spotOf(name); return s ? s.x : fb[0]; } });
-    Object.defineProperty(o, '1', { get: function () { var s = spotOf(name); return s ? s.z : fb[1]; } });
+  BTS.SpotAt = function (name, fb, dx, dz) {
+    var o = { spot: name }; dx = dx || 0; dz = dz || 0;
+    Object.defineProperty(o, '0', { get: function () { var s = spotOf(name); return s ? s.x + dx : fb[0]; } });
+    Object.defineProperty(o, '1', { get: function () { var s = spotOf(name); return s ? s.z + dz : fb[1]; } });
     Object.defineProperty(o, 'length', { value: 2 });
     return o;
   };

@@ -96,6 +96,7 @@ BTS.MapUI = (function () {
         g.fillStyle = 'rgba(120,100,80,.5)'; g.font = 'italic 13px Georgia'; g.fillText('?', (p0[0] + p1[0]) / 2 - 3, (p0[1] + p1[1]) / 2 + 4);
       }
     });
+    var areaRects = [];
     (st.areas || []).forEach(function (a) {
       if (!BTS.State.d.map[a.id]) return;
       var p0 = P(a.box[0], a.box[1]), p1 = P(a.box[2], a.box[3]);
@@ -103,10 +104,11 @@ BTS.MapUI = (function () {
       g.font = 'italic 13px Georgia'; var tw = g.measureText(label).width;
       var cx = (p0[0] + p1[0]) / 2 - tw / 2, cy = a.labelTop ? p0[1] + 14 : (p0[1] + p1[1]) / 2;
       g.fillStyle = 'rgba(214,203,176,.75)'; g.fillRect(cx - 3, cy - 12, tw + 6, 16);
+      areaRects.push([cx - 3, cy - 12, tw + 6, 16]);
       g.fillStyle = 'rgba(40,30,25,.95)'; g.fillText(label, cx, cy);
     });
     // discovered houses: tinted roof + pin + label under the house
-    if (page === 'village') M.drawPlaces(g, st, P, sc);
+    if (page === 'village') M.drawPlaces(g, st, P, sc, areaRects);
     // player marker
     var W = BTS.World, pl = W.player, mp = null;
     if (W.locId === page && pl) mp = [pl.x, pl.z];
@@ -121,7 +123,7 @@ BTS.MapUI = (function () {
     // compass
     g.font = 'bold 13px Georgia'; g.fillStyle = 'rgba(60,45,35,.9)'; g.fillText(t('map.north'), w - 34, 28);
   };
-  M.drawPlaces = function (g, st, P, sc) {
+  M.drawPlaces = function (g, st, P, sc, avoid) {
     var shapes = {};
     st.mapShapes.forEach(function (s) { if (s.t === 'house' && s.id) shapes[s.id] = s; });
     var boxes = [];
@@ -135,14 +137,15 @@ BTS.MapUI = (function () {
       boxes.push({ pl: pl, cx: (a[0] + c[0]) / 2, top: a[1], bot: c[1] });
     });
     g.font = 'bold 12px Georgia';
-    var placed = [];
+    var placed = (avoid || []).slice(), W = g.canvas.width;
     boxes.forEach(function (b) {
       var label = t('map.' + b.pl.id), tw = g.measureText(label).width + 10, th = 17;
-      var x = Math.max(10, Math.min(g.canvas.width - tw - 10, b.cx - tw / 2)), y = b.bot + 4;
-      // keep labels from piling on top of each other: try below, then above the house
-      var hit = function (yy) { return placed.some(function (r) { return x < r[0] + r[2] && x + tw > r[0] && yy < r[1] + r[3] && yy + th > r[1]; }); };
-      if (hit(y)) y = b.top - th - 4;
-      if (hit(y)) y = b.bot + 4 + th;
+      var cl = function (xx) { return Math.max(10, Math.min(W - tw - 10, xx)); };
+      // keep labels off each other and off the area names: below, above, then shifted sideways
+      var hit = function (c) { return placed.some(function (r) { return c[0] < r[0] + r[2] && c[0] + tw > r[0] && c[1] < r[1] + r[3] && c[1] + th > r[1]; }); };
+      var cands = [[cl(b.cx - tw / 2), b.bot + 4], [cl(b.cx - tw / 2), b.top - th - 4], [cl(b.cx - tw * 0.15), b.bot + 4], [cl(b.cx - tw * 0.85), b.bot + 4],
+        [cl(b.cx - tw * 0.15), b.top - th - 4], [cl(b.cx - tw * 0.85), b.top - th - 4], [cl(b.cx - tw / 2), b.bot + 6 + th]];
+      var c = cands.filter(function (q) { return !hit(q); })[0] || cands[0], x = c[0], y = c[1];
       placed.push([x, y, tw, th]);
       // pin
       g.beginPath(); g.moveTo(b.cx, (b.top + b.bot) / 2 + 1); g.lineTo(b.cx - 4, (b.top + b.bot) / 2 - 7); g.lineTo(b.cx + 4, (b.top + b.bot) / 2 - 7); g.closePath();

@@ -292,9 +292,9 @@ BTS.PortraitLib = (function () {
     o = o || {}; var f = a.f, w = f.sh * (o.w || 1) + f.stout * 0.15, E = a.E, i = inf || 0;
     var sy = o.slope || 0;
     return [
-      E([0, 3.15, -0.25], [1.3 * w + i, 1.2 + i, 0.78 + i + f.stout * 0.08]),
-      E([-1.24 * w, 2.62 + sy, -0.4], [0.55 + i, 0.44 + i, 0.55 + i]), E([1.24 * w, 2.62 + sy, -0.4], [0.55 + i, 0.44 + i, 0.55 + i]),
-      E([-0.58 * w, 2.12 + sy * 0.5, -0.42], [0.62 * w + i, 0.33 + i, 0.46 + i]), E([0.58 * w, 2.12 + sy * 0.5, -0.42], [0.62 * w + i, 0.33 + i, 0.46 + i]),
+      E([0, 2.9, -0.22], [1.3 * w + i, 1.2 + i, 0.8 + i + f.stout * 0.08]),
+      E([-1.24 * w, 2.5 + sy, -0.4], [0.55 + i, 0.44 + i, 0.55 + i]), E([1.24 * w, 2.5 + sy, -0.4], [0.55 + i, 0.44 + i, 0.55 + i]),
+      E([-0.58 * w, 2.0 + sy * 0.5, -0.42], [0.62 * w + i, 0.33 + i, 0.46 + i]), E([0.58 * w, 2.0 + sy * 0.5, -0.42], [0.62 * w + i, 0.33 + i, 0.46 + i]),
       E([-1.48 * w, 3.75, -0.4], [0.5 + i, 1.1 + i, 0.56 + i]), E([1.48 * w, 3.75, -0.4], [0.5 + i, 1.1 + i, 0.56 + i])
     ];
   }
@@ -306,22 +306,22 @@ BTS.PortraitLib = (function () {
       var t = (Y - 2.9) / 0.7; if (t > -0.2 && t < 1.2) { var lx = 1.05 - t * 0.45; d -= 0.04 * amt * a.g2((ax - lx) / 0.05, 0) * (1 - Math.abs(t - 0.5)); }
       // shoulder creases
       d -= 0.02 * amt * Math.pow(Math.abs(Math.sin(X * 3.1 + Y * 1.7 + seed)), 12);
-      d += 0.025 * amt * (a.vnoise(X * 2.2 + seed, Y * 1.6, 5) - 0.5);
+      d += 0.012 * amt * (a.vnoise(X * 2.2 + seed, Y * 1.6, 5) - 0.5);
       return d;
     };
   }
   function body(a, name, matName, inf, o) {
     o = o || {};
-    var pt = { name: name, F: a.Fb, mat: matName, prims: torso(a, inf, o), k: 0.22, disp: o.disp || folds(a, o.folds === undefined ? 1 : o.folds, inf * 10), mask: o.mask, lineGap: o.lineGap || 2.5, zoff: o.zoff };
+    var pt = { name: name, F: a.Fb, mat: matName, prims: torso(a, inf, o), k: 0.4, disp: o.disp || folds(a, o.folds === undefined ? 1 : o.folds, inf * 10), mask: o.mask, lineGap: o.lineGap || 2.5, zoff: o.zoff };
     a.parts.push(pt); return pt;
   }
   /* neck-hole shapes, in body-local coordinates */
-  function crewHole(r) { return function (X, Y, Z) { return Z > -0.2 && (X * X) / (r * r) + Math.pow((Y - 1.95) / (r * 0.9), 2) < 1; }; }
+  function crewHole(r) { return function (X, Y, Z) { return Z > -0.2 && (X * X) / (r * r) + Math.pow((Y - 1.84) / (r * 0.9), 2) < 1; }; }
   function vHole(depth, wid) { return function (X, Y, Z) { return Z > -0.1 && Y > 1.6 && Y < depth && Math.abs(X) < wid * (depth - Y) / (depth - 1.6) + 0.02; }; }
   function collarRing(a, name, matName, r, y0, h, o) {
     o = o || {}; var E = a.E, prims = [];
-    for (var k = 0; k < 10; k++) { var an = k / 10 * Math.PI * 2; prims.push(E([Math.sin(an) * r, y0 + (o.dip || 0) * Math.max(0, Math.cos(an)), Math.cos(an) * r * 0.95 - 0.22], [o.t || 0.16, h, o.t || 0.16])); }
-    var pt = { name: name, F: a.F, mat: matName, prims: prims, k: 0.12, mask: o.mask, disp: o.disp, lineGap: 1.5 };
+    for (var k = 0; k < 18; k++) { var an = k / 18 * Math.PI * 2; prims.push(E([Math.sin(an) * r, y0 + (o.dip || 0) * Math.max(0, Math.cos(an)), Math.cos(an) * r * 0.95 - 0.22], [o.t || 0.16, h, o.t || 0.16])); }
+    var pt = { name: name, F: a.F, mat: matName, prims: prims, k: 0.2, mask: o.mask, disp: o.disp, lineGap: 1.5 };
     a.parts.push(pt); return pt;
   }
   var OUT = {};
@@ -340,13 +340,13 @@ BTS.PortraitLib = (function () {
   };
   OUT.sweater = function (a, o) {
     body(a, 'sweater', 'top', 0, { folds: 1.1, disp: (function () { var fd = folds(a, 1.1, 2); return function (X, Y, Z) { return fd(X, Y, Z) - (Y > 3.6 ? 0 : 0.01 * Math.pow(Math.abs(Math.sin(X * 22)), 4)); }; })() });
-    collarRing(a, 'collar', 'topD', 0.5 * a.f.sh / 0.85, 1.98, 0.1, { t: 0.12, dip: 0.08, disp: function (X, Y, Z) { return -0.015 * Math.pow(Math.abs(Math.sin(Math.atan2(X, Z) * 14)), 3); } });
+    collarRing(a, 'collar', 'topD', 0.5 * a.f.sh / 0.85, 1.86, 0.1, { t: 0.12, dip: 0.08, disp: function (X, Y, Z) { return -0.015 * Math.pow(Math.abs(Math.sin(Math.atan2(X, Z) * 14)), 3); } });
     if (o.underCollar) collarRing(a, 'shirtCol', 'under', 0.45 * a.f.sh / 0.85, 1.9, 0.08, { t: 0.09 });
   };
   OUT.coat = function (a, o) {
     var E = a.E;
     if (o.turtle) { body(a, 'under', 'under', 0, { folds: 0.4 }); collarRing(a, 'turtle', 'under', a.f.neck + 0.08, 1.75, 0.38, { t: 0.18, disp: function (X, Y, Z) { return -0.02 * Math.pow(Math.abs(Math.sin(Y * 18)), 3); } }); }
-    else { body(a, 'under', function (X, Y, Z) { return crewHole(0.32)(X, Y, Z) ? 'skin' : 'under'; }, 0, { folds: 0.4 }); collarRing(a, 'shirtCol', 'under', a.f.neck + 0.05, 1.98, 0.12, { t: 0.11 }); }
+    else { body(a, 'under', function (X, Y, Z) { return crewHole(0.32)(X, Y, Z) ? 'skin' : 'under'; }, 0, { folds: 0.4 }); collarRing(a, 'shirtCol', 'under', a.f.neck + 0.05, 1.86, 0.12, { t: 0.11 }); }
     var open = o.open || 0.42;
     body(a, 'coat', 'top', 0.08, { mask: function (X, Y, Z) { return !(Z > -0.1 && Y < 4.5 && Math.abs(X - 0.04) < open * (Y - 1.7) / 1.5 + 0.12 && Y > 1.7); }, folds: 1.4 });
     // lapels / collar turned over the shoulders
@@ -357,7 +357,7 @@ BTS.PortraitLib = (function () {
   OUT.shirtvest = function (a, o) {
     var E = a.E;
     body(a, 'shirt', function (X, Y, Z) { return vHole(2.35, 0.2)(X, Y, Z) ? 'skin' : 'under'; }, 0, { folds: 0.8 });
-    collarRing(a, 'shirtCol', 'under', a.f.neck + 0.06, 1.95, 0.13, { t: 0.11, mask: function (X, Y, Z) { return !(Z > 0.2 && Math.abs(X) < 0.16); } });
+    collarRing(a, 'shirtCol', 'under', a.f.neck + 0.06, 1.84, 0.13, { t: 0.11, mask: function (X, Y, Z) { return !(Z > 0.2 && Math.abs(X) < 0.16); } });
     body(a, 'vest', 'top', 0.07, { mask: function (X, Y, Z) { if (Math.abs(X) > 1.05 * a.f.sh + 0.1 && Y < 2.9) return false; if (Y < 2.2 && Z < 0.3 && Math.abs(X) > 0.9 * a.f.sh) return false; return !(Z > -0.1 && Math.abs(X - 0.02) < 0.26 + (3.9 - Y) * 0.05 && Y < 3.9); }, folds: 0.7 });
     a.overlays.push(function (pen, ctx) { // vest buttons
       for (var k = 0; k < 3; k++) { var p = a.Fb.w(0.36, 3.45 + k * 0.34, 0.66); pen.zpx(p[0], p[1], p[2] + 5, a.mats.button.ramp[3]); }
@@ -365,7 +365,7 @@ BTS.PortraitLib = (function () {
   };
   OUT.smith = function (a, o) {
     body(a, 'shirt', function (X, Y, Z) { return vHole(2.4, 0.22)(X, Y, Z) ? 'skin' : 'top'; }, 0, { folds: 1.2 });
-    collarRing(a, 'shirtCol', 'top', a.f.neck + 0.06, 1.95, 0.12, { t: 0.12, mask: function (X, Y, Z) { return !(Z > 0.2 && Math.abs(X) < 0.18); } });
+    collarRing(a, 'shirtCol', 'top', a.f.neck + 0.06, 1.84, 0.12, { t: 0.12, mask: function (X, Y, Z) { return !(Z > 0.2 && Math.abs(X) < 0.18); } });
     // leather apron bib with neck strap
     a.parts.push({ name: 'apron', F: a.Fb, mat: 'leather', prims: torso(a, 0.1), k: 0.22, lineGap: 1.5,
       mask: function (X, Y, Z) { return Z > 0 && Math.abs(X) < 0.66 && Y > 2.85; }, disp: function (X, Y, Z) { return 0.015 * (a.vnoise(X * 6, Y * 6, 9) - 0.5); } });
@@ -373,7 +373,7 @@ BTS.PortraitLib = (function () {
       mask: function (X, Y, Z) { return Z > -0.3 && Y < 2.95 && Y > 1.85 && Math.abs(Math.abs(X) - (0.62 - (2.95 - Y) * 0.08)) < 0.07; } });
   };
   OUT.blouse = function (a, o) { // embroidered linen blouse (and optional apron / vest)
-    body(a, 'blouse', function (X, Y, Z) { if (crewHole(0.36)(X, Y, Z)) return 'skin'; var nb = Math.hypot(X / 0.36, (Y - 1.95) / 0.32); if (nb < 1.45 && Z > -0.2) return ((Math.floor(X * 18) + Math.floor(Y * 18)) & 1) && nb > 1.12 ? 'emb' : 'top'; return 'top'; }, 0, { folds: 1.4 });
+    body(a, 'blouse', function (X, Y, Z) { if (crewHole(0.36)(X, Y, Z)) return 'skin'; var nb = Math.hypot(X / 0.36, (Y - 1.84) / 0.32); if (nb < 1.45 && Z > -0.2) return ((Math.floor(X * 18) + Math.floor(Y * 18)) & 1) && nb > 1.12 ? 'emb' : 'top'; return 'top'; }, 0, { folds: 1.4 });
     if (o.vest) body(a, 'vest', 'vest', 0.07, { mask: function (X, Y, Z) { return !(Z > -0.1 && Math.abs(X) < 0.5 + (Y - 2) * 0.05 && Y > 1.6) && !(Math.abs(X) > 1.0 * a.f.sh); }, folds: 0.5 });
     if (o.apron) apron(a);
   };
@@ -385,7 +385,7 @@ BTS.PortraitLib = (function () {
   }
   OUT.dress = function (a, o) { // simple dress / cardigan + collar
     body(a, 'dress', function (X, Y, Z) { return crewHole(o.neck || 0.34)(X, Y, Z) ? 'skin' : 'under'; }, 0, { folds: 0.8 });
-    if (o.lace) collarRing(a, 'lace', 'lace', a.f.neck + 0.1, 2.0, 0.1, { t: 0.14, dip: 0.12, disp: function (X, Y, Z) { return -0.03 * Math.pow(Math.abs(Math.sin(Math.atan2(X, Z) * 16)), 4); } });
+    if (o.lace) collarRing(a, 'lace', 'lace', a.f.neck + 0.1, 1.88, 0.1, { t: 0.14, dip: 0.12, disp: function (X, Y, Z) { return -0.03 * Math.pow(Math.abs(Math.sin(Math.atan2(X, Z) * 16)), 4); } });
     if (o.cardigan) body(a, 'cardigan', 'top', 0.08, { mask: function (X, Y, Z) { return !(Z > -0.1 && Math.abs(X - 0.03) < 0.26 + (Y - 2.0) * 0.12 && Y > 1.75); }, folds: 1.5,
       disp: (function () { var fd = folds(a, 1.5, 1); return function (X, Y, Z) { return fd(X, Y, Z) - 0.012 * Math.pow(Math.abs(Math.sin(X * 16 + Math.sin(Y * 30) * 0.3)), 4); }; })() });
     if (o.shawl) a.parts.push({ name: 'shawl', F: a.Fb, mat: 'shawl', prims: torso(a, 0.12), k: 0.22, lineGap: 1.5,
@@ -404,7 +404,7 @@ BTS.PortraitLib = (function () {
   };
   OUT.uniform = function (a, o) { // vintage military-style jacket, shirt and tie (kept for later use)
     body(a, 'shirt', 'under', 0, { folds: 0.4 });
-    collarRing(a, 'shirtCol', 'under', a.f.neck + 0.06, 1.95, 0.12, { t: 0.11 });
+    collarRing(a, 'shirtCol', 'under', a.f.neck + 0.06, 1.84, 0.12, { t: 0.11 });
     body(a, 'jacket', 'top', 0.08, { mask: function (X, Y, Z) { return !(Z > -0.1 && Math.abs(X) < 0.36 * (Y - 1.7) / 1.0 + 0.1 && Y > 1.7 && Y < 2.9); }, folds: 1.2 });
   };
 
@@ -473,12 +473,12 @@ BTS.PortraitLib = (function () {
   };
   ACC.strap = function (a, o) { // backpack strap over the near shoulder
     a.parts.push({ name: 'strap', F: a.Fb, mat: 'strap', prims: torso(a, 0.12), k: 0.22, lineGap: 1.2,
-      mask: function (X, Y, Z) { var cx = -0.95 + (Y - 2.1) * 0.12; return Y > 1.95 && Math.abs(X - cx) < 0.17 && Z > -0.4; } });
+      mask: function (X, Y, Z) { var cx = -0.95 + (Y - 2.1) * 0.12; return Y > 1.84 && Math.abs(X - cx) < 0.17 && Z > -0.4; } });
   };
   ACC.camera = function (a, o) {
     var E = a.E;
     a.parts.push({ name: 'camStrap', F: a.Fb, mat: 'strap', prims: torso(a, 0.1), k: 0.22, lineGap: 1,
-      mask: function (X, Y, Z) { return Z > -0.2 && Y > 1.95 && Y < 3.6 && Math.abs(Math.abs(X) - (0.48 + (Y - 2) * 0.06)) < 0.05; } });
+      mask: function (X, Y, Z) { return Z > -0.2 && Y > 1.84 && Y < 3.6 && Math.abs(Math.abs(X) - (0.48 + (Y - 2) * 0.06)) < 0.05; } });
     a.parts.push({ name: 'camera', F: a.Fb, mat: 'camera', prims: [E([0.05, 3.75, 0.72], [0.44, 0.27, 0.2]), E([0.05, 3.48, 0.7], [0.14, 0.08, 0.15])], k: 0.03, lineGap: 1 });
     a.parts.push({ name: 'lens', F: a.Fb, mat: 'lens', prims: [E([0.12, 3.78, 0.92], [0.17, 0.17, 0.12])], k: 0.02, lineGap: 1 });
   };
@@ -500,7 +500,7 @@ BTS.PortraitLib = (function () {
     });
   };
   ACC.tie = function (a) {
-    a.parts.push({ name: 'tie', F: a.Fb, mat: 'tie', prims: torso(a, 0.04), k: 0.22, lineGap: 1, mask: function (X, Y, Z) { return Z > 0 && Y > 1.95 && Y < 3.3 && Math.abs(X) < 0.06 + (Y - 1.95) * 0.05; } });
+    a.parts.push({ name: 'tie', F: a.Fb, mat: 'tie', prims: torso(a, 0.04), k: 0.22, lineGap: 1, mask: function (X, Y, Z) { return Z > 0 && Y > 1.84 && Y < 3.3 && Math.abs(X) < 0.06 + (Y - 1.84) * 0.05; } });
   };
 
   /* ================= assembly ================= */
