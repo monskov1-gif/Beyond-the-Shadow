@@ -7,6 +7,7 @@ BTS.STRIDE = 17;
 
 BTS.MeshBuilder = function () {
   this.v = [];
+  this.oy = 0;             // vertical offset added to every vertex (upper storeys of interiors)
   this.min = [1e9, 1e9, 1e9]; this.max = [-1e9, -1e9, -1e9];
 };
 (function () {
@@ -17,6 +18,7 @@ BTS.MeshBuilder = function () {
 
   MB.vert = function (x, y, z, nx, ny, nz, u, v, r, col, mat) {
     var c = col || DEFCOL;
+    y += this.oy;
     this.v.push(x, y, z, nx, ny, nz, u, v, r.u0, r.v0, r.du, r.dv, c[0], c[1], c[2], c[3] === undefined ? 0 : c[3], mat || 0);
     if (x < this.min[0]) this.min[0] = x; if (y < this.min[1]) this.min[1] = y; if (z < this.min[2]) this.min[2] = z;
     if (x > this.max[0]) this.max[0] = x; if (y > this.max[1]) this.max[1] = y; if (z > this.max[2]) this.max[2] = z;

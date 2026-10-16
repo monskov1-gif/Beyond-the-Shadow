@@ -23,34 +23,82 @@ BTS.Screens = (function () {
     return U.push(s);
   };
 
-  /* ---------- main menu ---------- */
+  /* ---------- main menu ----------
+     Layers: the drifting 3D village (BTS.MenuFX camera) → shadow-theatre canvas (lantern, frieze, the boy and
+     his lagging shadow) → torn paper panel → logo and menu. */
+  function tornClip(seed, x0, amp, step) {
+    var pts = ['0% 0%'], r = seed;
+    for (var y = 0; y <= 100.01; y += step) {
+      r = (r * 16807) % 2147483647;
+      var j = (r / 2147483647);
+      // a hand-torn edge: slow wander + small fibres
+      var x = x0 + amp * (0.55 * Math.sin(y * 0.09 + seed) + 0.25 * Math.sin(y * 0.31 + seed * 2)) + amp * 0.45 * (j - 0.5);
+      pts.push(x.toFixed(2) + '% ' + y.toFixed(2) + '%');
+    }
+    pts.push('0% 100%');
+    return 'polygon(' + pts.join(',') + ')';
+  }
   S.main = function () {
-    var s = screen('main', 'mainmenu');
+    var s = screen('main', 'mainmenu intro');
+    var FX = BTS.MenuFX;
+    if (FX && BTS.Game.mode === 'menu') { FX.stage(); FX.startCamera(); }
+    var paper = el('div', 'mm-paper', null, s.el);
+    var back = el('i', 'mm-layer back', null, paper), front = el('i', 'mm-layer front', null, paper);
+    back.style.clipPath = back.style.webkitClipPath = tornClip(11, 94, 4, 1.1);
+    front.style.clipPath = front.style.webkitClipPath = tornClip(29, 90, 4, 0.8);
+    s.content = el('div', 'mm-content', null, s.el);
+    s.hint = el('div', 'mm-hint', null, s.el);
+    s.fx = FX ? FX.attach(s.el) : null;
+    setTimeout(function () { s.el.classList.remove('intro'); }, 2600);
+    var lastHover = null;
+    function hover(e) { var b = e.currentTarget; if (b !== lastHover && !b.disabled && U.top() === s) { lastHover = b; BTS.Audio.play('ui_move'); } }
     s.refresh = function () {
       var keep = s.focus && s.focus.dataset.id;
-      s.el.innerHTML = '';
-      var logo = el('div', 'logo', null, s.el);
-      el('div', 'l1', 'BEYOND THE SHADOWS', logo);
-      el('div', 'l2', esc(t('ui.subtitle')), logo);
-      var box = el('div', 'col menu', null, s.el);
-      var hasSave = BTS.Save.any();
-      var b;
-      b = U.button(s, box, t('ui.new_game'), function () {
+      var c = s.content;
+      c.innerHTML = '';
+      var logo = el('div', 'logo', null, c);
+      var words = '<span class="w1">Beyond</span><span class="w2">the</span><span class="w3">Shadows</span>';
+      s.logoShadow = el('div', 'l1 lshadow', words, logo);
+      s.logoShadow.setAttribute('aria-hidden', 'true');
+      s.logoEl = el('div', 'l1', words, logo);
+      el('div', 'l2', esc(t('ui.tagline')), logo);
+      var box = el('div', 'col menu', null, c);
+      var hasSave = BTS.Save.any(), n = 0;
+      function add(id, label, fn, o) {
+        var b = U.button(s, box, label, fn, o);
+        b.dataset.id = id;
+        b.innerHTML = '<span class="mi-orn"></span><span class="mi-t">' + esc(label) + '</span>';
+        b.style.setProperty('--i', n++);
+        b.addEventListener('mouseenter', hover);
+        return b;
+      }
+      add('new', t('ui.new_game'), function () {
         if (hasSave) S.confirm('ui.confirm_new', function () { U.closeAll(); BTS.Game.newGame(); }); else { U.closeAll(); BTS.Game.newGame(); }
-      }); b.dataset.id = 'new';
-      b = U.button(s, box, t('ui.continue'), function () { var sl = BTS.Save.latest(); if (sl) BTS.Game.loadSlot(sl); }, { disabled: !hasSave }); b.dataset.id = 'cont';
-      b = U.button(s, box, t('ui.load'), function () { S.saveLoad('load'); }, { disabled: !hasSave }); b.dataset.id = 'load';
-      b = U.button(s, box, t('ui.settings'), function () { S.settings(); }); b.dataset.id = 'set';
-      b = U.button(s, box, t('ui.language') + ': ' + (BTS.I18N.lang === 'ru' ? 'Русский' : 'English'), function () { BTS.I18N.set(BTS.I18N.lang === 'ru' ? 'en' : 'ru'); }); b.dataset.id = 'lang';
-      b.adjust = function () { BTS.I18N.set(BTS.I18N.lang === 'ru' ? 'en' : 'ru'); };
-      b = U.button(s, box, t('ui.credits'), function () { S.credits(); }); b.dataset.id = 'cred';
-      b = U.button(s, box, t('ui.exit'), function () { S.confirm('ui.confirm_exit', function () { S.exit(); }); }); b.dataset.id = 'exit';
-      el('div', 'ver', 'v' + BTS.VERSION + ' · ' + esc(t('ui.made_with')), s.el);
+      });
+      add('cont', t('ui.continue'), function () { var sl = BTS.Save.latest(); if (sl) BTS.Game.loadSlot(sl); }, { disabled: !hasSave });
+      add('load', t('ui.load'), function () { S.saveLoad('load'); }, { disabled: !hasSave });
+      add('set', t('ui.settings'), function () { S.settings(); });
+      var lb = add('lang', t('ui.language') + ': ' + (BTS.I18N.lang === 'ru' ? 'Русский' : 'English'), function () { BTS.I18N.set(BTS.I18N.lang === 'ru' ? 'en' : 'ru'); });
+      lb.adjust = function () { BTS.I18N.set(BTS.I18N.lang === 'ru' ? 'en' : 'ru'); };
+      add('cred', t('ui.credits'), function () { S.credits(); });
+      add('exit', t('ui.exit'), function () { S.confirm('ui.confirm_exit', function () { S.exit(); }); });
+      el('div', 'ver', 'v' + BTS.VERSION + ' · ' + esc(t('ui.made_with')), c);
+      s.hint.textContent = t('ui.menu_hint');
       if (keep) { var f = s.el.querySelector('[data-id="' + keep + '"]'); if (f) U.setFocus(s, f); }
+      // a fresh menu with a save offers "Continue" first
+      else if (hasSave) { var cf = s.el.querySelector('[data-id="cont"]'); if (cf) U.setFocus(s, cf); }
     };
+    s.update = function (dt) {
+      if (!s.fx || !FX) return;
+      FX.update(s.fx, dt, s.focus);
+      if (s.logoEl) { var o = FX.shadowOffset(s.fx, s.logoEl); s.logoShadow.style.transform = 'translate(' + o[0].toFixed(1) + 'px,' + o[1].toFixed(1) + 'px)'; }
+    };
+    s.onClose = function () { if (s.fx) s.fx.detach(); if (FX) FX.stopCamera(); };
     s.onBack = function () { };
     s.refresh();
-    return U.push(s);
+    U.push(s);
+    if (BTS.Save.any()) { var cf = s.el.querySelector('[data-id="cont"]'); if (cf) U.setFocus(s, cf); }
+    return s;
   };
 
   S.exit = function () {
@@ -142,6 +190,7 @@ BTS.Screens = (function () {
       el('div', 'set-head', esc(t('set.text')), box);
       option(box, 'text_speed', [[0, 'set.speed_slow'], [1, 'set.speed_normal'], [2, 'set.speed_fast'], [3, 'set.speed_instant']], function () { return C.get('textSpeed'); }, function (v) { C.set('textSpeed', v); });
       option(box, 'subtitles', [[true, 'set.on'], [false, 'set.off']], function () { return C.get('subtitles'); }, function (v) { C.set('subtitles', v); });
+      option(box, 'names', [[true, 'set.on'], [false, 'set.off']], function () { return C.get('nameLabels') !== false; }, function (v) { C.set('nameLabels', v); });
       el('div', 'set-head', esc(t('set.video')), box);
       option(box, 'fullscreen', [[false, 'set.off'], [true, 'set.on']], function () { return !!document.fullscreenElement; }, function (v) {
         try { if (v) document.documentElement.requestFullscreen(); else if (document.fullscreenElement) document.exitFullscreen(); } catch (e) { }
@@ -210,16 +259,22 @@ BTS.Screens = (function () {
   };
 
   /* ---------- credits ---------- */
+  function castList() {
+    var P = BTS.Data.people, skip = { villager: 1, baka: 1, mila: 1, luka: 1 };
+    var ids = Object.keys(P).filter(function (id) { return !skip[id]; });
+    return ids.length ? ids.map(function (id) { return t(P[id].name); }).join(' · ') : t('cred.people');
+  }
   S.credits = function (fromEnding) {
     var s = screen('credits', 'credits');
     s.refresh = function () {
       s.el.innerHTML = '';
       var roll = el('div', 'roll', null, s.el);
-      el('h1', null, 'BEYOND THE SHADOWS', roll);
+      el('h1', 'logo-t', '<span class="w1">Beyond</span> <span class="w2">the</span> <span class="w3">Shadows</span>', roll);
       el('div', 'sub', esc(t('ui.subtitle')), roll);
       BTS.Data.credits.forEach(function (c) {
         if (c.h) el('h3', null, esc(t(c.h)), roll);
-        if (c.k) el('p', null, U.fmt(t(c.k)), roll);
+        if (c.k === 'cred.people') el('p', null, esc(castList()), roll);   // built from the live names, so renames carry over
+        else if (c.k) el('p', null, U.fmt(t(c.k)), roll);
         if (c.raw) el('p', null, esc(c.raw), roll);
       });
       el('p', 'end', esc(t('cred.thanks')), roll);

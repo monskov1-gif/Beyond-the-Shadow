@@ -22,8 +22,14 @@ BTS.PropSprites = (function () {
       var a = rnd() * Math.PI * 2, r = Math.sqrt(rnd());
       blobs.push([cx + Math.cos(a) * r * rx * 0.8, cy + Math.sin(a) * r * ry * 0.8, 3 + rnd() * (rx * 0.35)]);
     }
+    // keep every blob inside the canvas so crowns are never cut flat at the top or sides
+    blobs.forEach(function (b) {
+      b[2] = Math.min(b[2], (p.w - 3) / 2, (p.h - 3) / 2);
+      b[0] = BTS.M.clamp(b[0], b[2] + 1.5, p.w - b[2] - 1.5);
+      b[1] = Math.max(b[1], b[2] + 1.5);
+    });
     blobs.sort(function (a, b) { return a[1] - b[1]; });
-    for (var y = Math.floor(cy - ry - 4); y < cy + ry + 4; y++) for (var x = Math.floor(cx - rx - 4); x < cx + rx + 4; x++) {
+    for (var y = 0; y < p.h; y++) for (var x = 0; x < p.w; x++) {
       var best = -1, bi = -1;
       for (var k = 0; k < blobs.length; k++) {
         var b = blobs[k], dx = x - b[0], dy = y - b[1], d = 1 - (dx * dx + dy * dy) / (b[2] * b[2]);
@@ -37,6 +43,8 @@ BTS.PropSprites = (function () {
       p.px(x, y, rd(ramp, t, x, y, 0.25));
     }
   }
+  /* Bresenham in the painter only terminates on exact integer endpoints: always round */
+  function ln(p, x0, y0, x1, y1, c) { p.line(Math.round(x0), Math.round(y0), Math.round(x1), Math.round(y1), c); }
   function trunk(p, cx, top, bottom, w, ramp) {
     for (var y = top; y <= bottom; y++) {
       var ww = w + (y > bottom - 3 ? 2 : 0);
@@ -58,10 +66,10 @@ BTS.PropSprites = (function () {
     [['tree_oak', 64, 80, LEAF, 1], ['tree_oak2', 64, 80, LEAF, 2], ['tree_walnut', 72, 76, LEAF_DARK, 3], ['tree_autumn', 60, 76, LEAF_AUT, 4]].forEach(function (t) {
       sprite(t[0], t[1], t[2], function (p) {
         var w = t[1], h = t[2];
-        trunk(p, w / 2, h * 0.45, h - 1, 5, BARK);
-        // branches
-        p.line(w / 2, h * 0.55, w / 2 - 9, h * 0.42, BARK[1]); p.line(w / 2, h * 0.5, w / 2 + 10, h * 0.38, BARK[1]);
-        crown(p, w / 2, h * 0.36, w * 0.44, h * 0.32, t[3], t[4], 30);
+        trunk(p, w / 2, Math.round(h * 0.45), h - 1, 5, BARK);
+        // branches (hidden inside the crown, peeking out of its gaps)
+        ln(p, w / 2, h * 0.58, w / 2 - 9, h * 0.46, BARK[1]); ln(p, w / 2, h * 0.54, w / 2 + 10, h * 0.43, BARK[1]);
+        crown(p, w / 2, h * 0.38, w * 0.4, h * 0.3, t[3], t[4], 30);
       });
     });
     sprite('tree_poplar', 28, 96, function (p) {
@@ -83,6 +91,38 @@ BTS.PropSprites = (function () {
         }
       }
     });
+    /* Balkan spruce / fir: a tall narrow cone of drooping branch tiers with a ragged silhouette */
+    function conifer(name, w, h, ramp, seed, o) {
+      sprite(name, w, h, function (p) {
+        var rnd = BTS.RNG(seed), cx = w / 2, top = 2, bot = h - (o.trunk || 7), tiers = o.tiers || 10;
+        trunk(p, Math.round(cx), bot - 6, h - 1, o.trunkW || 3, BARK);
+        var jag = [];
+        for (var k = 0; k <= tiers; k++) jag.push(0.75 + rnd() * 0.5);
+        for (var y = top; y < bot; y++) {
+          var t = (y - top) / (bot - top), ft = t * tiers, ti = Math.floor(ft), f = ft - ti;
+          // each tier widens toward its drooping tips, the next tier starts narrower above them
+          var hw = (1.2 + t * (w / 2 - 3)) * (0.62 + 0.38 * Math.pow(f, 0.7)) * (0.85 + 0.15 * jag[ti]);
+          if (t < 0.06) hw = Math.max(0.6, hw * 0.6);
+          for (var x = Math.floor(cx - hw - 1); x <= Math.ceil(cx + hw + 1); x++) {
+            var dx = (x + 0.5 - cx) / Math.max(hw, 0.5);
+            var edge = Math.abs(dx) + (BTS.M.hash(x * 1.7 + seed, y * 2.3) - 0.5) * 0.35 * (0.3 + t);
+            if (edge > 1) continue;
+            // branch tips droop: the outer pixels of a tier sit a little lower
+            if (Math.abs(dx) > 0.7 && f < 0.25) continue;
+            var sh = 0.62 - dx * 0.3 - (1 - f) * 0.22 + (BTS.M.hash(x + seed, y) - 0.5) * 0.25 - t * 0.08;
+            if (f > 0.86) sh -= 0.18;                                  // dark gap under each tier
+            if (Math.abs(dx) > 0.82 && dx < 0) sh += 0.12;              // sunlit left fringe
+            p.px(x, y, rd(ramp, sh, x, y, 0.22));
+          }
+        }
+        if (o.cones) for (var c = 0; c < o.cones; c++) { var cy = Math.round(top + 6 + rnd() * (bot - top) * 0.5), cxx = Math.round(cx + (rnd() - 0.5) * (4 + cy * 0.25)); if (p.alpha(cxx, cy)) { p.px(cxx, cy, [96, 60, 36]); p.px(cxx, cy + 1, [70, 44, 28]); } }
+      });
+    }
+    var SPRUCE = C.ramp(['0d1714', '13211b', '1a2c22', '22382a', '2b4632', '36553b']);
+    var FIR = C.ramp(['101a18', '172620', '1f3229', '283f31', '33503b', '41604a']);
+    conifer('tree_spruce', 44, 108, SPRUCE, 41, { tiers: 11, cones: 6 });
+    conifer('tree_spruce2', 36, 84, FIR, 43, { tiers: 9, cones: 3 });
+    conifer('tree_spruce_young', 24, 46, FIR, 47, { tiers: 6, trunk: 5, trunkW: 2 });
     sprite('tree_birch', 40, 84, function (p) {
       trunk(p, 20, 30, 83, 3, BIRCH);
       for (var y = 32; y < 83; y += 5) p.px(20 + (y % 3) - 1, y, [40, 36, 30]);
@@ -262,6 +302,54 @@ BTS.PropSprites = (function () {
     sprite('ball', 6, 6, function (p) { p.ellipse(3, 3, 3, 3, [190, 60, 50]); p.rect(0, 3, 6, 1, [230, 220, 200]); });
     sprite('kite', 12, 16, function (p) { for (var y = 0; y < 12; y++) { var w = y < 5 ? y * 2 : (12 - y) * 1.4; p.rect(6 - w / 2, y, w, 1, y < 5 ? [190, 70, 50] : [230, 200, 80]); } p.line(6, 12, 5, 15, [80, 70, 60]); });
     sprite('easel', 14, 24, function (p) { p.line(2, 23, 7, 0, [110, 80, 50]); p.line(12, 23, 7, 0, [110, 80, 50]); p.rect(2, 4, 10, 9, [220, 210, 186]); p.rect(3, 6, 8, 5, [120, 140, 100]); });
+
+    /* ---------- fair, church & home details ---------- */
+    sprite('flag_serbia', 36, 24, function (p) {      /* tricolour red-blue-white with the simplified arms near the hoist */
+      for (var y = 0; y < 24; y++) for (var x = 0; x < 36; x++) {
+        var wave = Math.round(Math.sin(x * 0.28) * 1.2);
+        var yy = y - wave; if (yy < 0 || yy > 23 - 2) continue;
+        var band = yy < 7 ? [176, 34, 40] : yy < 14 ? [30, 56, 120] : [232, 228, 218];
+        var k = 0.9 + 0.12 * Math.sin(x * 0.28 + 1.2);
+        p.px(x, y, [band[0] * k, band[1] * k, band[2] * k]);
+      }
+      // shield: red with a white double-headed eagle, crown above (pixel-simplified)
+      var sx = 8, sy = 4;
+      p.rect(sx - 4, sy - 2, 9, 2, [210, 170, 60]); p.px(sx - 4, sy - 3, [210, 170, 60]); p.px(sx, sy - 3, [210, 170, 60]); p.px(sx + 4, sy - 3, [210, 170, 60]);
+      for (var yy2 = 0; yy2 < 11; yy2++) { var hw = yy2 < 7 ? 4 : 4 - (yy2 - 6); p.rect(sx - hw, sy + yy2, hw * 2 + 1, 1, [160, 30, 36]); }
+      p.rect(sx - 3, sy + 2, 7, 1, [236, 232, 222]); p.rect(sx - 2, sy + 3, 5, 3, [236, 232, 222]); p.px(sx - 2, sy + 1, [236, 232, 222]); p.px(sx + 2, sy + 1, [236, 232, 222]);
+      p.px(sx - 1, sy + 6, [236, 232, 222]); p.px(sx + 1, sy + 6, [236, 232, 222]);
+    }, { outlineCol: [40, 30, 30] });
+    sprite('horos', 40, 14, function (p) {           /* Serbian church chandelier: a gilded ring with candles */
+      var g = [196, 164, 84], gd = [128, 100, 46];
+      p.ellipse(20, 9, 19, 4, gd); p.ellipse(20, 9, 17, 2.8, [0, 0, 0], 0); p.ellipse(20, 8, 19, 4, g); p.ellipse(20, 8, 17.4, 3.2, [0, 0, 0], 0);
+      for (var k = 0; k < 9; k++) { var x = Math.round(3 + k * 4.25); p.rect(x, 2 + (k % 2), 1, 4, [228, 220, 196]); }
+      for (k = 0; k < 6; k++) p.px(Math.round(5 + k * 6), 12, [214, 60, 50]);
+    });
+    sprite('kandilo', 6, 12, function (p) { p.px(3, 0, [150, 130, 70]); p.px(3, 2, [150, 130, 70]); p.px(3, 4, [150, 130, 70]); p.ellipse(3, 8, 2.5, 2.5, [170, 30, 34]); p.px(2, 7, [240, 120, 100]); p.rect(1, 10, 5, 1, [150, 130, 70]); });
+    sprite('analoy', 16, 22, function (p) {          /* lectern with a festal icon, covered with an embroidered cloth */
+      p.rect(7, 9, 2, 13, [70, 50, 34]); p.rect(4, 20, 8, 2, [60, 42, 28]);
+      for (var y = 0; y < 9; y++) p.rect(1 + Math.max(0, 3 - y), y + 1, 14 - Math.max(0, 3 - y) * 2, 1, y > 5 ? [150, 34, 38] : [168, 40, 44]);
+      p.rect(2, 9, 12, 2, [210, 170, 70]);
+      p.rect(5, 0, 6, 6, [200, 170, 90]); p.rect(6, 1, 4, 4, [150, 40, 36]); p.px(7, 1, [214, 176, 64]); p.px(8, 1, [214, 176, 64]); p.px(7, 2, [210, 160, 130]);
+    });
+    sprite('candle_stand', 10, 30, function (p) {    /* tall brass candlestick (čirak) */
+      var g = [190, 160, 90], gd = [120, 96, 50];
+      p.rect(4, 6, 2, 21, g); p.rect(5, 6, 1, 21, gd); p.rect(1, 27, 8, 3, gd); p.rect(2, 26, 6, 1, g); p.ellipse(5, 16, 2, 1, g); p.rect(2, 5, 6, 2, g);
+      p.rect(4, 0, 2, 5, [232, 222, 196]);
+    });
+    sprite('sack_flour', 12, 14, function (p) { p.ellipse(6, 8, 5.5, 5.5, [214, 206, 186]); p.rect(4, 1, 4, 3, [196, 188, 166]); p.rect(3, 7, 6, 3, [180, 60, 50]); p.px(4, 8, [230, 220, 200]); p.px(6, 8, [230, 220, 200]); });
+    sprite('peppers', 8, 22, function (p) { p.rect(3, 0, 1, 22, [110, 90, 60]); for (var y = 2; y < 21; y += 2) { p.rect(1 + (y % 4 ? 0 : 1), y, 3, 2, [170 + (y % 3) * 10, 30, 28]); p.rect(4 - (y % 4 ? 0 : 1), y + 1, 3, 2, [150, 24, 24]); } });
+    sprite('coat_rack', 16, 30, function (p) {
+      p.rect(7, 2, 2, 26, [70, 50, 34]); p.rect(3, 28, 10, 2, [60, 42, 28]); p.rect(4, 2, 8, 1, [70, 50, 34]);
+      p.rect(2, 4, 5, 13, [70, 56, 46]); p.rect(3, 5, 3, 11, [90, 72, 58]);     // Gvozdin's leather apron
+      p.rect(9, 4, 5, 11, [60, 70, 84]); p.rect(10, 5, 3, 3, [80, 92, 108]);    // coat
+      p.rect(8, 0, 4, 2, [150, 40, 36]);                                      // headscarf
+    });
+    sprite('peel', 6, 32, function (p) { p.rect(2, 0, 2, 22, [120, 92, 60]); p.ellipse(3, 26, 3, 5, [150, 116, 76]); p.px(2, 24, [170, 136, 92]); });
+    sprite('kneading_trough', 24, 12, function (p) { p.rect(0, 0, 24, 6, [120, 88, 56]); p.rect(1, 1, 22, 2, [214, 206, 186]); p.rect(2, 6, 2, 6, [80, 60, 40]); p.rect(20, 6, 2, 6, [80, 60, 40]); p.rect(0, 5, 24, 1, [90, 66, 42]); });
+    sprite('cheese_shelf', 20, 10, function (p) { p.rect(0, 8, 20, 2, [80, 60, 40]); for (var k = 0; k < 3; k++) { p.ellipse(3.5 + k * 6.5, 5, 3, 3, [220, 200, 140]); p.px(2 + k * 6, 4, [240, 226, 170]); } });
+    sprite('typewriter', 14, 9, function (p) { p.rect(0, 4, 14, 5, [40, 42, 46]); p.rect(2, 1, 10, 3, [220, 214, 196]); p.rect(1, 6, 12, 1, [120, 120, 126]); p.rect(0, 3, 14, 1, [60, 62, 66]); });
+    sprite('bucket_milk', 8, 9, function (p) { for (var y = 1; y < 9; y++) p.rect(1, y, 6, 1, [150, 156, 164]); p.rect(1, 1, 6, 1, [230, 230, 222]); });
 
     buildShadowCreature();
     buildIcons();

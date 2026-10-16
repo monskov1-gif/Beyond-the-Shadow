@@ -407,6 +407,107 @@ BTS.Textures = (function () {
       p.line(3, 3, 6, 5, [120, 30, 30]); p.line(13, 12, 9, 10, [120, 30, 30]);
     });
     def('cross_wood', 8, 16, 0, function (p) { p.wrap = false; p.fill([0, 0, 0, 0]); p.rect(3, 0, 2, 16, [70, 52, 36]); p.rect(0, 4, 8, 2, [70, 52, 36]); p.px(3, 0, [100, 76, 52]); });
+    /* ---------- fair bunting, fabrics ---------- */
+    [['bunt_red', [178, 38, 40]], ['bunt_blue', [36, 64, 136]], ['bunt_white', [230, 226, 214]], ['bunt_yellow', [222, 178, 52]], ['bunt_green', [62, 120, 60]]].forEach(function (b) {
+      def(b[0], 4, 4, 1, function (p) { p.fill(b[1]); p.px(0, 0, C.mul(b[1], 1.12)); p.px(3, 3, C.mul(b[1], 0.85)); });
+    });
+    def('cloth_blue', 16, 16, 1, function (p) { for (var y = 0; y < 16; y++) for (var x = 0; x < 16; x++) p.px(x, y, (x % 8 < 4) ? [44, 62, 110] : [200, 194, 170]); });
+    def('curtain', 16, 32, 1, function (p) {          /* heavy woven curtain with folds and a kilim border */
+      for (var y = 0; y < 32; y++) for (var x = 0; x < 16; x++) {
+        var fold = Math.sin(x / 16 * Math.PI * 4) * 0.5 + 0.5;
+        var base = y < 3 || y > 28 ? [60, 36, 30] : (y % 8 === 4 ? [196, 160, 80] : [124, 34, 32]);
+        if ((y === 2 || y === 29) && x % 4 < 2) base = [200, 180, 140];
+        var k = 0.62 + fold * 0.5;
+        p.px(x, y, [base[0] * k, base[1] * k, base[2] * k]);
+      }
+    });
+    def('rug_runner', 32, 32, 2, function (p) {      /* long red church runner with a dark border */
+      for (var y = 0; y < 32; y++) for (var x = 0; x < 32; x++) {
+        var c = (x < 3 || x > 28) ? [40, 24, 22] : (x < 5 || x > 26) ? [176, 136, 70] : [126, 30, 30];
+        if (x >= 5 && x <= 26 && (Math.abs(x - 15.5) + Math.abs((y % 16) - 7.5)) === 6) c = [176, 136, 70];
+        p.px(x, y, c);
+      }
+    });
+    /* ---------- church: gilded iconostasis, icons, royal doors, frescoes ---------- */
+    var GOLD = C.ramp(['5a4218', '7a5c22', '9c7a30', 'bd9a44', 'd8b860']);
+    def('gilt', 16, 16, 1, function (p) {
+      for (var y = 0; y < 16; y++) for (var x = 0; x < 16; x++) {
+        var vine = Math.sin(x * 0.8 + Math.sin(y * 0.6) * 2) + Math.cos(y * 0.9);
+        p.px(x, y, rampDither(GOLD, 0.45 + vine * 0.18 + BTS.M.hash(x, y) * 0.1, x, y));
+      }
+    });
+    function icon(name, w, h, fn) {
+      def(name, w, h, 0, function (p) {
+        p.wrap = false;
+        for (var y = 0; y < h; y++) for (var x = 0; x < w; x++) p.px(x, y, (x < 1 || y < 1 || x >= w - 1 || y >= h - 1) ? [120, 90, 40] : rampDither(GOLD, 0.55 + BTS.M.hash(x, y) * 0.15, x, y));
+        fn(p, w, h);
+      });
+    }
+    function figure(p, cx, top, robe, cloak, w) {
+      p.ellipse(cx, top + 3, 3.4, 3.4, [226, 190, 80]);            // halo
+      p.ellipse(cx, top + 3.3, 1.8, 2.1, [196, 146, 110]);          // face
+      p.px(Math.floor(cx) - 1, top + 3, [60, 40, 30]); p.px(Math.floor(cx) + 1, top + 3, [60, 40, 30]);
+      for (var y = top + 6; y < top + 6 + w * 2; y++) { var hw = 2 + (y - top - 6) * 0.35; p.rect(Math.round(cx - hw), y, Math.round(hw * 2), 1, robe); }
+      p.rect(Math.round(cx - 1), top + 6, 2, Math.round(w * 1.6), cloak);
+    }
+    icon('icon_christ', 16, 24, function (p) { figure(p, 8, 3, [150, 40, 36], [44, 62, 120], 7); p.rect(5, 12, 3, 4, [230, 222, 200]); p.px(6, 13, [60, 30, 30]); });
+    icon('icon_theotokos', 16, 24, function (p) { figure(p, 8, 3, [60, 40, 70], [130, 36, 40], 7); p.ellipse(9, 13, 2, 2, [214, 176, 64]); p.ellipse(9, 13, 1, 1.2, [196, 146, 110]); });
+    icon('icon_saint2', 16, 24, function (p) { figure(p, 8, 3, [52, 82, 64], [170, 120, 50], 7); p.rect(4, 13, 2, 7, [230, 222, 200]); });
+    icon('icon_row', 64, 12, function (p) {         /* festal row: small scenes side by side */
+      for (var k = 0; k < 8; k++) {
+        var x0 = 1 + k * 8;
+        p.rect(x0 + 1, 2, 6, 9, k % 2 ? [150, 40, 36] : [44, 62, 120]);
+        p.ellipse(x0 + 4, 4, 1.6, 1.6, [226, 190, 80]); p.px(x0 + 4, 4, [196, 146, 110]);
+        p.rect(x0 + 2, 7, 4, 3, k % 3 ? [52, 82, 64] : [226, 210, 170]);
+        p.rect(x0, 1, 1, 10, [120, 90, 40]);
+      }
+    });
+    def('royal_doors', 24, 36, 0, function (p) {   /* gilded double door with the Annunciation */
+      p.wrap = false; p.fill([0, 0, 0, 0]);
+      for (var y = 0; y < 36; y++) for (var x = 0; x < 24; x++) {
+        var dx = x - 11.5, dy = y - 11;
+        if (y < 11 && dx * dx + dy * dy > 132) continue;
+        var t = 0.55 + Math.sin(x * 1.1 + y * 0.5) * 0.12 + BTS.M.hash(x, y) * 0.12;
+        if (x === 11 || x === 12) t = 0.1;
+        p.px(x, y, rampDither(GOLD, t, x, y));
+      }
+      [[5, 12], [18, 12]].forEach(function (c, k) { p.rect(c[0] - 3, c[1], 7, 10, [70, 40, 36]); figure(p, c[0] + 0.5, c[1] + 0.5, k ? [52, 82, 120] : [150, 40, 36], k ? [130, 36, 40] : [226, 210, 170], 3); });
+      p.rect(3, 26, 6, 6, [150, 40, 36]); p.rect(15, 26, 6, 6, [44, 62, 120]);
+      p.px(5, 28, [226, 190, 80]); p.px(17, 28, [226, 190, 80]);
+    });
+    def('deacon_door', 12, 28, 0, function (p) {    /* side door with an archangel */
+      p.wrap = false;
+      for (var y = 0; y < 28; y++) for (var x = 0; x < 12; x++) p.px(x, y, (x < 1 || x > 10 || y < 1) ? [120, 90, 40] : [70, 46, 34]);
+      figure(p, 6, 4, [150, 40, 36], [226, 210, 170], 6);
+      p.rect(1, 9, 3, 6, [214, 200, 170]); p.rect(8, 9, 3, 6, [214, 200, 170]);   // wings
+    });
+    def('fresco_saints', 64, 32, 0, function (p) {  /* faded row of standing saints on a blue ground with a red frame band */
+      p.wrap = false;
+      for (var y = 0; y < 32; y++) for (var x = 0; x < 64; x++) {
+        var fade = (BTS.M.fbm(x * 0.15, y * 0.15, 2) - 0.5) * 0.4;
+        var c = y < 2 || y > 29 ? [140, 52, 44] : [52 + fade * 60, 74 + fade * 60, 104 + fade * 60];
+        p.px(x, y, c);
+      }
+      for (var k = 0; k < 5; k++) {
+        var cx = 6.5 + k * 12.5;
+        figure(p, cx, 4, [[150, 40, 36], [160, 130, 70], [52, 82, 64], [120, 60, 80], [176, 150, 120]][k], [[226, 210, 170], [130, 36, 40], [200, 180, 140], [44, 62, 120], [80, 50, 40]][k], 9);
+      }
+      for (var n = 0; n < 60; n++) { var fx = BTS.M.hash(n, 3) * 64 | 0, fy = BTS.M.hash(n, 7) * 30 | 0; p.px(fx, fy, [168, 160, 140]); }   // flaking plaster
+    });
+    def('fresco_apse', 48, 24, 0, function (p) {   /* Theotokos Platytera in the apse conch */
+      p.wrap = false; p.fill([0, 0, 0, 0]);
+      for (var y = 0; y < 24; y++) for (var x = 0; x < 48; x++) {
+        var dx = (x - 23.5) / 24, dy = (y - 24) / 24;
+        if (dx * dx + dy * dy > 1) continue;
+        var edge = dx * dx + dy * dy > 0.86;
+        p.px(x, y, edge ? [140, 52, 44] : [44 + BTS.M.hash(x, y) * 14, 64 + BTS.M.hash(x, y) * 14, 100]);
+      }
+      p.ellipse(24, 14, 8, 8, [226, 190, 80]);
+      p.ellipse(24, 10, 3.5, 3.5, [214, 176, 64]); p.ellipse(24, 10.5, 2, 2.3, [196, 146, 110]);
+      for (var yy = 13; yy < 24; yy++) { var hw = 3 + (yy - 13) * 0.7; p.rect(Math.round(24 - hw), yy, Math.round(hw * 2), 1, [130, 36, 40]); }
+      p.ellipse(24, 17, 3, 3, [226, 190, 80]); p.ellipse(24, 17, 1.3, 1.5, [196, 146, 110]);
+      p.rect(6, 18, 4, 6, [226, 210, 170]); p.rect(38, 18, 4, 6, [226, 210, 170]);      // archangels' wings at the sides
+    });
     BTS.Log.info('textures painted:', Object.keys(DEF).length);
   }
 

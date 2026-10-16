@@ -4,79 +4,115 @@ BTS.Locale.en_parts.push({
   sub: { prologue: 'June 28. Vidovdan. Pakleštica, Serbia' },
   obj: {
     p_room: 'Take the sketchbook from the desk', p_window: 'Look out of the window — as always before going out', p_go_fair: 'Go down to the fair meadow (south-east of the village)',
-    p_fair: 'The fair: talk to Granny Milka and to Pečko, then find Zajko by the bonfire', p_game: 'Watch Zajko’s shadow (press F near him)', p_night: 'Go home, up the hill'
+    p_crowd: 'Too loud! Get out of the crowd to Mama’s bread stall (the white awning by the entrance). Keep clear of people — the noise grows faster near them',
+    p_fair: 'The fair: greet Baroness de Milka on her bench, then find Zajko by the bonfire', p_game: 'Watch Zajko’s shadow (press F near him)', p_night: 'Go home, up the hill'
   },
   dlg: {
     p_intro: {
       1: 'A room on the hill. Evening. Đorđe is drawing house number seventeen.',
       2: 'House seventeen is Radoje’s. Eleven sheep, two chimneys, one smoking.',
       3: 'I draw houses because houses don’t change. Almost.',
-      4: 'The lamp is on the left of the desk. So my shadow is on the right, on the wall. I don’t look there.',
-      5: 'The fair is tonight. Zajko said he’d come by at seven forty. It’s seven thirty-two.',
-      6: 'I have to take the sketchbook. I don’t go out without it.'
+      4: 'The lamp is on the left of the desk. So my shadow is on the right, on the wall. I don’t look there. I never look there.',
+      5: 'Mama has been at the fair since five, selling bread. Tata closed the smithy and is downstairs looking for his good belt. I can hear him opening the third drawer.',
+      6: 'Zajko said he’d come by at seven forty. It’s seven thirty-two.'
     },
+    p_tata: {
+      1: 'Two knocks. Tata always knocks twice. Even when the door is open.',
+      2: 'Majstore, I’m heading down. Mama’s been at her stall since five this morning — she’ll sell every loaf before we get there.',
+      3: 'Zajko’s picking you up, yes? Don’t let the fair eat you.',
+      4: 'Fairs don’t eat people. Tata means the noise. I know that now. When I was seven, I didn’t.',
+      5: 'Zajko comes at seven forty. It’s seven thirty-two.',
+      6: 'Then you’ve got eight minutes to put your shoes on. That’s seven more than I need.',
+      7: 'He smiles with half his mouth. Half a smile means a joke. I didn’t get the joke. I nod so it doesn’t go to waste.',
+      8: 'If it gets too loud — Mama’s stall. Like always. Deal?',
+      9: 'Mama’s stall. Like always.',
+      10: 'Gvozdin lifts his hand to ruffle his son’s hair. Đorđe goes still. Gvozdin lowers his hand without touching him. He remembers.',
+      11: 'Good lad. Door shut till it clicks, yes?'
+    },
+    p_tata_after: { 1: 'Tata is gone. The door is closed until it clicks. He always closes it until it clicks, because I do.', 2: 'I have to take the sketchbook. I don’t go out without it.' },
     p_desk: { 1: 'Sketchbook. Pencil. Spare pencil.', 2: 'A hundred and twelve pages. Ninety-four used.', 3: 'Now — the window. I always look out of the window before going out. To check the village is still there.' },
     p_window: {
       1: 'The village is there. Smoke from eleven chimneys. On the meadow the bonfire is already lit.',
-      2: 'Down below, at Zajko’s gate, an old woman is standing. Black headscarf. I don’t know her.',
+      2: 'Down below, at Zajko’s gate — Zlatko and Jablan’s house — an old woman is standing. Black headscarf. I don’t know her.',
       3: 'I know everyone in Pakleštica. One hundred and forty-two people. Not her.',
       4: 'She doesn’t knock. She just stands there. Nine minutes. Ten. Eleven.',
       5: 'Gone. Toward the forest. I write: “7:40 pm. Old woman at Zajko’s gate. 11 minutes.”'
     },
     p_zajko: {
       1: 'Đorđe! Ready? Of course you’re ready, you’re always ready eight minutes early.',
-      2: 'Everything’s already going! They’ve raised the pole, there’s music, Pečko baked so much pogača you could build a house!',
+      2: 'Everything’s already going! They’ve raised the pole, there’s music, your mama baked so much pogača you could build a house out of it!',
       3: 'Zajko talks fast. I catch about three quarters. The rest I guess from his hands.',
       4: 'And tonight there’s “Catch the Shadow”! Will you play this time? Just a little?',
       c1: '“Let’s go to the fair”', c2: '[Say nothing]', c3: '“I don’t play with shadows”',
       5: 'Let’s go.', 6: 'Yes! Just don’t run ahead of me, okay? Or you’ll get lost between three stalls again.',
       7: 'Đorđe silently nods at the door.', 8: 'Got it, got it. You say “yes” with your eyes. I’ve learned.',
       9: 'I don’t play with shadows.', 10: 'I know. You don’t even look at yours. You’re strange.', 11: 'Fine, you’ll be the judge. Judges don’t play, judges watch. You’re the best watcher in the village.',
-      12: 'He said “strange”, but he smiled. So it isn’t an insult.',
+      12: 'He said “strange”, but he smiled. Corners of the mouth up, eyes narrow. So it isn’t an insult.',
       13: 'Right, I’m off! I’ll wait for you at the meadow entrance, by the torches!',
       14: 'Zajko is gone. The door is left open a hand’s width. I close it until it clicks.'
     },
-    p_arrive: { 1: 'Finally! Look, look — they’re dancing round the pole!', 2: 'Music. A drum in sevens: one-two, one-two, one-two-three. Too many voices at once.', 3: 'I’m going to the fire! Find me when you’re ready. Talk to Granny Milka — she knows more about shadows than anyone!' },
-    p_overload: { 1: 'Too loud. Too many people moving at the same time.', 2: 'The voices stick together into one noise, like water in a pipe.', 3: 'I need to go to the edge of the meadow. It’s quieter there. There I can count.' },
+    p_arrive: { 1: 'Finally! Come on, come on — I’ll show you the pole up close! It’s best from the middle!', 2: 'He pulls me by the sleeve. I don’t like being pulled. But it’s Zajko. Zajko is allowed.' },
+    p_arrive2: { 1: 'See? Ribbons, wreaths! Right, I’m off to the fire to get us a spot! Come find me!', 2: 'Zajko vanishes between backs. People all around. On every side.', 3: 'The drum beats in sevens. A hundred voices at once. Someone’s elbow brushes me.' },
+    p_cross_start: { 1: 'Too loud. Too many faces. They all move at the same time.', 2: 'Mama’s stall is by the entrance, under the white awning. It smells of bread there. It’s quieter there.', 3: 'Go where there are fewer people. Touch no one. Count the steps.' },
+    p_cross_half: { 1: 'The sound is turning into one single sound. Like water in a pipe. As if someone poured water into my ears.', 2: 'Don’t stop. White awning. Bread. Mama.' },
+    p_cross_fail: { 1: 'Đorđe presses his hands over his ears and crouches down in the middle of the crowd.', 2: 'Can’t. Can’t. Too much. Everything at once.', 3: 'Count the tiles… there are no tiles here. Count the blades of grass. One. Two. Three.' },
+    p_cross_mama: { 1: 'Đorđe. Zlato moje. It’s Mama. I’m here.', 2: 'Pečko crouches beside him and doesn’t touch him. She only holds her palm near his shoulder — so he can decide.', 3: 'Let’s go under the awning. I’ll go first, and you follow my apron. Look at the apron, not at the people.' },
+    p_mama: {
+      1: 'Under the awning. The smell of bread. The noise stayed outside, beyond the cloth.',
+      2: 'I made it. White awning. Bread. Mama. The noise stayed outside, beyond the cloth.',
+      3: 'Oh, my golden boy! You got here by yourself! Through that whole crowd! Well, look at you.',
+      4: 'Sit here, on the crate. Under the table. Like always.',
+      5: 'Đorđe sits on the crate under the stall. Pečko stands so that she shields him from the crowd.',
+      6: 'Now — count the bread for me. How much is left?',
+      7: 'Thirty-one pogačas. Eleven loaves. Four bureks.',
+      8: 'And how much did I bake?', 9: 'Sixty pogačas. Twenty loaves. The burek I don’t know.',
+      10: 'So how much did I sell? Well?',
+      11: 'Twenty-nine pogačas. Nine loaves. Mama laughs with her whole face: eyes — two lines, triangles at the corners. That is the good laugh.',
+      12: 'Better?', 13: 'Better. The noise is outside the awning now. Inside — bread and Mama.',
+      14: 'Here. No, take it, take it, don’t argue with me. Eat, or the wind will carry you off.',
+      15: 'The wind carries off things lighter than me. I weigh forty-one kilos. I don’t say it out loud. Mama knows. It’s a saying.',
+      16: 'Go and say good evening to the Baroness — she’s on the bench by the dancing. If you don’t, she’ll sulk until Christmas.',
+      17: 'She isn’t a baroness. Baronesses have castles.',
+      18: 'Shh! Just don’t tell her that, zlato. Just say: “Good evening, Baroness.” All right?',
+      19: '“Good evening, Baroness.” I repeat it to myself four times so I don’t change a word.',
+      20: 'And then — to Zajko, by the fire. And if it gets loud again — come here. To me. Like always.'
+    },
+    p_overload: { 1: 'Too loud. Too many people moving at the same time.', 2: 'The voices stick together into one noise, like water in a pipe.', 3: 'I need to go to the edge of the meadow. Or to Mama’s stall. There I can count.' },
     p_milka: {
-      1: 'Ah, Đorđe. Sit, sit by the old woman.', 2: 'See what they’re doing? Stepping on their shadows, grabbing at them. Laughing.',
-      3: 'Granny Milka isn’t laughing. Her hands are folded, like in church.', 4: 'My mother told me: you don’t play with your shadow. A shadow is like a door.',
-      5: 'Something you didn’t invite can come into your head through it. And carry off your mind. Carry it off for good.',
-      c1: '“Then why does everyone play?”', c2: '[Say nothing]',
-      6: 'Then why does everyone play?', 7: 'Because they’ve forgotten. People always forget when nothing happens for a long time.',
-      8: 'Don’t you play, son. You’re a clever one. You watch.'
+      1: 'Ah! Young master Đorđe! Do sit beside me. No, not that side — that side is draughty. A baroness does not sit in a draught.',
+      2: 'Baroness de Milka sits on the bench as if it were a throne. Her headscarf is pinned with a brooch missing two stones.',
+      3: 'The brooch had seven stones. Five are left. Last year there were five too. She hasn’t lost any more.',
+      4: 'Do you see what they’re doing? Stepping on their shadows, grabbing at them. Laughing.',
+      5: 'On our estate — in Vojvodina, child, we had a house with forty windows, until forty-six — nobody played with shadows. Mother forbade it.',
+      6: 'A shadow is like a door. Something you never invited can come into your head through it. And carry off your mind. Carry it off for good.',
+      c1: '“Then why does everyone play?”', c2: '“Good evening, Baroness”',
+      7: 'Then why does everyone play?', 8: 'Because they’ve forgotten. People always forget when nothing happens for a long time. Estates, titles, fear — they forget it all.',
+      9: 'Good evening, Baroness.', 10: 'The Baroness looks at him for a long time. Then she lifts her chin — pleased.',
+      11: 'At last. Someone in this village with manners.',
+      12: 'Mama told me to say it. I said it later than I was supposed to. But she is pleased. Maybe for baronesses “later” is fine too.',
+      13: 'And you, young master — don’t you play. You’re a clever one. You watch.'
     },
-    p_milka_again: { 1: 'Watch, son. Watch carefully. You know how.' },
-    p_pecko: {
-      1: 'Đorđe, my treasure! You came! And Zajko said you wouldn’t — that the crowd would scare you.',
-      2: 'Here. No, take it, take it, don’t argue with me.', 3: 'Pečko always pushes food at me. I never argue. Arguing with Pečko is pointless.',
-      4: 'Eat it, or the wind will carry you off. Skinny as my Zajko, only he’s always running and you’re always thinking.',
-      5: 'Go on, go to the fire. And if Zajko starts acting the fool — you stop him. He listens to you.'
-    },
-    p_pecko_again: { 1: 'Another pogača? No? Well, you watch yourself.' },
-    p_gvozdin: { 1: 'Ah, master Đorđe! How are your houses — all thirty-six in place?', 2: 'I’m selling horseshoes here. For luck. Want one? Hang it over your door.', 3: 'Gvozdin speaks loudly, but slowly. He’s easy. His words don’t crash into each other.', 4: 'Keep an eye on Zajko tonight. He’s running around like his hair’s on fire.' },
-    p_jessica: {
-      1: 'Hi! Oh — sorry — zdravo! I’m Jessica. I collect stories. Folklore.', 2: 'This shadow game — what does it mean? Everyone tells me something different.',
-      c1: '“Whoever catches their shadow is its master for a year”', c2: '[Look away]',
-      3: 'Whoever catches their shadow is its master. For a year.', 4: 'Master of his own shadow! That’s beautiful. Can I write that down? You’re a great storyteller.',
-      5: 'Đorđe looks at her camera. The lens is like an eye with no lids.', 6: 'It’s okay, it’s okay. I don’t like being looked at either.',
-      7: 'I’m here until September. Renting a room from Stana. Come by, I’ll show you my photos!'
-    },
-    p_gorazd: { 1: 'What are you staring at? Need firewood? No? Then move along.', 2: 'And that dead granny of yours… ah, never mind. Move along.', 3: 'Gorazd smells of rakija and sawdust. He always talks as if someone has wronged him.' },
+    p_milka_again: { 1: 'Watch, young master. Watch carefully. You know how.' },
+    p_pecko_again: { 1: 'Another pogača? No? Well, you watch yourself. Go to Zajko, zlato.', 2: 'Mama fixes her headscarf with floury fingers. Now there is a white mark on it. I don’t tell her. It suits her.' },
+    p_gvozdin: { 1: 'Majstore! You made it! See the braziers at the entrance? Forged them myself, in May. Not one has fallen over.', 2: 'Tata is proud of things that don’t fall over. Gates, braziers. Me.', 3: 'Mama fed you? Good. Keep an eye on Zajko — he’s running about like his hair’s on fire.',
+      4: '“Like his hair’s on fire.” Zajko’s hair is brown and not burning. Tata means “fast”. I write the saying on page ninety-four, with the others.' },
+    p_gorazd: { 1: 'What are you staring at? Need firewood? No? Then move along.', 2: 'You smell of rakija.', 3: 'Why, you little… Move along, I said! Just like that grandmother of yours!', 4: 'I told the truth. Sometimes the truth makes people angry. I don’t always know in advance which truth.' },
     p_conflict: {
       1: 'Hey, get away from here! Stop hanging round my goods!', 2: 'I only want to look, son. Only to look.',
       3: 'We know how you look. Get lost, witch!', 4: 'Gorazd shoves the old woman. She doesn’t fall. She just steps back once.',
       5: 'She looks into his face for a long time. Then — over the crowd. Straight at me.', 6: 'It’s the same old woman. From Zajko’s gate.', 7: 'Her shadow by the fire is longer than it should be. No. I imagined it. I write that down too.'
     },
     p_sava: { 1: 'God bless you, Đorđe. It’s good that you came out among people.', 2: 'A feast is there so that no one is alone.', 3: 'Father Sava always speaks as if quoting. Maybe he is.' },
-    p_dragan: { 1: 'Little man! Lemonade’s on the house. Tonight only!', 2: 'Tomorrow you pay like everyone else. Joking. You won’t.' },
-    p_stana: { 1: 'Đorđe, how you’ve grown. Soon you’ll be taller than me.', 2: 'I have a guest this year — an American. Or English? She photographs everything.' },
-    p_tihomir: { 1: 'I rang the bell this morning and my arm’s still humming.', 2: 'Sixty years I’ve rung it. That bell knows me better than my wife did.', 3: 'Tihomir speaks quietly, but there’s a ring in his voice. As if the bell were inside.' },
-    p_vesna: { 1: 'Đorđe, join the kolo! No? Well, at least watch us dance!', 2: 'White shirts, red embroidery. They circle the pole, and their shadows circle with them.' },
-    p_radoje: { 1: 'Counted the sheep? Eleven?', 2: 'That’s what I say — eleven. My wife says twelve. She doesn’t believe me.' },
+    p_dragan: { 1: 'Little man! Lemonade’s on the house. Tonight only!', 2: 'Tomorrow you pay like everyone else. Joking. You won’t.', 3: '“You pay” and “you won’t” in one breath. That’s a joke. So it’s free tonight and tomorrow too? I’ll ask Tata.' },
+    p_stana: { 1: 'Đorđe, how you’ve grown. You’ll be taller than your tata soon.', 2: 'And me — empty all summer, not a single guest. Two rooms upstairs gathering dust. Nobody comes to us anymore.' },
+    p_tihomir: { 1: 'I rang the bell this morning and my arm’s still humming.', 2: 'Sixty years I’ve rung it. That bell knows me better than my wife did.', 3: 'Tihomir rings at seven-oh-oh and nineteen-oh-oh. He has never been late. I checked against a clock for three years.' },
+    p_vesna: { 1: 'Đorđe, join the kolo! No? Well, at least watch us dance!', 2: 'White shirts, red embroidery. They circle the pole, and their shadows circle with them. I look at the embroidery. The embroidery doesn’t circle.' },
+    p_radoje: { 1: 'Counted the sheep? Eleven?', 2: 'Eleven. I count every day at eight fifteen, when you let them out.', 3: 'There! My wife says twelve. She won’t believe me. She’ll believe you.' },
     p_mila: { 1: 'Đorđe! This is for you. I made it myself!', 2: 'Mila slips a small wreath of wildflowers onto his wrist.', 3: 'So the shadows won’t touch you. That’s what Grandma says.', 4: 'Chamomile, poppy, chicory. Seven flowers. I don’t take it off.' },
-    p_luka: { 1: 'I almost caught my shadow! Almost! It’s fast!', 2: 'Zajko says you don’t play because you’re scared. Is that true?' },
-    p_zajko_wait: { 1: 'Too early! Walk around, talk to people. Then come — I’ll save us a spot right by the fire!', 2: 'He’s right. First Granny Milka and Pečko. Then the fire.' },
+    p_luka: { 1: 'I almost caught my shadow! Almost! It’s fast!', 2: 'Is it true you’re scared of your shadow? Everyone says so.', 3: 'It’s true. I don’t answer. Luka would tell everyone by the fire. Luka tells everyone everything.' },
+    p_zajko_wait: { 1: 'Too early! Walk around, say hello to the Baroness. Then come — I’ll save us a spot right by the fire!',
+      2: 'Look, this is Kum. He’s nobody’s. I gave him half of your mama’s pogača — don’t tell her, she’ll be hurt I didn’t eat it myself.',
+      3: 'The dog lies at Zajko’s feet and looks at him the way you look at a fire. Zajko always gives half away. To me, to dogs, to Mila.' },
     p_zajko_ready: { 1: 'There you are! Come on, the best part is about to start!' },
     p_game: {
       1: 'Around the bonfire — a ring of stones. Inside it people jump, stamp on their shadows, grab at them, shout.',
@@ -88,20 +124,26 @@ BTS.Locale.en_parts.push({
       8: 'I can’t. I can’t look at it.', 9: 'Đorđe steps out of the ring, hands over his ears.',
       10: 'Hey, hey. It’s fine. It’s all fine. You did great for trying.', 11: 'I did great.', 12: 'You did great. Now watch how it’s done!',
       13: 'No.', 14: 'Okay, okay. Then watch. You’re our chief watcher.',
-      15: 'You don’t play with your shadow…', 16: 'Granny Milka’s voice — from somewhere in the dark beyond the fire.',
-      17: 'Got you!'
+      15: 'You don’t play with your shadow…', 16: 'The Baroness’s voice — from somewhere in the dark beyond the fire.',
+      17: 'Got you!',
+      18: 'Đorđe’s scared of his shadow! Scared of his own shadow! Nyah!',
+      19: 'Hey! He’s not scared — he’s the judge! Judges don’t play. And you stepped out of the ring, Luka, so you’re out. Go on.',
+      20: 'Luka sticks out his tongue and runs off to his mother.',
+      21: 'Zajko stood between me and Luka. Shoulder first. The way Tata stands between the wind and a brazier.'
     },
-    p_game_after: { 1: 'Caught it! Caught it! Did you see, Đorđe? I’m master of my shadow!', 2: 'He stands by the fire, laughing. His shadow lies on the grass.', 3: 'I should look at it carefully. The way I look at houses. (F — watch a shadow)' },
+    p_game_after: { 1: 'Caught it! Caught it! Did you see, Đorđe? I’m master of my shadow!', 2: 'He stands by the fire, laughing. His shadow lies on the grass.', 3: 'I should look at it carefully. The way I look at houses. Other people’s shadows I can look at. (F — watch a shadow)' },
     p_observe_zajko: {
       1: 'Đorđe watches Zajko’s shadow. For a long time. Without blinking.', 2: 'Zajko raises his hand — the shadow raises its hand.', 3: 'Zajko lowers his hand. So does the shadow. But later. A quarter of a second later.',
       4: 'It’s just the fire flickering. Fire always flickers.', 5: 'Why are you staring like that? Drawing me?', 6: 'Your shadow is late.',
       7: 'It’s tired of me! I was the fastest tonight!', 8: 'I write it down. And sketch it. To check later. Now — home. It’s too loud here.'
     },
     p_zajko_night: { 1: 'Leaving already? Okay. I’ll come by tomorrow. No, the day after — tomorrow I’m sleeping till noon!', 2: 'He waves at me. I wave back. Once.' },
+    p_mama_night: { 1: 'Go on home, zlato. Tata and I will pack up the stall and follow.', 2: 'Door shut till it clicks, majstore. We’ll knock twice.', 3: 'Twice. So it will be them.' },
     p_well: {
       1: 'By the well, in the dark, stands an old woman in a black headscarf.', 2: 'The same one. She is looking at me. She doesn’t blink.',
       3: 'She turns and walks off along the west street, unhurried.', 4: 'Her shadow from the lamp doesn’t follow behind her. It walks beside her. Like a dog.', 5: 'No. It’s the lamp. It’s just the lamp.'
     },
-    p_bed: { 1: 'Home. Door closed until it clicks. Lamp on the right — shadow on the left. Not looking.', 2: 'Today: a hundred and forty people, one bonfire, one unknown old woman — twice.', 3: 'Zajko’s shadow was a quarter of a second late.', 4: 'It’s just the fire.', 5: 'I write everything down. Even what is “just”.' }
+    p_bed: { 1: 'Home. Door closed until it clicks. Lamp on the right — shadow on the left. Not looking.', 2: 'Today: a hundred and forty people, one bonfire, one unknown old woman — twice.', 3: 'Zajko’s shadow was a quarter of a second late.', 4: 'It’s just the fire.',
+      5: 'At 23:10 — two knocks on the door. Mama and Tata. Mama says through the door: “Laku noć, zlato.” I answer: “Good night.” Once.', 6: 'I write everything down. Even what is “just”.' }
   }
 });

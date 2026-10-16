@@ -7,10 +7,10 @@
   var ROADS = [
     { pts: [[0, 47], [20, 46], [40, 46.5], [64, 46], [84, 47], [110, 46]], w: 3.4, t: 'auto' },          // main street
     { pts: [[6, 64], [30, 64.5], [52, 64], [70, 64.5], [90, 64]], w: 2.4, t: 'dirt' },                      // south lane
-    { pts: [[55, 46], [53, 38], [58, 30], [52, 22], [55, 16]], w: 2.0, t: 'dirt' },                         // hill path
+    { pts: [[55, 46], [55.5, 41], [58.6, 33.2], [48.5, 30], [59.5, 25.5], [51.2, 22.4], [54.8, 19.5], [53.8, 17.4]], w: 2.0, t: 'dirt' },   // serpentine up the hill
     { pts: [[80, 46.5], [83, 36], [86, 29]], w: 2.2, t: 'gravel' },                                         // church path
     { pts: [[62, 64.5], [72, 69], [80, 72]], w: 2.4, t: 'dirt' },                                           // to the fair
-    { pts: [[50, 46.5], [49, 56], [52, 64], [53, 76], [53, 90]], w: 2.6, t: 'dirt' },                       // south road
+    { pts: [[50, 46.5], [49, 56], [52, 64], [53, 76], [53, 100]], w: 2.6, t: 'dirt' },                      // south road (over the creek bridge)
     { pts: [[14, 46.5], [11, 38], [13, 31], [6, 31], [0, 31]], w: 1.8, t: 'dirt' },                         // west path / forest
     { pts: [[13, 31], [12, 27.5]], w: 1.4, t: 'mud' },                                                      // Jaglika's yard path
     { pts: [[30, 46.5], [29, 64.5]], w: 1.6, t: 'dirt' }, { pts: [[90, 47], [91, 64]], w: 1.6, t: 'dirt' },
@@ -20,6 +20,13 @@
     var dx = b[0] - a[0], dz = b[1] - a[1], l2 = dx * dx + dz * dz;
     var t = l2 ? M.clamp(((px - a[0]) * dx + (pz - a[1]) * dz) / l2, 0, 1) : 0;
     return Math.hypot(px - a[0] - dx * t, pz - a[1] - dz * t);
+  }
+  /* the creek along the southern edge; the south road crosses it on a wooden bridge at x 53 */
+  var CREEK = [[2, 91], [10, 88.6], [16, 87.2], [21, 85.9], [27, 86.6], [34, 87.5], [41, 87.1], [47, 86.3], [53, 86.3], [59, 87.1], [65, 88.8], [72, 91.4], [80, 94]];
+  function creekD(x, z) {
+    var d = 1e9;
+    for (var k = 0; k < CREEK.length - 1; k++) d = Math.min(d, segDist(x, z, CREEK[k], CREEK[k + 1]));
+    return Math.min(d, Math.hypot(x - 21, z - 85.4) - 1.6);     // the old pond widens it at the fields
   }
   function roadAt(x, z) {
     for (var i = 0; i < ROADS.length; i++) {
@@ -34,26 +41,28 @@
   }
   function height(x, z) {
     var h = 0;
-    var dh = Math.hypot(x - 55, (z - 12) * 1.1);
-    h += 4.6 * M.smooth(24, 7, dh);                       // Đorđe's hill
+    var dh = Math.hypot(x - 55, (z - 11.5) * 1.1);
+    h += 6.6 * M.smooth(27, 5.5, dh);                      // Đorđe's hill: a real rise with a flat top for the house
     h += 2.6 * M.smooth(24, 3, z);                         // northern ridge
     h += 1.3 * M.smooth(13, 4, Math.hypot(x - 87, z - 24)); // church rise
     h += 1.6 * M.smooth(10, 0, x) * M.smooth(50, 20, z);   // western forest slope
     h += (M.fbm(x * 0.07, z * 0.07, 3) - 0.5) * 0.7;
     var meadow = M.smooth(10, 3, Math.max(Math.abs(x - 85) - 14, Math.abs(z - 77) - 8, 0));
     h = M.lerp(h, 0.05, meadow * 0.85);
-    h -= 1.2 * M.smooth(84, 92, z) * M.smooth(30, 0, Math.abs(x - 30));   // dip to the creek
+    h -= 1.5 * M.smooth(2.6, 0.6, creekD(x, z));          // creek bed
     return h;
   }
   var tileCache = null;
   function computeTile(x, z) {
+    var cd = creekD(x, z);
+    if (cd < 1.35) return 'water';
     var r = roadAt(x, z);
     if (Math.hypot(x - 52, z - 47) < 5.2) return 'cobble';
     if (r) return r;
+    if (cd < 2.2) return M.hash(x * 1.3, z) > 0.45 ? 'mud' : 'grass_dark';
     if (x > 66 && x < 104 && z > 67 && z < 97) return ((x * 7 + z * 3) | 0) % 11 === 0 ? 'grass_dry' : 'grass_meadow';
     if (x > 77 && x < 97 && z > 14 && z < 34) return 'grass_dark';                  // churchyard
     if (x < 34 && z > 77 && z < 88) return ((z | 0) % 9 < 7) ? 'field' : 'grass';     // fields
-    if (Math.hypot(x - 22, z - 86) < 5 || (z > 86 && x > 10 && x < 40)) return 'water';    // creek pond
     if (x < 7 || x > 104 || z < 6 || z > 97) return 'grass_dark';
     if (Math.hypot(x - 11, z - 25) < 6) return M.hash(x, z) > 0.6 ? 'mud' : 'grass_dry';  // Jaglika's yard
     var n = M.fbm(x * 0.15 + 3, z * 0.15, 2);
@@ -115,17 +124,67 @@
         return h;
       }
 
-      /* ---------- Đorđe's house on the hill ---------- */
-      var dj = L.house({ id: 'h_djordje', x: 55, z: 11, w: 6.5, d: 5, h: 2.8, wall: 'wall_plaster_patchy', base: 'wall_stone', baseH: 0.7, roof: 'roof_tile', door: { side: 's', at: -1.2 }, windows: [{ side: 's', at: 1.2 }, { side: 's', at: 2.6, w: 0.7 }, { side: 'e', at: 0 }, { side: 'w', at: 0.6 }], windowTile: 'window', chimney: [-2, 0.5], porch: true, mapLabel: 'area.hill' });
-      L.spot('djordje_door', dj.doorWorld[0], dj.doorWorld[1] + 0.3, 'down');
-      L.spot('djordje_view', 55, 19.5, 'down');
+      /* ---------- Đorđe's house on the hill: raised on a stone plinth with a covered terrace (trijem) and steps ---------- */
+      var dj = L.house({ id: 'h_djordje', x: 55, z: 11, w: 6.5, d: 5, h: 2.8, wall: 'wall_plaster_patchy', base: 'wall_stone', baseH: 0.7, raise: 0.75, noStep: true, roof: 'roof_tile', door: { side: 's', at: -1.2 }, windows: [{ side: 's', at: 1.2 }, { side: 's', at: 2.6, w: 0.7 }, { side: 'e', at: 0 }, { side: 'w', at: 0.6 }], windowTile: 'window', chimney: [-2, 0.5], porch: false, mapLabel: 'area.hill' });
+      (function () {
+        var fl = dj.floor, tx0 = 51.45, tx1 = 58.55, tz0 = 13.5, tz1 = 15.5, sx0 = 53.0, sx1 = 54.6, sz1 = 17.4;
+        var mb = L.propMB(55, 14.5), low = Math.min(height(tx0, tz1), height(tx1, tz1), height(tx0, tz0), height(tx1, tz0)) - 0.3;
+        // stone plinth with a plank floor on top
+        mb.box(55, low, (tz0 + tz1) / 2, tx1 - tx0, fl - low, tz1 - tz0, { all: 'wall_stone', top: 'floor_wood' }, { mat: BTS.MAT.STONE, ao: 0.6 });
+        mb.box(55, fl - 0.12, tz1 + 0.02, tx1 - tx0 + 0.06, 0.12, 0.08, { all: 'wood_dark' }, { mat: BTS.MAT.WOOD });
+        L.pad(tx0, tz0 - 0.2, tx1, tz1, fl);
+        // steps down to the path, then the terrace edges are solid
+        L.stairs(sx0, tz1, sx1, sz1, 'n', height((sx0 + sx1) / 2, sz1), fl, { side: 'wall_stone', top: 'stone_block', rail: 'wood_dark' });
+        L.box(tx0 - 0.08, tz1 - 0.08, sx0, tz1 + 0.1, 'terrace'); L.box(sx1, tz1 - 0.08, tx1 + 0.08, tz1 + 0.1, 'terrace');
+        L.box(tx0 - 0.12, tz0, tx0 + 0.06, tz1 + 0.1, 'terrace'); L.box(tx1 - 0.06, tz0, tx1 + 0.12, tz1 + 0.1, 'terrace');
+        // railing (balusters + hand rail) along the front, broken by the steps
+        [[tx0 + 0.05, sx0], [sx1, tx1 - 0.05]].forEach(function (seg) {
+          for (var x = seg[0]; x <= seg[1] + 0.01; x += 0.3) mb.post(x, fl, tz1 - 0.05, 0.85, 0.05, 'wood_dark', { mat: BTS.MAT.WOOD });
+          L.beam(mb, seg[0], fl + 0.88, tz1 - 0.05, seg[1], fl + 0.88, tz1 - 0.05, 0.08, 'wood_beam');
+        });
+        [tx0 + 0.05, tx1 - 0.05].forEach(function (x) { for (var z = tz0 + 0.3; z < tz1; z += 0.3) mb.post(x, fl, z, 0.85, 0.05, 'wood_dark', { mat: BTS.MAT.WOOD }); L.beam(mb, x, fl + 0.88, tz0, x, fl + 0.88, tz1 - 0.05, 0.08, 'wood_beam'); });
+        // roof posts and the trijem roof: a separate chunk that fades while Đorđe stands under it
+        var rb = new BTS.MeshBuilder(), wh = 2.8;
+        [tx0 + 0.08, sx0 - 0.05, sx1 + 0.05, 56.9, tx1 - 0.08].forEach(function (x) { rb.post(x, fl, tz1 - 0.08, wh - 0.3, 0.16, 'wood_beam', { mat: BTS.MAT.WOOD }); });
+        rb.box(55, fl + wh - 0.42, tz1 - 0.08, tx1 - tx0 + 0.2, 0.16, 0.18, { all: 'wood_dark' }, { mat: BTS.MAT.WOOD });
+        rb.quad([[tx0 - 0.3, fl + wh - 0.62, tz1 + 0.35], [tx1 + 0.3, fl + wh - 0.62, tz1 + 0.35], [tx1 + 0.3, fl + wh + 0.02, tz0], [tx0 - 0.3, fl + wh + 0.02, tz0]], BTS.M.norm3([0, 1, 0.7]), [[0, 1.2], [3.6, 1.2], [3.6, 0], [0, 0]], 'roof_tile', null, BTS.MAT.STONE);
+        rb.quad([[tx0 - 0.3, fl + wh - 0.74, tz1 + 0.35], [tx1 + 0.3, fl + wh - 0.74, tz1 + 0.35], [tx1 + 0.3, fl + wh - 0.62, tz1 + 0.35], [tx0 - 0.3, fl + wh - 0.62, tz1 + 0.35]], [0, 0, 1], [[0, 0.06], [7, 0.06], [7, 0], [0, 0]], 'wood_dark', null, BTS.MAT.WOOD);
+        var rc = L.addChunk(rb, { id: 'h_djordje_trijem', fadeable: true });
+        if (rc) rc.base = [tx0 - 0.3, tz1 + 0.3, tx1 + 0.3, tz1 + 0.35, fl + wh];
+        // a bench and a pot of geraniums on the terrace
+        mb.box(57.4, fl, 13.85, 1.6, 0.42, 0.42, { all: 'wood_light' }, { mat: BTS.MAT.WOOD }); L.box(56.6, 13.6, 58.2, 14.1, 'bench');
+        mb.billboard(52.0, fl, 13.9, 'pot_clay', { mat: BTS.MAT.STONE }); mb.billboard(52.0, fl + 0.5, 13.92, 'bush_berry', { scale: 0.45, wind: 0.2 });
+        L.light(53.8, fl + 2.2, 14.6, [1.0, 0.66, 0.36], 4.2, 0.7, 'lamp', 0.05);
+        L.statics.push({ sprite: 'lantern_hang', x: sx1 + 0.05, y: fl + 1.9, z: tz1 + 0.05, scale: 1.2, emissive: true, night: true });
+      })();
+      L.spot('djordje_door', dj.doorWorld[0], dj.doorWorld[1] + 0.25, 'down');
+      L.spot('djordje_steps', 53.8, 18.0, 'up');
+      L.spot('djordje_view', 55, 19.6, 'down');
       L.bench(59.5, 17.8, 2.2);
       L.fence([[49, 15.5], [49, 19.5], [53.3, 19.5]], { pickets: true }); L.fence([[56.7, 19.5], [61.5, 19.5], [61.5, 14]], { pickets: true });
       L.woodpile(60.2, 10.6, 2);
       L.billboard('beehive', 47.5, 12, { mat: BTS.MAT.WOOD, collide: 0.3 }); L.billboard('beehive', 46.6, 13.2, { mat: BTS.MAT.WOOD, collide: 0.3 });
       for (var i = 0; i < 7; i++) L.tree('tree_plum', 40 + (i % 3) * 3.2 + R.range(-0.5, 0.5), 9 + Math.floor(i / 3) * 3.4);     // grandmother's orchard
       L.tree('tree_walnut', 64, 8); L.tree('tree_poplar', 67, 13); L.tree('tree_poplar', 44, 20);
-      L.lanternPost(53.5, 17.2, { radius: 5, intensity: 0.9 });
+      // spruces sheltering the house from the north wind
+      [[49.5, 6.2, 'tree_spruce'], [52.4, 5.4, 'tree_spruce2'], [57.8, 5.6, 'tree_spruce'], [61.2, 6.6, 'tree_spruce2'], [47.2, 8.0, 'tree_spruce_young'], [63.0, 11.2, 'tree_spruce_young']].forEach(function (t) { L.tree(t[2], t[0], t[1], { scale: 1.05 }); });
+      L.lanternPost(51.7, 17.8, { radius: 5, intensity: 0.9 });
+      // the serpentine: low dry-stone retaining walls on the outside of each bend, rough steps where it is steepest
+      L.stoneWall([[60.3, 34.6], [60.4, 33], [59.6, 31.6]], { h: 0.55, th: 0.4 });
+      L.stoneWall([[47.4, 31.6], [46.9, 30], [47.6, 28.5]], { h: 0.55, th: 0.4 });
+      L.stoneWall([[61.2, 27.0], [61.4, 25.4], [60.6, 24.0]], { h: 0.55, th: 0.4 });
+      L.stoneWall([[49.8, 23.9], [49.4, 22.3], [50.3, 21.0]], { h: 0.55, th: 0.4 });
+      (function () {
+        var steps = [[[58.6, 33.2], [48.5, 30]], [[48.5, 30], [59.5, 25.5]], [[59.5, 25.5], [51.2, 22.4]]];
+        steps.forEach(function (sg) {
+          for (var t = 0.2; t < 0.85; t += 0.16) {
+            var x = sg[0][0] + (sg[1][0] - sg[0][0]) * t, z = sg[0][1] + (sg[1][1] - sg[0][1]) * t, dx = sg[1][0] - sg[0][0], dz = sg[1][1] - sg[0][1], l = Math.hypot(dx, dz);
+            var nx = -dz / l * 0.8, nz = dx / l * 0.8, mb = L.propMB(x, z);
+            L.beam(mb, x - nx, height(x - nx, z - nz) + 0.06, z - nz, x + nx, height(x + nx, z + nz) + 0.06, z + nz, 0.14, 'bark');
+          }
+        });
+      })();
+      ['tree_spruce_young', 'tree_birch', 'tree_spruce2', 'tree_oak2', 'tree_spruce_young'].forEach(function (k, n) { var pts = [[62.4, 30.5], [45.2, 27.2], [63.6, 22.6], [46.0, 34.6], [57.2, 37.6]]; L.tree(k, pts[n][0], pts[n][1]); });
 
       /* ---------- church (ref photo 4) & churchyard ---------- */
       var ch = L.house({ id: 'h_church', x: 87, z: 22.5, w: 5.4, d: 8, h: 4.0, wall: 'wall_stone', base: 'wall_stone_grey', baseH: 0.3, roof: 'roof_slab', roofType: 'gable_z', rise: 2.2, overhang: 0.25, door: { side: 's', at: 0, tile: 'door_arch' }, windows: [{ side: 'e', at: -1.5, y: 2.0, w: 0.5, h: 0.8, tile: 'window_plain' }, { side: 'w', at: -1.5, y: 2.0, w: 0.5, h: 0.8, tile: 'window_plain' }], lit: true, lived: false, noDrip: true, mapLabel: 'area.church' });

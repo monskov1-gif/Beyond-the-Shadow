@@ -19,6 +19,7 @@ BTS.LocationBuilder = function (def) {
   this.height = def.height || function () { return 0; };
   this.tileAt = def.tile || function () { return 'grass'; };
   this.aoBoxes = [];
+  this.pads = [];          // raised walkable surfaces (terraces, stairs, bridge decks, upper storeys)
 };
 (function () {
   var LB = BTS.LocationBuilder.prototype;
@@ -44,6 +45,108 @@ BTS.LocationBuilder = function (def) {
   };
   LB.emitter = function (e) { this.emitters.push(e); return e; };
   LB.area = function (id, x0, z0, x1, z1) { this.areas.push({ id: id, box: [x0, z0, x1, z1] }); };
+
+  /* ---------------- walkable heights ----------------
+     pad: a raised surface the walkers stand on (y: number or function(x,z)); the highest pad wins over terrain.
+     ramp: linear slope; up = walking direction that climbs ('n' = toward -z, 's' = +z, 'e' = +x, 'w' = -x). */
+  LB.pad = function (x0, z0, x1, z1, y) { var p = { box: [Math.min(x0, x1), Math.min(z0, z1), Math.max(x0, x1), Math.max(z0, z1)], y: y }; this.pads.push(p); return p; };
+  LB.ramp = function (x0, z0, x1, z1, up, yLow, yHigh) {
+    var a = Math.min(x0, x1), b = Math.max(x0, x1), c = Math.min(z0, z1), d = Math.max(z0, z1);
+    return this.pad(a, c, b, d, function (x, z) {
+      var t = up === 'n' ? (d - z) / (d - c) : up === 's' ? (z - c) / (d - c) : up === 'e' ? (x - a) / (b - a) : (b - x) / (b - a);
+      return yLow + (yHigh - yLow) * BTS.M.clamp(t, 0, 1);
+    });
+  };
+  LB.walkHeight = function (base) {
+    var pads = this.pads;
+    return function (x, z) {
+      var h = base(x, z);
+      for (var i = 0; i < pads.length; i++) {
+        var b = pads[i].box;
+        if (x < b[0] || x > b[2] || z < b[1] || z > b[3]) continue;
+        var v = typeof pads[i].y === 'function' ? pads[i].y(x, z) : pads[i].y;
+        if (v > h) h = v;
+      }
+      return h;
+    };
+  };
+  /* straight flight of steps over the footprint; up as in ramp. o: {tile, side, top, mb, base, sides:[left,right] (true = solid edge
+     with collider), rail} — steps are solid blocks down to `base` (default: terrain under them - 0.2). */
+  LB.stairs = function (x0, z0, x1, z1, up, yLow, yHigh, o) {
+    o = o || {};
+    var mb = o.mb || this.propMB((x0 + x1) / 2, (z0 + z1) / 2), H = this.height;
+    var a = Math.min(x0, x1), b = Math.max(x0, x1), c = Math.min(z0, z1), d = Math.max(z0, z1);
+    var alongZ = up === 'n' || up === 's', len = alongZ ? d - c : b - a;
+    var n = o.steps || Math.max(2, Math.round((yHigh - yLow) / 0.2));
+    var rise = (yHigh - yLow) / n, run = len / n;
+    var faces = { all: o.side || 'stone_block', top: o.top || o.tile || 'stone_block' };
+    for (var i = 0; i < n; i++) {
+      var y1 = yLow + (i + 1) * rise, s0 = i * run, cx, cz, w, dd;
+      // step i spans from the bottom edge (i*run) to the top edge of the flight (so lower steps are fronts of a solid block)
+      if (up === 'n') { cz = d - s0 - (len - s0) / 2; dd = len - s0; cx = (a + b) / 2; w = b - a; }
+      else if (up === 's') { cz = c + s0 + (len - s0) / 2; dd = len - s0; cx = (a + b) / 2; w = b - a; }
+      else if (up === 'e') { cx = a + s0 + (len - s0) / 2; w = len - s0; cz = (c + d) / 2; dd = d - c; }
+      else { cx = b - s0 - (len - s0) / 2; w = len - s0; cz = (c + d) / 2; dd = d - c; }
+      var y0 = o.base !== undefined ? o.base : Math.min(H(a, c), H(b, c), H(a, d), H(b, d)) - 0.2;
+      if (i > 0) y0 = yLow + i * rise - 0.02;
+      mb.box(cx, y0, cz, w, y1 - y0, dd, faces, { mat: o.mat === undefined ? BTS.MAT.STONE : o.mat, ao: 0.7 });
+    }
+    this.ramp(a, c, b, d, up, yLow, yHigh);
+    // side edges: thin colliders (and optional hand rails)
+    var self = this, sides = o.sides || [true, true];
+    var edges = alongZ ? [[a, c, a, d], [b, c, b, d]] : [[a, c, b, c], [a, d, b, d]];
+    edges.forEach(function (e, k) {
+      if (!sides[k]) return;
+      if (alongZ) self.box(e[0] - 0.08, c + (up === 's' ? 0.35 : 0), e[0] + 0.08, d - (up === 'n' ? 0.35 : 0), 'stairs');
+      else self.box(a + (up === 'e' ? 0.35 : 0), e[1] - 0.08, b - (up === 'w' ? 0.35 : 0), e[1] + 0.08, 'stairs');
+      if (o.rail) {
+        var m = Math.max(2, Math.round(len / 0.45));
+        for (var q = 0; q <= m; q++) {
+          var t = q / m, px = alongZ ? e[0] : a + (b - a) * t, pz = alongZ ? c + (d - c) * t : e[1];
+          var tt = up === 'n' ? 1 - (pz - c) / (d - c) : up === 's' ? (pz - c) / (d - c) : up === 'e' ? (px - a) / (b - a) : 1 - (px - a) / (b - a);
+          var py = yLow + (yHigh - yLow) * Math.min(1, Math.ceil(tt * n) / n);
+          mb.post(px, py - 0.02, pz, 0.92, q === 0 || q === m ? 0.1 : 0.05, o.rail, { mat: BTS.MAT.WOOD });
+        }
+        var p0 = alongZ ? [e[0], up === 'n' ? d : c] : [up === 'e' ? a : b, e[1]], p1 = alongZ ? [e[0], up === 'n' ? c : d] : [up === 'e' ? b : a, e[1]];
+        self.beam(mb, p0[0], yLow + 0.9, p0[1], p1[0], yHigh + 0.9, p1[1], 0.07, o.rail);
+      }
+    });
+  };
+  /* a thin square beam between two 3D points (hand rails, ropes, poles) */
+  LB.beam = function (mb, xa, ya, za, xb, yb, zb, th, tile, o) {
+    o = o || {};
+    var dx = xb - xa, dz = zb - za, l = Math.hypot(dx, dz) || 1, nx = dz / l * th / 2, nz = -dx / l * th / 2, h = th / 2;
+    var col = o.col, mat = o.mat === undefined ? BTS.MAT.WOOD : o.mat, u = Math.hypot(l, yb - ya);
+    var c0 = o.wind ? [1, 1, 1, o.wind[0]] : col, c1 = o.wind ? [1, 1, 1, o.wind[1]] : col;
+    var cs = [c0, c1, c1, c0];
+    // front (toward camera) and top faces are enough for thin members seen from above
+    mb.quad([[xa + nx, ya - h, za + nz], [xb + nx, yb - h, zb + nz], [xb + nx, yb + h, zb + nz], [xa + nx, ya + h, za + nz]], BTS.M.norm3([nx, 0.3, nz + 0.001]), [[0, 0.1], [u, 0.1], [u, 0], [0, 0]], tile, null, mat, cs);
+    mb.quad([[xb - nx, yb - h, zb - nz], [xa - nx, ya - h, za - nz], [xa - nx, ya + h, za - nz], [xb - nx, yb + h, zb - nz]], BTS.M.norm3([-nx, 0.3, -nz + 0.001]), [[0, 0.1], [u, 0.1], [u, 0], [0, 0]], tile, null, mat, [c1, c0, c0, c1]);
+    mb.quad([[xa - nx, ya + h, za - nz], [xa + nx, ya + h, za + nz], [xb + nx, yb + h, zb + nz], [xb - nx, yb + h, zb - nz]], [0, 1, 0], [[0, 0.1], [0.1, 0.1], [0.1, 0], [0, 0]], tile, null, mat, [c0, c0, c1, c1]);
+  };
+  /* sagging rope between two 3D points with little flags (bunting) and flowers; o: {sag, flags:[tiles], flagEvery, flowers, flowerEvery} */
+  LB.bunting = function (a, b, o) {
+    o = o || {};
+    var mb = this.propMB((a[0] + b[0]) / 2, (a[2] + b[2]) / 2);
+    var len = Math.hypot(b[0] - a[0], b[2] - a[2], b[1] - a[1]), sag = o.sag === undefined ? Math.min(1.4, len * 0.07) : o.sag;
+    var n = Math.max(4, Math.round(len / 0.6));
+    function at(t) { return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t - sag * 4 * t * (1 - t), a[2] + (b[2] - a[2]) * t]; }
+    for (var i = 0; i < n; i++) {
+      var p = at(i / n), q = at((i + 1) / n), wa = 0.15 * Math.sin(Math.PI * i / n), wb = 0.15 * Math.sin(Math.PI * (i + 1) / n);
+      this.beam(mb, p[0], p[1], p[2], q[0], q[1], q[2], 0.04, o.rope || 'wood_dark', { wind: [wa, wb] });
+    }
+    var flags = o.flags || ['bunt_red', 'bunt_blue', 'bunt_white'], fe = o.flagEvery || 0.55, nf = Math.floor(len / fe);
+    for (var k = 1; k < nf; k++) {
+      var t = k / nf, f = at(t), fw = 0.16, fh = 0.34, wnd = 0.25 + 0.3 * Math.sin(Math.PI * t);
+      var tile = flags[k % flags.length];
+      var cb = [1, 1, 1, 0.12 * Math.sin(Math.PI * t)], ct = [1, 1, 1, wnd];
+      mb.quad([[f[0] - fw, f[1], f[2]], [f[0] + fw, f[1], f[2]], [f[0], f[1] - fh, f[2] + 0.02], [f[0], f[1] - fh, f[2] + 0.02]], [0, 0.3, 1], [[0, 0], [1, 0], [0.5, 1], [0.5, 1]], tile, null, BTS.MAT.CLOTH, [cb, cb, ct, ct]);
+    }
+    if (o.flowers !== false) {
+      var fl = o.flowerEvery || 1.3, nfl = Math.floor(len / fl);
+      for (var j = 1; j < nfl; j++) { var g = at((j + 0.5) / nfl); if ((j + 0.5) / nfl >= 1) continue; mb.billboard(g[0], g[1] - 0.22, g[2] + 0.03, 'garland', { scale: 0.9, wind: 0.15, mat: BTS.MAT.FOLIAGE }); }
+    }
+  };
 
   /* ---------------- terrain ---------------- */
   LB.ground = function (x0, z0, x1, z1, o) {
@@ -99,7 +202,7 @@ BTS.LocationBuilder = function (def) {
     var x = o.x, z = o.z, w = o.w || 5, d = o.d || 4, wh = o.h || 2.6;
     var x0 = x - w / 2, x1 = x + w / 2, z0 = z - d / 2, z1 = z + d / 2;
     var hs = [H(x0, z0), H(x1, z0), H(x0, z1), H(x1, z1)];
-    var floor = Math.max.apply(null, hs) + 0.15, low = Math.min.apply(null, hs) - 0.4;
+    var floor = Math.max.apply(null, hs) + 0.15 + (o.raise || 0), low = Math.min.apply(null, hs) - 0.4;
     o.floor = floor;
     var wall = o.wall || 'wall_plaster', base = o.base || 'wall_stone_grey';
     var baseH = o.baseH === undefined ? 0.5 : o.baseH;
@@ -124,7 +227,7 @@ BTS.LocationBuilder = function (def) {
     mb.decal(doorPos[0], floor, doorPos[1], 0.95, 1.9, door.side, door.tile || 'door', MAT.WOOD);
     // lintel + step
     var stepY = floor - 0.02;
-    if (door.side === 's') { mb.box(doorPos[0], floor + 1.9, z1 + 0.05, 1.25, 0.14, 0.1, { all: 'wood_beam' }, { mat: MAT.WOOD }); mb.box(doorPos[0], H(doorPos[0], z1 + 0.4) - 0.1, z1 + 0.32, 1.2, stepY - H(doorPos[0], z1 + 0.4) + 0.12, 0.6, { all: 'stone_block' }, { mat: MAT.STONE }); }
+    if (door.side === 's' && !o.noStep) { mb.box(doorPos[0], floor + 1.9, z1 + 0.05, 1.25, 0.14, 0.1, { all: 'wood_beam' }, { mat: MAT.WOOD }); mb.box(doorPos[0], H(doorPos[0], z1 + 0.4) - 0.1, z1 + 0.32, 1.2, stepY - H(doorPos[0], z1 + 0.4) + 0.12, 0.6, { all: 'stone_block' }, { mat: MAT.STONE }); }
     o.doorWorld = [doorPos[0] + (door.side === 'e' ? 0.6 : door.side === 'w' ? -0.6 : 0), doorPos[1] + (door.side === 's' ? 0.75 : door.side === 'n' ? -0.75 : 0)];
     // windows
     var self = this;
@@ -360,6 +463,7 @@ BTS.LocationBuilder = function (def) {
 
   LB.finish = function () {
     var self = this;
+    if (this.pads.length) this.height = this.walkHeight(this.height);
     Object.keys(this.mbProps).forEach(function (k) { self.addChunk(self.mbProps[k], { id: 'props' }); });
     return this;
   };

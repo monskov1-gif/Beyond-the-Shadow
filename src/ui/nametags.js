@@ -26,7 +26,7 @@ BTS.NameTags = (function () {
   function headHeight(e) {
     var ch = BTS.Data.characters && BTS.Data.characters[e.anim ? e.anim.sheetId : e.id];
     var b = ch && ch.body;
-    var h = b === 'child' ? 1.6 : b === 'small' ? 1.7 : b === 'old' ? 1.95 : 2.1;
+    var h = b === 'child' ? 1.55 : b === 'small' ? 1.6 : b === 'old' ? 1.8 : b === 'big' ? 1.95 : 1.88;
     return h * (e.scale || 1);
   }
 
@@ -36,17 +36,16 @@ BTS.NameTags = (function () {
     var w = name.toLowerCase().split(/\s+/).pop();
     return w.length > 4 ? w.slice(0, -1) : w;
   }
-  function objectiveTarget() {
+  function objectiveTarget(ids) {
     var d = BTS.State.d;
-    var key = d.beat + '|' + Object.keys(d.flags).length + '|' + d.clueOrder.length + '|' + (d.objectiveKey || '');
+    var key = d.beat + '|' + Object.keys(d.flags).length + '|' + d.clueOrder.length + '|' + (d.objectiveKey || '') + '|' + ids.join(',');
     if (key === N.tk) return N.tid;
     N.tk = key; N.tid = null;
     var people = BTS.Data.people, talk = BTS.Data.talk || {}, S = BTS.Story;
     var obj = d.objectiveKey ? BTS.t(d.objectiveKey).toLowerCase() : '';
     var movers = [], named = [];
     try {
-      Object.keys(people).forEach(function (id) {
-        if (SKIP[id]) return;
+      ids.forEach(function (id) {
         var list = talk[id] || [], pick = null;
         for (var i = 0; i < list.length; i++) { var o = list[i]; if (S.inRange(o.beats) && BTS.Cond.eval(o.if)) { pick = o; break; } }
         var moves = pick && (pick.then || (pick.set && !BTS.State.flag(pick.set)) || (pick.clue && [].concat(pick.clue).some(function (c) { return !BTS.State.hasClue(c); })));
@@ -69,7 +68,9 @@ BTS.NameTags = (function () {
     dt = Math.min(dt || 0.016, 0.1);
     var people = BTS.Data.people, cam = BTS.Camera.target, vw = window.innerWidth, vh = window.innerHeight;
     var fi = W.focusInteract, focusEnt = fi && fi.ent && U.prompt && U.prompt.classList.contains('show') ? fi.ent : null;
-    var goalId = objectiveTarget();
+    var ids = [];
+    for (var j = 0; j < W.entities.length; j++) { var en = W.entities[j]; if (!en.isPlayer && en.kind === 'npc' && people[en.id] && !SKIP[en.id]) ids.push(en.id); }
+    var goalId = ids.length ? objectiveTarget(ids) : null;
     var seen = {};
     for (var i = 0; i < W.entities.length; i++) {
       var e = W.entities[i];
