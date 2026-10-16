@@ -318,33 +318,92 @@
     examine: [{ id: 'x_gh_stove', at: [1.6, 2.0], label: 'it.stove', dlg: 'x_gh_stove' }]
   });
 
-  /* ============ Stana's guesthouse: hall + Jessica's room ============ */
+  /* ============ Stana's guesthouse: two storeys ============
+     ground floor (y 0): kitchen | dining room | reception (front door) | stair hall
+     upper floor (y 3, laid out to the east of the stair, reached by a walkable flight): landing | Jessica's room | Lisa's room.
+     Jessica's room keeps its old x/z, so the story's desk interactables still sit on her desk (now upstairs). */
+  var GH_UP = 3.0;
   interior('guesthouse', {
-    nameKey: 'loc.guesthouse', bounds: [-1, -1, 19, 10], camBounds: [4, 2, 14, 7], mapParent: 'village', mapPos: [64, 37],
+    nameKey: 'loc.guesthouse', bounds: [-11, -1, 27, 10], camBounds: [-7, 2, 23, 7], mapParent: 'village', mapPos: [64, 37],
     build: function (L) {
-      var K = new Kit(L);
-      K.floor(0, 0, 18, 9, 'floor_wood');
-      K.shell(0, 0, 18, 9, 'wall_int_white', { doors: [3] });
-      K.partition(9, 0, 9, 5, 7, 'wall_int_white');
-      // hall: reception counter with guestbook, sofa, stairs prop
-      K.mb.box(5.6, 0, 2.4, 3.2, 1.05, 0.7, { all: 'wall_planks_brown', top: 'wood_light' }, { mat: MAT.WOOD }); L.box(4.0, 2.05, 7.2, 2.75);
-      K.prop('books', 6.4, 2.3, { y: 1.05, scale: 0.5 });
-      K.shelf(2.0, 0.3, 1.6, 'shelf_jars', 1.9);
+      var K = new Kit(L), U = new Kit(L, GH_UP), MB = K.mb;
+      /* ---- ground floor ---- */
+      K.floor(-10, 0, 0, 9, 'floor_stone'); K.floor(0, 0, 9.8, 9, 'floor_wood');
+      K.shell(-10, 0, 9.8, 9, 'wall_int_white', { doors: [3], noEast: true });
+      K.partition(-5, 0, 9, 5.0, 7.0, 'wall_int_white');
+      K.partition(0, 0, 9, 5.0, 7.0, 'wall_int_white');
+      // kitchen
+      K.stove(-9.0, 1.0); K.cupboard(-6.6, 0.45, 2.2);
+      var kt = K.table(-7.4, 4.0, 2.2, 1.0, { top: 'wood_light' });
+      K.prop('bread', -7.6, 3.9, { y: kt, scale: 0.8 }); K.prop('jug', -6.7, 3.8, { y: kt }); K.prop('pot_clay', -8.2, 3.9, { y: kt, scale: 0.8 });
+      K.prop('herbs_hang', -8.0, 0.3, { y: 2.0, mat: MAT.CLOTH }); K.prop('peppers', -5.6, 0.3, { y: 1.85, mat: MAT.CLOTH });
+      K.prop('sack_flour', -9.5, 7.9, { collide: 0.28 }); K.prop('barrel', -8.7, 8.1, { collide: 0.3 }); K.prop('bucket_milk', -5.8, 8.2, { collide: 0.2 });
+      K.lamp(-7.4, 4.2, 5);
+      // dining room
+      [[-2.5, 2.8, 'cloth_red'], [-2.5, 6.4, 'cloth_green']].forEach(function (t, i) {
+        var h = K.table(t[0], t[1], 2.2, 1.0, { cloth: t[2] });
+        K.chair(t[0] - 1.45, t[1], false); K.chair(t[0] + 1.45, t[1], false); if (!i) { K.chair(t[0] - 0.5, t[1] - 0.85); K.chair(t[0] + 0.5, t[1] - 0.85); }
+        K.prop('jug', t[0] + 0.3, t[1] - 0.1, { y: h, scale: 0.8 }); K.candle(t[0] - 0.4, h, t[1], { scale: 0.7, radius: 3, intensity: 0.5 });
+      });
+      K.window(-2.5, 0, { side: 'back', y: 1.3 });
+      K.decal(-4.5, 1.7, 0, 0.6, 0.72, 'icon_corner');
+      K.decal(-0.7, 1.5, 0, 0.6, 0.75, 'photo_frame');
+      // reception: counter with the guestbook, key board, notices, a sitting corner
+      MB.box(5.6, 0, 2.4, 3.2, 1.05, 0.7, { all: 'wall_planks_brown', top: 'wood_light' }, { mat: MAT.WOOD }); L.box(4.0, 2.05, 7.2, 2.75);
+      K.prop('books', 6.4, 2.3, { y: 1.05, scale: 0.5 }); K.prop('bell', 4.5, 2.3, { y: 1.05, scale: 0.45 });
+      K.shelf(1.5, 0.3, 1.6, 'shelf_jars', 1.9);
       K.decal(4.5, 1.5, 0, 1.1, 0.8, 'pinned_notes');
-      K.window(7.6, 0, { side: 'back', y: 1.3 });
-      K.rug(4.6, 5.9, 4, 2); K.chair(2.2, 5.6); K.chair(2.2, 6.6);
-      K.lamp(4.6, 4, 6);
+      K.decal(3.1, 1.55, 0, 0.8, 0.5, 'shelf_jars');                    // key board
+      K.window(6.4, 0, { side: 'back', y: 1.4, w: 0.7 });
+      K.rug(2.8, 6.0, 3.2, 2); K.chair(0.9, 2.7); K.chair(0.9, 3.6); K.table(0.9, 4.4, 0.7, 0.6, { h: 0.6 });
+      K.prop('bush', 6.9, 7.6, { scale: 0.55, collide: 0.3 }); K.prop('pot_clay', 6.9, 7.62, { scale: 0.9 });
+      K.lamp(3.6, 4, 6);
+      /* ---- stair hall: a flight climbing north to the landing ---- */
+      var sx0 = 7.6, sx1 = 9.8;
+      L.stairs(sx0, 3.6, sx1, 7.6, 'n', 0, GH_UP, { mb: MB, base: 0, side: 'wood_dark', top: 'floor_wood', mat: MAT.WOOD, sides: [true, false], rail: 'wood_dark' });
+      MB.box((sx0 + sx1) / 2, 0, 1.8, sx1 - sx0, GH_UP, 3.6, { all: 'wall_int_white', top: 'floor_wood' }, { mat: MAT.PLASTER, ao: 0.6 });   // landing on its wall
+      L.pad(sx0, 0, sx1, 3.6, GH_UP);
+      L.box(sx0 - 0.15, 0, sx0 + 0.15, 3.6, 'wall');                                                                   // landing edge / wall under it
+      for (var bz = 0.3; bz < 3.6; bz += 0.3) MB.post(sx0 + 0.05, GH_UP, bz, 0.9, 0.05, 'wood_dark', { mat: MAT.WOOD });
+      L.beam(MB, sx0 + 0.05, GH_UP + 0.92, 0, sx0 + 0.05, GH_UP + 0.92, 3.6, 0.08, 'wood_beam');
+      MB.box((sx0 + sx1) / 2, GH_UP, -0.15, sx1 - sx0 + 0.3, 3.0, 0.3, { all: 'wall_int_white', top: 'wood_dark' }, { mat: MAT.PLASTER, ao: 0.55 });
+      L.statics.push({ sprite: 'lantern_hang', x: 8.7, y: GH_UP + 1.9, z: 4.6, scale: 1.4, emissive: true }); L.light(8.7, GH_UP + 2.0, 5.0, [1, 0.66, 0.36], 6, 0.9, 'fire', 0.06);
+      /* ---- upper floor block: the storey below shown in section, floor on top ---- */
+      var ux0 = 9.8, ux1 = 25.6;
+      MB.box((ux0 + ux1) / 2, 0, 4.5, ux1 - ux0, GH_UP, 9, { all: 'wall_plaster', top: false, n: false }, { mat: MAT.PLASTER, col: [0.62, 0.6, 0.56, 0], ao: 0.5 });
+      MB.box((ux0 + ux1) / 2, GH_UP - 0.28, 9.02, ux1 - ux0, 0.28, 0.05, { all: 'wood_dark' }, { mat: MAT.WOOD });
+      for (var jx = ux0 + 0.4; jx < ux1; jx += 0.9) MB.box(jx, GH_UP - 0.24, 9.06, 0.16, 0.16, 0.04, { all: 'wood_beam' }, { mat: MAT.WOOD });
+      L.box(ux0, 3.6, ux0 + 0.3, 9.6, 'wall');
+      U.floor(ux0, 0, ux1, 9, 'floor_wood');
+      U.shell(ux0, 0, ux1, 9, 'wall_int_white', { noWest: true });
+      L.pad(ux0, 0, ux1, 9, GH_UP);
+      U.partition(ux0, 0, 9, 1.0, 3.2, 'wall_int_white');
+      U.partition(18, 0, 9, 5.0, 7.0, 'wall_int_white');
       // Jessica's room
-      K.bed(16.6, 2.2, 1.4, 2.8, 'cloth_white');
-      K.table(11.6, 1.0, 2.4, 0.9); K.chair(11.6, 2.0, false);
-      K.prop('papers', 11.2, 1.0, { y: 0.8 }); K.prop('photo_frame', 12.4, 1.0, { y: 0.8 });
-      K.prop('suitcase', 14.6, 6.8, { collide: 0.4 }); K.prop('easel', 10.0, 6.8, { collide: 0.3 });
-      K.window(14.0, 0, { side: 'back', y: 1.3 });
-      K.decal(10.6, 1.7, 0, 0.9, 0.7, 'pinned_notes');
-      K.rug(13.6, 5.4, 2, 2, 'rug_plain');
-      K.candle(12.6, 0.8, 1.1, { radius: 3.5, intensity: 0.8 });
+      U.bed(16.6, 2.2, 1.4, 2.8, 'cloth_white');
+      U.table(11.6, 1.0, 2.4, 0.9); U.chair(11.6, 2.0, false);
+      U.prop('papers', 11.2, 1.0, { y: 0.8 }); U.prop('photo_frame', 12.4, 1.0, { y: 0.8 });
+      U.prop('suitcase', 14.6, 6.8, { collide: 0.4 }); U.prop('easel', 11.2, 7.0, { collide: 0.3 });
+      U.window(14.0, 0, { side: 'back', y: 1.3 });
+      U.decal(10.6, 1.7, 0, 0.8, 0.65, 'pinned_notes');
+      U.rug(13.6, 5.4, 2, 2, 'rug_plain');
+      U.candle(12.6, 0.8, 1.1, { radius: 3.5, intensity: 0.8 });
+      U.cupboard(17.2, 7.9, 1.2);
+      // Lisa's room
+      U.bed(24.3, 2.2, 1.4, 2.8, 'blanket');
+      var lt = U.table(20.2, 1.0, 2.0, 0.9); U.chair(20.2, 2.0, false);
+      U.prop('typewriter', 19.8, 1.0, { y: lt }); U.prop('papers', 20.7, 1.1, { y: lt });
+      U.prop('suitcase', 22.6, 7.4, { collide: 0.4 }); U.prop('coat_rack', 25.0, 7.3, { collide: 0.28 });
+      U.window(22.4, 0, { side: 'back', y: 1.3 });
+      U.decal(18.9, 1.55, 0, 0.9, 0.7, 'pinned_notes');
+      U.rug(21.4, 5.2, 2.4, 2, 'rug_kilim');
+      U.lamp(21.4, 4.4, 5.5); U.lamp(13.6, 4.4, 5.5);
+      U.done();
       K.door(3, 9);
-      L.spot('door_in', 3, 7.6, 'up'); L.spot('counter', 5.6, 3.6, 'up'); L.spot('stana_spot', 5.6, 1.4, 'down'); L.spot('jess_desk', 11.6, 2.2, 'up'); L.spot('jess_bed', 15.2, 3.0, 'right'); L.spot('jess_room', 13.2, 6.0, 'up'); L.spot('default', 4, 7, 'up');
+      L.spot('door_in', 3, 7.6, 'up'); L.spot('counter', 5.6, 3.6, 'up'); L.spot('stana_spot', 5.6, 1.4, 'down'); L.spot('default', 4, 7, 'up');
+      L.spot('guest_kitchen', -7.4, 5.8, 'up'); L.spot('dining', -2.5, 4.6, 'up'); L.spot('stairs', 8.7, 8.2, 'up'); L.spot('upstairs', 8.7, 2.0, 'right');
+      L.spot('jess_desk', 11.6, 2.2, 'up'); L.spot('jess_bed', 15.2, 3.0, 'right'); L.spot('jess_room', 13.2, 6.0, 'up');
+      L.spot('lisa_room', 21.4, 6.3, 'up'); L.spot('lisa_bed', 22.9, 3.0, 'right'); L.spot('lisa_desk', 20.2, 2.5, 'up');
     },
     exits: [{ id: 'out', at: [3, 8.6], to: 'village', spawn: 'guest_door', label: 'loc.village', verb: 'verb.go' }],
     examine: [{ id: 'x_gu_notes', at: [4.5, 1.0], label: 'it.notices', dlg: 'x_gu_notes' }]
@@ -359,7 +418,7 @@
       var K = new Kit(L);
       K.floor(0, 0, 14, 9, 'floor_wood_dark'); K.floor(14, 0, 20, 9, 'floor_brick');
       K.shell(0, 0, 20, 9, 'wall_int_dark', { doors: [3] });
-      K.partition(8, 0, 9, 5.2, 7, 'wall_int_dark');
+      K.partition(8, 0, 9, 2.8, 4.6, 'wall_int_dark');
       K.partition(14, 0, 9, 5.4, 7, 'wall_stone_dark');
       // hearth room
       K.mb.box(1.4, 0, 0.8, 2.2, 1.4, 1.0, { all: 'wall_stone_dark', top: 'stone_block' }, { mat: MAT.STONE }); L.box(0.3, 0.2, 2.5, 1.3);
@@ -372,11 +431,21 @@
       K.window(3.2, 0, { side: 'back', y: 1.4, w: 0.7, h: 0.7, intensity: 0.4 });
       K.rug(4.4, 6.4, 3, 2, 'rug_plain');
       // storage: jars, needles on red cloth
-      K.shelf(10.0, 0.3, 2.6, 'shelf_jars', 2.2); K.shelf(12.6, 0.3, 1.6, 'shelf_jars', 2.2);
-      K.table(11.0, 3.8, 2.2, 0.9, { top: 'cloth_red' });
-      K.prop('needle_bundle', 10.6, 3.7, { y: 0.8 }); K.prop('needle_bundle', 11.5, 3.9, { y: 0.8, flip: true }); K.prop('vials', 11.0, 3.4, { y: 0.8 });
-      K.candle(11.9, 0.8, 3.6, { scale: 0.9, radius: 4.2, intensity: 0.9 });   // a stub of candle by the needles: the evidence must read
-      K.prop('sack', 9.0, 7.4, { collide: 0.25 }); K.prop('jug', 12.8, 7.2, { collide: 0.2 });
+      K.shelf(9.8, 0.3, 2.4, 'shelf_jars', 2.2);
+      K.table(11.6, 3.3, 2.2, 0.9, { top: 'cloth_red' });
+      K.prop('needle_bundle', 11.0, 3.2, { y: 0.8 }); K.prop('needle_bundle', 11.9, 3.4, { y: 0.8, flip: true }); K.prop('vials', 11.5, 2.95, { y: 0.8 });
+      K.candle(12.4, 0.8, 3.1, { scale: 0.9, radius: 4.2, intensity: 0.9 });   // a stub of candle by the needles: the evidence must read
+      K.prop('jug', 13.2, 7.4, { collide: 0.2 }); K.prop('sack', 13.3, 6.6, { collide: 0.25 });
+      // curtained sleeping alcove in the corner (the hiding place): plank bed, heavy curtain, a tall wardrobe closing its east side
+      K.mb.box(8.6, 0, 7.45, 0.8, 0.38, 2.3, { all: 'wood_dark', top: 'blanket' }, { mat: MAT.WOOD }); L.box(8.15, 6.3, 9.0, 8.6, 'bed');
+      K.mb.box(8.6, 0.38, 6.55, 0.7, 0.12, 0.4, { all: 'cloth_white' }, { mat: MAT.CLOTH });
+      K.curtain(8.15, 9.75, 5.95, 2.05);
+      K.mb.box(9.82, 0.04, 5.95, 0.2, 2.0, 0.22, { all: 'curtain' }, { mat: MAT.CLOTH, units: 1 });   // the drawn-aside panel
+      K.wardrobe(11.0, 7.45, 0.7, 1.9, 'e', 2.25);
+      K.prop('herbs_hang', 8.9, 6.1, { y: 2.2, mat: MAT.CLOTH, scale: 0.7 });
+      // back door to the woods behind the house
+      K.decal(12.9, 0, 0, 0.95, 1.9, 'door_dark', MAT.WOOD); K.mb.box(12.9, 1.9, 0.08, 1.2, 0.12, 0.14, { all: 'wood_dark' }, { mat: MAT.WOOD });
+      K.mb.flat(12.9, 0.015, 0.7, 1.0, 0.9, 'floor_dirt', MAT.GROUND);
       // dark records room (ref photo 1): notes board, posters, desk with book & quill, candelabra, jars
       K.decal(16.0, 1.2, 0, 2.0, 1.4, 'pinned_notes');
       K.decal(18.5, 1.5, 0, 0.8, 1.0, 'poster_anatomy'); K.decal(14.9, 1.6, 0, 0.6, 0.8, 'poster_anatomy');
@@ -389,49 +458,93 @@
       K.door(3, 9);
       L.spot('door_in', 3, 7.6, 'up'); L.spot('hearth', 2.2, 2.6, 'up'); L.spot('table', 4.6, 5.2, 'up'); L.spot('storage', 11, 5.2, 'up'); L.spot('records', 16.6, 5.4, 'up'); L.spot('board', 16, 1.4, 'up');
       L.spot('default', 4, 7, 'up'); L.spot('lisa_watch', 6.6, 7.2, 'up'); L.spot('jag_return', 3, 8.2, 'up');
+      L.spot('hide_in', 9.75, 7.55, 'left'); L.spot('hide_spot', 10.1, 5.2, 'down'); L.spot('back_door', 12.9, 1.0, 'up');
     },
-    exits: [{ id: 'out', at: [3, 8.6], to: 'village', spawn: 'jaglika_door', label: 'loc.village', verb: 'verb.go' }]
+    exits: [{ id: 'out', at: [3, 8.6], to: 'village', spawn: 'jaglika_door', label: 'loc.village', verb: 'verb.go' },
+      { id: 'back', at: [12.9, 0.55], to: 'village', spawn: 'jaglika_back', label: 'loc.village', verb: 'verb.go' }]
   });
 
-  /* ============ Church interior ============ */
+  /* ============ Church interior: tall nave, gilded iconostasis with royal doors, frescoes, horos ============ */
   interior('church', {
     nameKey: 'loc.church', bounds: [-1, -1, 11, 15], camBounds: [5, 4, 5, 9], mapParent: 'village', mapPos: [87, 22.5], music: 'silence',
     ambience: { interior: true, reverb: 0.75, reverbLen: 4.2, dogs: false },
     surface: function () { return 'stone'; },
     build: function (L) {
-      var K = new Kit(L);
+      var K = new Kit(L), MB = K.mb, WH = 6.2, IZ = 2.1;
       K.floor(0, 0, 10, 14, 'floor_stone');
-      K.shell(0, 0, 10, 14, 'wall_stone', { doors: [5], beams: false });
-      // iconostasis across the north wall
-      K.mb.box(5, 0, 0.6, 9.4, 2.8, 0.3, { all: 'wood_dark' }, { mat: MAT.WOOD }); L.box(0, 0, 10, 0.9);
-      for (var i = 0; i < 5; i++) K.decal(1.3 + i * 1.85, 1.0, 0.75, 0.75, 1.1, 'icon_fresco');
-      K.decal(5, 0.05, 0.76, 1.1, 1.6, 'door_arch', MAT.WOOD);
-      K.mb.decal(5, 2.75, 0.02, 0.8, 0.8, 's', 'window_round', MAT.GLASS);
-      // side windows (narrow) with light shafts
-      K.sideDecal(0.03, 1.8, 4, 0.5, 1.0, 'window_plain', 'e'); K.sideDecal(9.97, 1.8, 4, 0.5, 1.0, 'window_plain', 'w');
-      L.light(1.2, 2.2, 4, [0.7, 0.75, 0.9], 5, 0.6, 'day'); L.light(8.8, 2.2, 4, [0.7, 0.75, 0.9], 5, 0.6, 'day');
-      L.statics.push({ beam: [[0.1, 2.3, 3.7], [0.1, 2.3, 4.3], [3.2, 0.02, 5.6], [2.6, 0.02, 4.6]], col: [1, 0.95, 0.85], day: true });
-      L.statics.push({ beam: [[9.9, 2.3, 4.3], [9.9, 2.3, 3.7], [7.4, 0.02, 4.6], [6.8, 0.02, 5.6]], col: [1, 0.95, 0.85], day: true });
-      // benches along the walls, candle stand of sand near the entrance
-      [2.5, 5, 7.5, 10].forEach(function (z) { K.mb.box(0.55, 0.42, z, 0.5, 0.07, 1.6, { all: 'wood_light' }, { mat: MAT.WOOD }); K.mb.box(0.55, 0, z, 0.35, 0.42, 0.1, { all: 'wood_dark' }, { mat: MAT.WOOD }); L.box(0.2, z - 0.8, 0.9, z + 0.8); K.mb.box(9.45, 0.42, z, 0.5, 0.07, 1.6, { all: 'wood_light' }, { mat: MAT.WOOD }); K.mb.box(9.45, 0, z, 0.35, 0.42, 0.1, { all: 'wood_dark' }, { mat: MAT.WOOD }); L.box(9.1, z - 0.8, 9.8, z + 0.8); });
-      K.mb.box(3.0, 0, 11.4, 1.2, 0.9, 0.7, { all: 'metal', top: 'sand' }, { mat: MAT.METAL }); L.box(2.4, 11.05, 3.6, 11.75);
+      K.shell(0, 0, 10, 14, 'wall_plaster', { doors: [5], beams: false, h: WH });
+      // stone wainscot and pilasters carrying the vault ribs
+      MB.box(0.06, 0, 7, 0.12, 1.0, 14, { all: 'wall_stone', top: 'plaster_trim' }, { mat: MAT.STONE }); MB.box(9.94, 0, 7, 0.12, 1.0, 14, { all: 'wall_stone', top: 'plaster_trim' }, { mat: MAT.STONE });
+      [6.3, 11.3].forEach(function (z) {
+        [[0.18, 1], [9.82, -1]].forEach(function (w) {
+          MB.box(w[0], 0, z, 0.36, 4.5, 0.6, { all: 'plaster_trim' }, { mat: MAT.STONE, ao: 0.7 });
+          L.box(w[0] - 0.18, z - 0.3, w[0] + 0.18, z + 0.3, 'pilaster');
+        });
+      });
+      // cornice where the (cut-away) barrel vault springs from the walls
+      MB.box(0.14, 4.5, 7, 0.28, 0.2, 14, { all: 'plaster_trim' }, { mat: MAT.STONE }); MB.box(9.86, 4.5, 7, 0.28, 0.2, 14, { all: 'plaster_trim' }, { mat: MAT.STONE });
+      // frescoes on the side walls: rows of saints between the pilasters, high windows above
+      [[3.9, 'e', 0.03], [8.8, 'e', 0.03], [3.9, 'w', 9.97], [8.8, 'w', 9.97]].forEach(function (f) { K.sideDecal(f[2], 1.6, f[0], 3.6, 1.8, 'fresco_saints', f[1]); });
+      [[12.6, 'e', 0.03], [12.6, 'w', 9.97]].forEach(function (f) { K.sideDecal(f[2], 1.6, f[0], 2.0, 1.4, 'icon_saint2', f[1]); });
+      [5.0, 9.6].forEach(function (z) {
+        K.sideDecal(0.03, 3.6, z, 0.55, 1.4, 'window_plain', 'e'); K.sideDecal(9.97, 3.6, z, 0.55, 1.4, 'window_plain', 'w');
+        L.light(1.2, 3.8, z, [0.7, 0.75, 0.9], 5.5, 0.55, 'day'); L.light(8.8, 3.8, z, [0.7, 0.75, 0.9], 5.5, 0.55, 'day');
+        L.statics.push({ beam: [[0.1, 4.2, z - 0.25], [0.1, 4.2, z + 0.25], [3.6, 0.02, z + 1.8], [3.0, 0.02, z + 0.8]], col: [1, 0.95, 0.85], day: true });
+        L.statics.push({ beam: [[9.9, 4.2, z + 0.25], [9.9, 4.2, z - 0.25], [7.0, 0.02, z + 0.8], [6.4, 0.02, z + 1.8]], col: [1, 0.95, 0.85], day: true });
+      });
+      /* iconostasis: gilded screen of three tiers, royal doors in the middle, deacon doors at the sides */
+      MB.box(5, 0, IZ - 0.15, 10, 4.7, 0.3, { all: 'wood_dark', top: 'gilt' }, { mat: MAT.WOOD }); L.box(0, 0, 10, IZ);
+      [0.0, 2.55, 3.45, 4.35].forEach(function (y) { MB.box(5, y, IZ + 0.04, 10, 0.12, 0.1, { all: 'gilt' }, { mat: MAT.METAL }); });
+      [0.12, 1.75, 2.85, 4.15, 5.85, 7.15, 8.25, 9.88].forEach(function (x) { MB.box(x, 0, IZ + 0.04, 0.16, 2.6, 0.1, { all: 'gilt' }, { mat: MAT.METAL }); });
+      MB.decal(5, 0.02, IZ + 0.06, 1.6, 2.4, 's', 'royal_doors', MAT.METAL);
+      MB.decal(2.3, 0.02, IZ + 0.06, 0.8, 1.95, 's', 'deacon_door', MAT.WOOD); MB.decal(7.7, 0.02, IZ + 0.06, 0.8, 1.95, 's', 'deacon_door', MAT.WOOD);
+      [[3.5, 'icon_theotokos'], [6.5, 'icon_christ'], [0.95, 'icon_saint2'], [9.05, 'icon_fresco']].forEach(function (ic) { MB.decal(ic[0], 0.75, IZ + 0.06, 0.95, 1.45, 's', ic[1], MAT.DEFAULT); });
+      MB.decal(2.6, 2.7, IZ + 0.06, 4.8, 0.7, 's', 'icon_row', MAT.DEFAULT); MB.decal(7.4, 2.7, IZ + 0.06, 4.8, 0.7, 's', 'icon_row', MAT.DEFAULT);
+      MB.decal(2.6, 3.6, IZ + 0.06, 4.8, 0.7, 's', 'icon_row', MAT.DEFAULT); MB.decal(7.4, 3.6, IZ + 0.06, 4.8, 0.7, 's', 'icon_row', MAT.DEFAULT);
+      MB.billboard(5, 4.7, IZ - 0.1, 'cross_wood', { scale: 2.6, mat: MAT.WOOD });
+      // lampadas burning before Christ and the Theotokos
+      [3.5, 6.5].forEach(function (x) { L.statics.push({ sprite: 'kandilo', x: x, y: 2.25, z: IZ + 0.45, scale: 1.3 }); L.statics.push({ sprite: 'flame', x: x, y: 2.62, z: IZ + 0.48, scale: 0.3, emissive: true, flicker: true, fire: true }); L.light(x, 2.6, IZ + 0.9, [1, 0.45, 0.3], 3.2, 0.6, 'fire', 0.2); });
+      // apse conch with the Theotokos above the screen, a round window over it
+      MB.decal(5, 4.75, 0.02, 4.2, 2.1, 's', 'fresco_apse', MAT.DEFAULT);
+      [2.7, 7.3].forEach(function (x) { MB.box(x, 4.6, 0.12, 0.4, WH - 4.6, 0.24, { all: 'plaster_trim' }, { mat: MAT.STONE }); });
+      // red runner from the door to the soleas
+      MB.flat(5, 0.014, 8.2, 1.4, 11.6, 'rug_runner', MAT.CLOTH);
+      /* stasidia (wall stalls) with tall backs along both walls */
+      [2.9, 4.9, 7.6, 10.0].forEach(function (z) {
+        [[0.55, 0.16], [9.45, 9.84]].forEach(function (b) {
+          MB.box(b[0], 0.42, z, 0.5, 0.07, 1.4, { all: 'wood_light' }, { mat: MAT.WOOD }); MB.box(b[0], 0, z, 0.35, 0.42, 0.1, { all: 'wood_dark' }, { mat: MAT.WOOD });
+          MB.box(b[1], 0, z, 0.1, 1.5, 1.45, { all: 'wood_dark' }, { mat: MAT.WOOD });
+          MB.box(b[0], 0, z - 0.7, 0.5, 0.95, 0.06, { all: 'wood_dark' }, { mat: MAT.WOOD }); MB.box(b[0], 0, z + 0.7, 0.5, 0.95, 0.06, { all: 'wood_dark' }, { mat: MAT.WOOD });
+          L.box(b[0] - 0.35, z - 0.72, b[0] + 0.3, z + 0.72);
+        });
+      });
+      /* analoy with the feast icon, tall candlesticks before the screen */
+      K.prop('analoy', 5, 4.6, { collide: 0.32, scale: 1.1 });
+      [2.0, 8.0].forEach(function (x) { K.prop('candle_stand', x, 2.75, { collide: 0.22, scale: 1.1 }); L.statics.push({ sprite: 'flame', x: x, y: 2.08, z: 2.79, scale: 0.42, emissive: true, flicker: true, fire: true }); L.light(x, 2.4, 3.2, [1, 0.62, 0.3], 4.2, 0.85, 'fire', 0.18); });
+      // sand tray for candles of the living (near the door) and a low one for the dead
+      MB.box(3.0, 0, 11.4, 1.2, 0.9, 0.7, { all: 'metal', top: 'sand' }, { mat: MAT.METAL }); L.box(2.4, 11.05, 3.6, 11.75);
       for (var c = 0; c < 6; c++) K.candle(2.6 + (c % 3) * 0.4, 0.9, 11.2 + Math.floor(c / 3) * 0.35, { light: c === 0, radius: 4.5, intensity: 1.0 });
-      K.candle(2.2, 0, 1.5, { scale: 1.8, radius: 4, intensity: 0.9 }); K.candle(7.8, 0, 1.5, { scale: 1.8, radius: 4, intensity: 0.9 });
-      K.prop('candelabra', 5, 2.4, { collide: 0.3, scale: 1.3 });
+      MB.box(7.0, 0, 11.6, 1.2, 0.45, 0.7, { all: 'metal', top: 'sand' }, { mat: MAT.METAL }); L.box(6.4, 11.25, 7.6, 11.95);
+      for (c = 0; c < 4; c++) K.candle(6.65 + c * 0.24, 0.45, 11.5 + (c % 2) * 0.2, { light: c === 1, radius: 3.2, intensity: 0.6, scale: 0.8 });
       // funeral candles at the head and foot of the bier keep the centre of the nave readable
       K.candle(3.7, 0, 6.6, { scale: 1.6, radius: 5, intensity: 1.1 }); K.candle(6.3, 0, 8.4, { scale: 1.6, radius: 5, intensity: 1.1 });
-      L.light(5, 3.0, 3.6, [1, 0.7, 0.4], 5, 0.8, 'fire', 0.12);
-      // chandelier (horos)
-      L.statics.push({ sprite: 'lantern_hang', x: 5, y: 2.6, z: 6.5, scale: 1.8 }); L.light(5, 2.4, 6.6, [1, 0.72, 0.42], 4, 0.5, 'fire', 0.1);
+      /* horos: the great round chandelier hanging in the middle of the nave */
+      var hy = 3.4, hz = 8.7;
+      L.statics.push({ sprite: 'horos', x: 5, y: hy, z: hz, scale: 1.0 });
+      [-1.1, 1.1].forEach(function (o) { L.beam(MB, 5 + o, hy + 0.45, hz, 5, WH + 0.6, hz - 0.4, 0.025, 'metal', { mat: MAT.METAL }); });
+      for (var k = 0; k < 9; k++) L.statics.push({ sprite: 'flame', x: 5 - 1.08 + k * 0.266, y: hy + 0.55 - (k % 2) * 0.04, z: hz + 0.02, scale: 0.26, emissive: true, flicker: true, fire: true });
+      L.light(5, hy + 0.4, hz + 0.4, [1, 0.72, 0.42], 7, 1.0, 'fire', 0.1);
+      L.light(5, 3.2, 3.4, [1, 0.7, 0.4], 5, 0.7, 'fire', 0.12);
       K.door(5, 14);
-      L.spot('door_in', 5, 12.8, 'up'); L.spot('altar', 5, 3.6, 'up'); L.spot('sava_spot', 5, 2.6, 'down'); L.spot('candles', 3.0, 12.6, 'up'); L.spot('bier', 5, 7.5, 'down');
+      L.spot('door_in', 5, 12.8, 'up'); L.spot('altar', 5, 3.6, 'up'); L.spot('sava_spot', 5, 2.65, 'down'); L.spot('candles', 3.0, 12.6, 'up'); L.spot('bier', 5, 7.5, 'down');
+      L.spot('analoy', 5, 5.5, 'up'); L.spot('candles_dead', 7.0, 12.7, 'up');
       L.spot('mourner1', 3.4, 9.0, 'up'); L.spot('mourner2', 6.6, 9.2, 'up'); L.spot('mourner3', 4.2, 10.4, 'up'); L.spot('mourner4', 7.2, 10.6, 'up'); L.spot('mourner5', 2.4, 7.6, 'right'); L.spot('default', 5, 12, 'up');
     },
     exits: [{ id: 'out', at: [5, 13.6], to: 'village', spawn: 'church_door', label: 'loc.village', verb: 'verb.go' }],
     examine: [
-      { id: 'x_ch_icons', at: [3.2, 1.4], label: 'it.iconostasis', dlg: 'x_ch_icons' },
+      { id: 'x_ch_icons', at: [3.5, 2.6], label: 'it.iconostasis', dlg: 'x_ch_icons' },
       { id: 'x_ch_candles', at: [3.0, 11.8], label: 'it.candles', dlg: 'x_ch_candles' },
-      { id: 'x_ch_window', at: [1.0, 4.0], label: 'it.window', dlg: 'x_ch_window' }
+      { id: 'x_ch_window', at: [1.0, 5.0], label: 'it.window', dlg: 'x_ch_window', hy: 3.6 }
     ]
   });
 

@@ -36,7 +36,7 @@
       shadows: { zajko: { stage: 2 } }
     },
     { id: 'c1_back', chapter: 'ch1', obj: 'obj.c1_back', env: { time: 'evening', weather: 'overcast', transition: 20 },
-      triggers: [{ loc: 'djordje_house', box: [-1, -1, 40, 40], run: function (C) { return C.say('c1_home'); }, then: 'c1_storm' }]
+      triggers: [{ loc: 'djordje_house', box: [-30, -10, 40, 30], run: function (C) { return C.say('c1_home'); }, then: 'c1_storm' }]
     },
     { id: 'c1_storm', chapter: 'ch1', obj: 'obj.c1_storm', env: { time: 'night', weather: 'storm', horror: 0.1 }, envInstant: true, music: 'symptoms',
       hide: ['pecko', 'gvozdin'],

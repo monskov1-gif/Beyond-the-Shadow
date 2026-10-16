@@ -146,7 +146,8 @@ BTS.Portraits = (function () {
       NX[i] = nv[0]; NY[i] = nv[1]; NZ[i] = nv[2];
       var M = mats[typeof pt.mat === 'function' ? pt.mat(pt.loc[i * 3], pt.loc[i * 3 + 1], pt.loc[i * 3 + 2], x, y) : pt.mat] || mats.skin;
       var nl = nv[0] * LIGHT[0] + nv[1] * LIGHT[1] + nv[2] * LIGHT[2];
-      var dif = clamp((nl + 0.3) / 1.3, 0, 1);
+      var dif = clamp((nl + (M.wrap || 0.1)) / (1 + (M.wrap || 0.1)), 0, 1);
+      var bounce = Math.max(0, nv[0] * 0.55 + nv[1] * 0.45 + nv[2] * 0.2) * 0.12;
       // cast shadow by marching the height field toward the light
       var sh = 0;
       if (pt.noShadow !== true && !window.__NOSH) for (var st = 2; st < 22; st++) {
@@ -156,8 +157,8 @@ BTS.Portraits = (function () {
         if (top[j2] >= 0 && parts[top[j2]].cast !== false && Z[j2] > z0 + rise * st + 1.5) { sh = 1; break; }
       }
       var cav = Math.max(0, Zb[i] - Z[i]);
-      var occ = window.__NOAO ? 1 : 1 - Math.min(0.45, cav * 0.045);
-      var v = (0.16 + 0.84 * dif * (sh ? 0.42 : 1)) * occ;
+      var occ = window.__NOAO ? 1 : 1 - Math.min(0.5, cav * 0.06);
+      var v = (0.1 + 0.9 * dif * (sh ? 0.4 : 1) + bounce) * occ;
       // cool rim from the back right
       if (nv[0] > 0.45 && M.rim) v += M.rim * 0.25 * (nv[0] - 0.45);
       if (pt.vmul) v *= pt.vmul;
@@ -325,19 +326,27 @@ BTS.Portraits = (function () {
     var ear = { name: 'ear', F: F, mat: 'skin', k: 0.05, prims: [
       E([-0.92, 0.12, -0.15], [0.11, 0.3, 0.22], { rot: [-0.25, 0, -0.12] }), E([0.92, 0.12, -0.15], [0.11, 0.3, 0.22], { rot: [0.25, 0, 0.12] })
     ], lineGap: 1.5 };
-    var neck = { name: 'neck', F: F, mat: 'skin', k: 0.1, prims: [E([0, 1.5, -0.3], [f.neck + f.stout * 0.15, 0.95, f.neck * 1.1 + f.stout * 0.1], { rot: [0, -0.15, 0] })], vmul: 0.92 };
-    return { head: head, ear: ear, neck: neck };
+    var neck = { name: 'neck', F: F, mat: 'skin', k: 0.1, prims: [E([0, 1.5, -0.3], [f.neck + f.stout * 0.15, 0.95, f.neck * 1.1 + f.stout * 0.1], { rot: [0, -0.15, 0] })], vmul: 0.85 };
+    /* the same skull, jaw and chin inflated by `inf` units: a base for beards, scarves and caps that hug the head */
+    function shell(inf, o) {
+      o = o || {};
+      var list = [prims[1], prims[2], prims[3], prims[9]];
+      if (st) list = list.concat(prims.slice(prims.length - 3));
+      if (o.cranium) list.unshift(prims[0]);
+      return list.map(function (e) { return E(e.c, [e.r[0] + inf, e.r[1] + inf, e.r[2] + inf], { rot: e.rot, k: e.k }); });
+    }
+    return { head: head, ear: ear, neck: neck, shell: shell, prims: prims, muzzle: prims[9], lipU: prims[10], lipL: prims[11] };
   }
 
   /* expression parameters */
   var EXP = {
     neutral: { open: 1, browIn: 0, browOut: 0, mouth: 0, curve: 0, cheek: 0, look: 0, lower: 0 },
-    sad:     { open: 0.78, browIn: -0.075, browOut: 0.035, curve: -0.05, cheek: 0, look: 0.03, lower: 0, droop: 0.4, lookY: 0.02 },
-    scared:  { open: 1.45, browIn: -0.09, browOut: -0.06, curve: -0.02, mouthOpen: 0.03, open2: 1, cheek: 0, pupil: 0.65, look: 0 },
-    angry:   { open: 0.72, browIn: 0.085, browOut: -0.035, curve: -0.035, cheek: 0, flat: 1, furrow: 1, tight: 1 },
+    sad:     { open: 0.74, browIn: -0.1, browOut: 0.04, curve: -0.05, cheek: 0, look: 0.03, lower: 0, droop: 0.4, lookY: 0.02 },
+    scared:  { open: 1.5, browIn: -0.12, browOut: -0.08, curve: -0.02, mouthOpen: 0.03, open2: 1, cheek: 0, pupil: 0.65, look: 0 },
+    angry:   { open: 0.66, browIn: 0.12, browOut: -0.04, curve: -0.04, cheek: 0, flat: 1, furrow: 1, tight: 1 },
     smile:   { open: 0.78, browIn: -0.015, browOut: 0, curve: 0.06, cheek: 1, lower: 0.035, smile: 1 },
     blank:   { open: 0.9, browIn: 0, browOut: 0.01, curve: -0.008, cheek: 0, dull: 1 },
-    worried: { open: 1.08, browIn: -0.075, browOut: 0.015, curve: -0.025, cheek: 0, look: -0.05, furrow: 0.5 },
+    worried: { open: 1.05, browIn: -0.1, browOut: 0.02, curve: -0.025, cheek: 0, look: -0.05, furrow: 0.5 },
     tired:   { open: 0.52, browIn: -0.02, browOut: 0.03, curve: -0.02, cheek: 0, bags: 1 }
   };
   P.EXP = EXP;
@@ -349,7 +358,7 @@ BTS.Portraits = (function () {
     var irisC = spec.eyes || [70, 60, 50];
     var hairC = spec.browCol || spec.hairCol || [60, 40, 30];
     var ink = C.mix(C.mul(skinM.ramp[0], 0.45), [20, 12, 22], 0.5);
-    var eyeS = f.eye, ew = 0.19 * eyeS, eyeX = 0.39 + (f.child ? -0.01 : 0), open = ex.open * (spec.lidOpen || 1);
+    var eyeS = f.eye, ew = 0.2 * eyeS, eyeX = 0.39 + (f.child ? -0.01 : 0), open = ex.open * (spec.lidOpen || 1);
     var hu0 = 0.08 * eyeS * open, hl0 = 0.048 * eyeS * Math.min(1.2, 0.6 + open * 0.4);
     var irisR = 0.082 * eyeS * (f.child ? 1.08 : 1);
     var lookX = (ex.look || 0) + (spec.look || 0), lookY = (ex.lookY || 0) + (spec.lookY || 0);
@@ -401,12 +410,14 @@ BTS.Portraits = (function () {
         return;
       }
       // upper lid line / lashes
-      if (e.t > -0.04 && e.t < 1.04 && dU < 0 && dU >= -1.15 - (e.t > 0.6 ? 0.5 * (f.fem || 0) : 0)) { pen.px(x, y, C.mix(ink, C.mul(hairC, 0.5), 0.2)); return; }
+      if (e.t > -0.04 && e.t < 1.06 && dU < 0 && dU >= -1.1 - (e.t > 0.45 ? 0.8 + 0.6 * (f.fem || 0) * (e.t > 0.75 ? 1 : 0) : 0)) { pen.px(x, y, C.mix(ink, C.mul(hairC, 0.5), 0.2)); return; }
+      if (e.t > 0.85 && e.t < 1.12 && dL < 0.6 && dL > -0.8) { pen.px(x, y, C.mix(ink, skinM.ramp[1], 0.45)); return; }  // outer corner
       // eyelid crease above
       var crease = (Y - (e.yU - 0.045 - 0.02 * open)) * s;
       if (e.t > 0.1 && e.t < 0.98 && crease > -0.6 && crease < 0.5) { pen.lit(x, y, skinM, -0.2); return; }
       // lower lid
-      if (e.t > 0.15 && e.t < 0.95 && dL < 0 && dL > -1) { pen.lit(x, y, skinM, -0.1); return; }
+      if (e.t > 0.12 && e.t < 0.95 && dL < 0 && dL > -1) { pen.lit(x, y, skinM, e.t > 0.5 ? -0.16 : -0.1); return; }
+      if (e.t > 0.15 && e.t < 0.9 && dL <= -1 && dL > -2) { pen.lit(x, y, skinM, 0.06); return; }  // lit lower lid rim
       if ((ex.bags || f.age > 0.5 || spec.bags) && e.t > 0.15 && e.t < 0.85 && dL < -1.6 && dL > -2.6) pen.lit(x, y, skinM, -0.12 * (ex.bags ? 1.4 : spec.bags || f.age));
     }, null);
 
@@ -440,7 +451,7 @@ BTS.Portraits = (function () {
     });
 
     // mouth: lips shaded with the lip material, parting line shaped by the expression
-    var my = f.mouthY, mw = 0.27 * f.lipW * (1 + (ex.smile ? 0.12 : 0) - (ex.tight ? 0.08 : 0));
+    var my = f.mouthY, mw = 0.31 * f.lipW * (1 + (ex.smile ? 0.12 : 0) - (ex.tight ? 0.08 : 0));
     var curve = ex.curve + (spec.mouthCurve || 0);
     var openA = ex.mouthOpen ? 0.05 + (ex.open2 ? 0.02 : 0) : (ex.smile && spec.teeth ? 0.025 : 0);
     var upH = 0.06 * f.lip * (ex.tight ? 0.6 : 1), loH = 0.075 * f.lip * (ex.tight ? 0.6 : 1);
@@ -472,12 +483,6 @@ BTS.Portraits = (function () {
     eachVisible(ctx, head, function (x, y, X, Y, Z) {
       if (Z < 0.1) return;
       var ax = Math.abs(X);
-      if (f.age > 0.3 || spec.lines) {
-        var a = f.age || spec.lines;
-        [-0.52, -0.62, -0.72].forEach(function (ly, k) { if (k < 1 + Math.round(a * 2) && ax < 0.42 - k * 0.04 && Math.abs((Y - ly - 0.02 * Math.cos(X * 4)) * s) < 0.5 && hash(x, k) > 0.18) pen.lit(x, y, skinM, -0.12); });
-        if (ax > 0.53 && ax < 0.66 && Y > -0.06 && Y < 0.08) { var cf = (Y + (ax - 0.53) * (Math.round(hash(Math.floor(Y * 30), 3) * 2) - 1) * 0.8) * s; if (hash(x, y) < 0.35 * a) pen.lit(x, y, skinM, -0.12); }
-        if (a > 0.6 && ax > 0.15 && ax < 0.42 && Math.abs((Y - 0.16 - (ax - 0.3) * (ax - 0.3) * 0.8) * s) < 0.5) pen.lit(x, y, skinM, -0.1);
-      }
       if (spec.freckles) {
         var fq = Math.floor(X * 26), fr = Math.floor(Y * 26);
         if (ax > 0.08 && ax < 0.62 && Y > 0.08 && Y < 0.5 && hash(fq, fr) > 0.8 && hash(x, y) > 0.4) pen.lit(x, y, mats.freckle || skinM, -0.06);
@@ -485,6 +490,34 @@ BTS.Portraits = (function () {
       if (spec.blush || f.child || ex.cheek) {
         var bl = g2((ax - 0.5) / 0.16, (Y - 0.36) / 0.12) * (spec.blush || 0.6) * (f.child ? 1 : 0.7);
         if (bl > 0.25) pen.tint(x, y, [200, 80, 80], Math.min(0.22, bl * 0.3));
+      }
+    });
+    // creases: forehead, crow's feet, under-eye, nasolabial and marionette lines, drawn as a shadow line with a lit edge
+    var age = Math.max(f.age, spec.lines || 0), lines = [];
+    function L(pts, k, side) { lines.push({ p: pts, k: k, side: side }); }
+    var nyF = f.noseY, myF = f.mouthY, mwF = 0.31 * f.lipW;
+    if (age > 0.3) { L([[-0.36, -0.58], [-0.1, -0.61], [0.12, -0.6], [0.36, -0.56]], 0.16 * age); if (age > 0.55) L([[-0.3, -0.69], [0, -0.72], [0.3, -0.68]], 0.13 * age); }
+    if (age > 0.5 || ex.furrow) { L([[-0.06, -0.3 + (ex.browIn > 0 ? 0.04 : 0)], [-0.05, -0.17]], 0.14 * Math.max(age, ex.furrow || 0)); L([[0.06, -0.3 + (ex.browIn > 0 ? 0.04 : 0)], [0.05, -0.17]], 0.14 * Math.max(age, ex.furrow || 0)); }
+    if (ex.browIn < -0.05) { L([[-0.2, -0.47], [0, -0.5], [0.2, -0.47]], 0.1); }
+    if (age > 0.45 || ex.cheek) [-1, 1].forEach(function (sd) {
+      var ox = sd * (0.6 + 0.02), k = 0.12 * Math.max(age, ex.cheek * 0.8);
+      L([[ox, -0.04], [ox + sd * 0.12, -0.09]], k); L([[ox, 0.02], [ox + sd * 0.13, 0.03]], k); if (age > 0.7) L([[ox - sd * 0.02, 0.07], [ox + sd * 0.11, 0.13]], k);
+    });
+    if (age > 0.35 || ex.bags) [-1, 1].forEach(function (sd) { L([[sd * 0.24, 0.14], [sd * 0.38, 0.18], [sd * 0.54, 0.13]], 0.1 * Math.max(age, ex.bags || 0)); });
+    if (age > 0.35 || ex.cheek || f.stout) [-1, 1].forEach(function (sd) { L([[sd * 0.17 * f.noseW, nyF - 0.04], [sd * 0.27, nyF + 0.12], [sd * (mwF + 0.06), myF + 0.06]], 0.16 * Math.max(age, ex.cheek, f.stout * 0.6), sd); });
+    if (age > 0.65) [-1, 1].forEach(function (sd) { L([[sd * (mwF + 0.02), myF + 0.08], [sd * (mwF + 0.04), myF + 0.3]], 0.12 * age, sd); });
+    if (lines.length) eachVisible(ctx, head, function (x, y, X, Y, Z) {
+      if (Z < 0.1) return;
+      for (var li = 0; li < lines.length; li++) {
+        var ln = lines[li], best = 9, bt = 0;
+        for (var j = 0; j + 1 < ln.p.length; j++) {
+          var p0 = ln.p[j], p1 = ln.p[j + 1], vx = p1[0] - p0[0], vy = p1[1] - p0[1], l2 = vx * vx + vy * vy;
+          var t = Math.max(0, Math.min(1, ((X - p0[0]) * vx + (Y - p0[1]) * vy) / l2));
+          var dx = X - p0[0] - vx * t, dy = Y - p0[1] - vy * t, d = Math.sqrt(dx * dx + dy * dy) * s;
+          if (d < best) { best = d; bt = (dy < 0 ? -1 : 1); }
+        }
+        if (best < 0.6) pen.lit(x, y, skinM, -ln.k * 1.4);
+        else if (best < 1.5 && bt > 0) pen.lit(x, y, skinM, ln.k * 0.35);
       }
     });
     // stubble / shaved beard shadow
@@ -528,7 +561,7 @@ BTS.Portraits = (function () {
 
     var skin = spec.skin;
     var mats = {
-      skin: mat(skin, { n: 6, lo: 0.42, hi: 1.16, shadow: [120, 50, 70], light: [255, 236, 210], shift: 0.5, warm: 0.6, dither: 0.35, rim: 0.3 }),
+      skin: mat(skin, { n: 7, lo: 0.4, hi: 1.14, shadow: [120, 46, 70], light: [255, 238, 214], shift: 0.55, warm: 0.6, dither: 0.3, rim: 0.3 }),
       lip: mat(spec.lipCol || C.mix(skin, [176, 70, 72], f.fem ? 0.42 : 0.28), { n: 5, lo: 0.5, hi: 1.12, shadow: [90, 30, 50], dither: 0.2 }),
       freckle: mat(C.mix(skin, [150, 80, 40], 0.4), { n: 5, lo: 0.5, hi: 1.1, dither: 0 })
     };

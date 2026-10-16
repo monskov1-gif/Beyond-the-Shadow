@@ -1,7 +1,8 @@
-/* CHAPTER 5 — Lisa. CHAPTER 6 — watching. CHAPTER 7 — Jaglika's house. */
+/* CHAPTER 5 — Gorazd and Jessica (September 11–17): his notes match a death; Lisa believes and stays.
+   CHAPTER 6 — watching. CHAPTER 7 — Jaglika's house. */
 'use strict';
 (function () {
-  var D = BTS.D, U = BTS.StoryUtil, when = U.when, add = U.add, S = BTS.State;
+  var D = BTS.D, U = BTS.StoryUtil, when = U.when, add = U.add, S = BTS.State, A = BTS.SpotAt;
   var LISA_FOLLOW = { loc: '*', follow: true, act: 'idle' };
 
   /* ---------- chapter 6: following Jaglika (freeze when she looks back) ---------- */
@@ -58,33 +59,53 @@
     }, 'stalk_fail');
   }
 
-  /* ---------- chapter 7: Jaglika returns while Đorđe is inside ---------- */
+
+  var GORAZD_FIELD = { loc: 'outskirts', at: [41.5, 35.5], act: 'lie', stage: 4, noTalk: true, get sheet() { return U.sheetOr('gorazd_bare', 'gorazd'); } };
+
   BTS.Story.define([
     /* ================= CHAPTER 5 ================= */
-    { id: 'c5_arrival', chapter: 'ch5', loc: 'djordje_house', spawn: 'desk', forceSpawn: true, chapterCard: 'chap.ch5', chapterSub: 'sub.c5', day: 82, deaths: ['jessica'],
-      env: { time: 'day', weather: 'overcast', horror: 0.35 }, envInstant: true, obj: null, music: 'explore',
-      scene: function (C) {
-        C.anim('player', 'sketch');
-        return C.wait(1).then(function () { C.sfx('door_knock', {}); return C.wait(1.4); })
-          .then(function () { C.anim('player', null); C.sfx('door_open', {}); C.spawn('lisa', 'door_in', { dir: 'up', noTalk: true }); return C.walk('lisa', 'lisa_table'); })
-          .then(function () { C.face('lisa', 'player'); C.face('player', 'lisa'); return C.say('c5_meet'); });
-      }, after: 'c5_proof'
+    { id: 'c4_gorazd_dead', chapter: 'ch5', loc: 'outskirts', spawn: 'from_village_w', forceSpawn: true, chapterCard: 'chap.ch5', chapterSub: 'sub.c5', day: 76,
+      env: { time: 'morning', weather: 'fog', horror: 0.4 }, envInstant: true, obj: 'obj.c4_gorazd_dead', music: 'symptoms',
+      npcs: { gorazd: GORAZD_FIELD, radoje: { loc: 'outskirts', at: [43.5, 37], act: 'mourn', dir: 'left' }, sava: { loc: 'outskirts', at: [39.5, 37.4], act: 'pray', dir: 'right' },
+        dragan: { loc: 'outskirts', at: [42, 38.5], act: 'idle', dir: 'up' }, lisa: { loc: 'outskirts', at: [44.6, 35.4], act: 'idle', dir: 'left', noTalk: true } },
+      props: [{ loc: 'outskirts', sprite: 'lantern_hang', at: [40.6, 35.2], scale: 1.4, emissive: true }],
+      triggers: [{ loc: 'outskirts', box: [33, 28, 52, 42], run: function (C) {
+        return C.cam({ target: [41.5, 0.5, 36], time: 1.6 }).then(function () { return C.say('c4_field'); })
+          .then(function () { C.walk('lisa', U.nearPlayer(0.9, -0.5)); return C.wait(1.2); })
+          .then(function () { C.face('lisa', 'player'); C.face('player', 'lisa'); return C.say('c5_turn'); });
+      }, clue: ['fact_gorazd_death', 'fact_prediction'], then: 'c5_proof' }]
     },
-    { id: 'c5_proof', chapter: 'ch5', obj: 'obj.c5_proof',
-      npcs: { lisa: { loc: 'djordje_house', at: 'lisa_table', act: 'idle', dir: 'left' } }
+    { id: 'c5_proof', chapter: 'ch5', loc: 'djordje_house', spawn: 'table', forceSpawn: true, obj: 'obj.c5_proof', deaths: ['gorazd'],
+      env: { time: 'day', weather: 'overcast', horror: 0.35 }, envInstant: true, music: 'explore',
+      npcs: { lisa: { loc: 'djordje_house', at: A('lisa_table', [6.4, 5.4]), act: 'idle', dir: 'left' } }
     },
-    { id: 'c5_guestbook', chapter: 'ch5', obj: 'obj.c5_guestbook', set: 'guest_open',
-      npcs: { lisa: LISA_FOLLOW },
-      interact: [{ loc: 'guesthouse', id: 'guestbook', at: [6.4, 3.0], label: 'it.guestbook', verb: 'verb.read', dlg: 'c5_guestbook', clue: 'fact_guestbook', hint: true, then: 'c5_ally' }]
+    { id: 'c4_jessica', chapter: 'ch5', obj: 'obj.c4_jessica', music: 'symptoms', env: { time: 'evening', weather: 'drizzle', horror: 0.4 },
+      npcs: { lisa: LISA_FOLLOW, jessica: { loc: 'guesthouse', at: 'jess_bed', act: 'weak', dir: 'right', stage: 3 }, stana: { loc: 'guesthouse', at: 'stana_spot', act: 'work', dir: 'down' } },
+      interact: [
+        { loc: 'guesthouse', id: 'camera', at: A('jess_desk', [12.4, 1.6], 0.8, -0.6), label: 'it.camera', dlg: 'c4_camera', item: 'jessica_photo', clue: 'obs_jessica_photos', hint: true, once: true, condLive: true, cond: 'flag:jessica_talked' },
+        { loc: 'guesthouse', id: 'diary', at: A('jess_desk', [11.2, 1.6], -0.4, -0.6), label: 'it.diary', verb: 'verb.read', dlg: 'c4_diary', clue: 'obs_jessica_diary', hint: true, once: true, condLive: true, cond: 'flag:jessica_talked' },
+        { loc: 'guesthouse', id: 'guestbook', at: A('counter', [6.4, 3.0], 0.8, -0.6), label: 'it.guestbook', verb: 'verb.read', dlg: 'c5_guestbook', clue: 'fact_guestbook', once: true }
+      ],
+      observe: { jessica: { run: function (C) { return C.say('c4_observe_jessica'); }, clue: 'sk_jessica' } },
+      tick: when('c4_jess_done', 'clue:obs_jessica_photos&clue:obs_jessica_diary&clue:sk_jessica', function (C) { return C.say('c4_jess_out').then(function () { return C.fade(1, 0.6); }); }, 'c4_jessica_dead')
     },
-    { id: 'c5_ally', chapter: 'ch5', obj: null, npcs: { lisa: LISA_FOLLOW },
-      scene: function (C) { return C.say('c5_convinced').then(function () { return C.fade(1, 0.7); }); }, after: 'c6_plan'
+    { id: 'c4_jessica_dead', chapter: 'ch5', loc: 'village', spawn: 'well', forceSpawn: true, chapterCard: 'sub.c5b', day: 80, deaths: ['jessica'],
+      env: { time: 'evening', weather: 'drizzle', horror: 0.45 }, envInstant: true, obj: 'obj.c4_jessica_dead', music: 'symptoms',
+      npcs: { stana: { loc: 'village', at: [61.5, 41.5], act: 'mourn', dir: 'down' }, milka: { loc: 'village', at: [59.5, 42.2], act: 'idle', dir: 'right' }, lisa: { loc: 'village', at: [63.6, 42.6], act: 'mourn', dir: 'left', noTalk: true } },
+      triggers: [{ loc: 'village', box: [56, 38, 70, 46], run: function (C) {
+        return C.cam({ target: [62, 1, 41], time: 1.4 }).then(function () { return C.say('c4_guest'); }).then(function () { return C.fade(1, 0.7); });
+      }, clue: 'fact_jessica_death', then: 'c5_ally' }]
+    },
+    { id: 'c5_ally', chapter: 'ch5', loc: 'djordje_house', spawn: 'table', forceSpawn: true, chapterCard: 'sub.c5c', day: 82,
+      env: { time: 'evening', weather: 'overcast', horror: 0.35 }, envInstant: true, obj: null, music: 'explore',
+      npcs: { lisa: { loc: 'djordje_house', at: A('lisa_table', [6.4, 5.4]), act: 'idle', dir: 'left', noTalk: true } },
+      scene: function (C) { C.anim('player', 'sit'); C.face('lisa', 'player'); return C.say('c5_convinced').then(function () { return C.fade(1, 0.7); }); }, after: 'c6_plan'
     },
     /* ================= CHAPTER 6 ================= */
     { id: 'c6_plan', chapter: 'ch6', loc: 'djordje_house', spawn: 'table', forceSpawn: true, chapterCard: 'chap.ch6', chapterSub: 'sub.c6', day: 85,
       env: { time: 'night', weather: 'fog', horror: 0.4 }, envInstant: true, obj: 'obj.c6_plan', music: 'tension', musicByLoc: { djordje_house: 'explore' },
       npcs: { lisa: LISA_FOLLOW },
-      scene: function (C) { C.place('lisa', 'lisa_table', 'left'); return C.say('c6_plan'); },
+      scene: function (C) { C.place('lisa', U.spot('lisa_table', [6.4, 5.4]), 'left'); return C.say('c6_plan'); },
       triggers: [{ loc: 'village', box: [16.5, 28.5, 22, 34.5], run: function (C) { return C.say('c6_hide'); }, then: 'c6_follow' }],
       blockExit: { south: 'block_night', west: 'block_night' }
     },
@@ -148,8 +169,8 @@
     },
     { id: 'c7_hide', chapter: 'ch7', obj: 'obj.c7_hide', music: 'jaglika', noSave: true,
       npcs: { lisa: { loc: 'village', at: [14.6, 30.4], act: 'look' } }, hideAll: true, keep: ['lisa'],
-      interact: [{ loc: 'jaglika_house', id: 'hide', at: [9.2, 6.6], label: 'it.hide', verb: 'verb.hide', hint: true, r: 1.6, run: function (C) {
-        C.place('player', [9.4, 7.3], 'right'); C.anim('player', 'cower');
+      interact: [{ loc: 'jaglika_house', id: 'hide', at: A('hide_spot', [10.1, 5.2]), label: 'it.hide', verb: 'verb.hide', hint: true, r: 1.6, run: function (C) {
+        C.place('player', U.spot('hide_in', [9.75, 7.55]), 'right'); C.anim('player', 'cower');
         C.spawn('jaglika', 'jag_return', { dir: 'up', noTalk: true, stage: 2 });
         C.cam({ target: [7.6, 0.6, 6.4], dist: 16, time: 1.2 });   // frame the hiding place, the lamp and the wall together
         C.sfx('door_open', {});
@@ -158,35 +179,49 @@
           .then(function () { C.shadow('jaglika', { wall: { x: 8.0, z: 0.2, y: 0 }, beast: 0.25 }); C.sfx('shadow_move', {}); return C.say('c7_hidden_b'); })
           .then(function () { C.sfx('door_knock', {}); return C.say('c7_knock'); })
           .then(function () { return C.walk('jaglika', [3, 7.4]); }).then(function () { C.face('jaglika', 'down'); return C.say('c7_lisa_door'); })
-          .then(function () { C.anim('player', null); C.camRelease(); return C.walk('player', 'door_in', { run: true }); })
-          .then(function () { return C.fade(1, 1.2); });
+          .then(function () { C.anim('player', null); C.camRelease(); return C.walk('player', U.spot('back_door', [12.9, 1.0]), { run: true }); })
+          .then(function () { C.sfx('door_close', { vol: 0.4 }); return C.fade(1, 1.2); });
       }, then: 'c7_after' }]
     },
     { id: 'c7_after', chapter: 'ch7', loc: 'djordje_house', spawn: 'table', forceSpawn: true, env: { time: 'evening', weather: 'overcast', horror: 0.4 }, envInstant: true, obj: null, music: 'explore',
-      npcs: { lisa: { loc: 'djordje_house', at: 'lisa_table', act: 'idle', dir: 'left' } },
+      npcs: { lisa: { loc: 'djordje_house', at: A('lisa_table', [6.4, 5.4]), act: 'idle', dir: 'left' } },
       scene: function (C) { C.anim('player', 'sit'); return C.fade(0, 1).then(function () { return C.say('c7_talk'); }).then(function () { C.clue('hyp_poison'); }); }, after: 'c8_chest'
     }
   ]);
 
   /* ---------- dialogues ---------- */
-  D('c5_meet', [['*', '1'], ['lisa', '2'], ['lisa', '3'], ['>', '4'], ['lisa', '5', { p: 'worried' }], ['dj', '6'], ['lisa', '7'], ['*', '8'], ['lisa', '9'], ['lisa', '10', { p: 'worried' }], ['>', '11']]);
+  D('c4_field', [['*', '1'], ['radoje', '2', { p: 'sad' }], ['radoje', '3'], ['>', '4'], ['>', '5'], ['sava', '6'], ['>', '7']]);
+  D('c5_turn', [['lisa', '1', { p: 'scared' }], { if: 'flag:told_lisa_gorazd', then: 'told' }, ['*', '2'], ['lisa', '3', { p: 'scared' }], { goto: 'e' },
+    { label: 'told' }, ['lisa', '4', { p: 'scared' }],
+    { label: 'e' }, ['lisa', '5', { p: 'worried' }], ['>', '6'], ['lisa', '7'], ['>', '8']]);
   D('c5_present', [
     ['lisa', '1'], ['lisa', '2'],
     { label: 'menu' },
-    { if: 'flag:shown_pattern&flag:shown_photo&flag:shown_needles', then: 'ok' },
-    { choice: [['c1', 'pattern', { if: 'clue:hyp_pattern&!flag:shown_pattern' }], ['c2', 'photo', { if: 'item:jessica_photo&!flag:shown_photo' }], ['c3', 'needles', { if: 'item:amulet_gorazd&!flag:shown_needles' }], ['c4', 'sketch', { if: '!flag:shown_sketch' }], ['c5', 'know'], ['c6', 'later']] },
+    { if: 'flag:shown_pattern&flag:shown_needles&flag:shown_jessica', then: 'ok' },
+    { choice: [['c1', 'pattern', { if: 'clue:hyp_pattern&!flag:shown_pattern' }], ['c2', 'needles', { if: 'item:amulet_gorazd&!flag:shown_needles' }], ['c3', 'jessica', { if: '!flag:shown_jessica' }], ['c4', 'sketch', { if: '!flag:shown_sketch' }], ['c5', 'know'], ['c6', 'later']] },
     { label: 'pattern' }, ['*', '3'], ['lisa', '4', { p: 'worried' }], ['lisa', '5'], { set: 'shown_pattern' }, { goto: 'menu' },
-    { label: 'photo' }, ['*', '6'], ['lisa', '7', { p: 'scared' }], ['lisa', '8'], { set: 'shown_photo' }, { goto: 'menu' },
-    { label: 'needles' }, ['*', '9'], ['lisa', '10', { p: 'worried' }], { set: 'shown_needles' }, { goto: 'menu' },
-    { label: 'sketch' }, ['*', '11'], ['lisa', '12'], { set: 'shown_sketch' }, { goto: 'menu' },
-    { label: 'know' }, ['dj', '13'], ['lisa', '14'], { goto: 'menu' },
-    { label: 'later' }, ['lisa', '15'], { end: true },
-    { label: 'ok' }, ['lisa', '16', { p: 'worried' }], ['lisa', '17'], ['>', '18'], { set: 'guest_open' }, { call: 'goto', args: 'c5_guestbook' }
+    { label: 'needles' }, ['*', '6'], ['lisa', '7', { p: 'worried' }], ['lisa', '8'], { set: 'shown_needles' }, { goto: 'menu' },
+    { label: 'jessica' }, ['dj', '9'], ['lisa', '10', { p: 'scared' }], ['lisa', '11', { p: 'scared' }], { set: 'shown_jessica' }, { goto: 'menu' },
+    { label: 'sketch' }, ['*', '12'], ['lisa', '13'], { set: 'shown_sketch' }, { goto: 'menu' },
+    { label: 'know' }, ['dj', '14'], ['lisa', '15'], { goto: 'menu' },
+    { label: 'later' }, ['lisa', '16'], { end: true },
+    { label: 'ok' }, ['lisa', '17', { p: 'worried' }], ['lisa', '18'], ['>', '19'], { set: 'guest_open' }, { call: 'goto', args: 'c4_jessica' }
   ]);
-  D('c5_guestbook', [['*', '1'], ['stana', '2'], ['*', '3'], ['lisa', '4', { p: 'worried' }], ['*', '5']]);
-  D('c5_convinced', [['lisa', '1', { p: 'tired' }], ['lisa', '2'], ['dj', '3'], ['lisa', '4', { p: 'smile' }], ['lisa', '5'], ['>', '6']]);
+  D('c4_stana', [['stana', '1', { p: 'worried' }], ['stana', '2'], ['stana', '3', { p: 'sad' }]]);
+  D('c4_jessica_talk', [['jessica', '1', { p: 'tired' }], ['jessica', '2', { p: 'scared' }], ['jessica', '3'], ['dj', '4'], ['jessica', '5', { p: 'scared' }], ['jessica', '6', { p: 'sad' }],
+    { choice: [['c1', 'a'], ['c2', 'b']] }, { label: 'a' }, ['dj', '7'], ['jessica', '8', { p: 'sad' }], { goto: 'e' }, { label: 'b' }, ['*', '9'], ['jessica', '10', { p: 'tired' }],
+    { label: 'e' }, ['lisa', '12', { p: 'worried' }], ['jessica', '11'], { set: 'jessica_talked' }]);
+  D('c4_jessica_again', [['jessica', '1', { p: 'blank' }]]);
+  D('c4_camera', [['*', '1'], ['>', '2'], ['>', '3'], ['jessica', '4', { p: 'scared' }], ['>', '5']]);
+  D('c4_diary', [['*', '1'], ['>', '2'], ['>', '3'], ['>', '4']]);
+  D('c5_guestbook', [['*', '1'], ['>', '2'], ['lisa', '3', { p: 'worried' }], ['*', '4']]);
+  D('c4_observe_jessica', [['*', '1'], ['>', '2'], ['>', '3']]);
+  D('c4_jess_out', [['lisa', '1', { p: 'worried' }], ['>', '2'], ['>', '3']]);
+  D('c4_guest', [['*', '1'], ['stana', '2', { p: 'sad' }], ['stana', '3', { p: 'sad' }], ['lisa', '4', { p: 'sad' }], ['milka', '5'], ['>', '6'], ['>', '7'], ['>', '8']]);
+  D('c5_convinced', [['*', '1'], ['lisa', '2', { p: 'tired' }], ['lisa', '3'], ['lisa', '4', { p: 'sad' }], ['dj', '5'], ['lisa', '6', { p: 'smile' }], ['lisa', '7'], ['lisa', '8'], ['>', '9'], ['>', '10']]);
+  D('c5_lisa_wait', [['lisa', '1']]);
   D('c6_plan', [['lisa', '1'], ['lisa', '2'], ['dj', '3'], ['lisa', '4', { p: 'worried' }], ['lisa', '5'], ['>', '6']]);
-  D('c6_hide', [['*', '1'], ['lisa', '2'], ['>', '3'], ['>', '4']]);
+  D('c6_hide', [['*', '1'], ['lisa', '2'], ['>', '3'], ['>', '4'], ['>', '5']]);
   D('c6_losing', [['lisa', '1']]);
   D('c6_lost', [['lisa', '1', { p: 'worried' }]]);
   D('c6_seen', [['*', '1'], ['lisa', '2', { p: 'scared' }]]);
@@ -209,14 +244,13 @@
   D('c7_knock', [['lisa', '1'], ['jaglika', '2']]);
   D('c7_lisa_door', [['lisa', '3'], ['jaglika', '4'], ['>', '5']]);
   D('c7_talk', [['lisa', '1', { p: 'tired' }], ['lisa', '2'], ['lisa', '3', { p: 'worried' }], ['dj', '4'], ['lisa', '5'], ['lisa', '6', { p: 'sad' }], ['dj', '7'], ['lisa', '8', { p: 'worried' }], ['>', '9']]);
-  D('c5_lisa_wait', [['lisa', '1']]);
   D('c6_lisa_follow', [['lisa', '1']]);
 
   add('lisa', [
     { beats: 'c5_proof', dlg: 'c5_present' },
-    { beats: 'c5_guestbook..c5_ally', dlg: 'c5_lisa_wait' },
+    { beats: 'c4_jessica', dlg: 'c5_lisa_wait' },
     { beats: 'c6_plan..c6_follow', dlg: 'c6_lisa_follow' }
   ]);
-  add('stana', [{ beats: 'c5_guestbook', dlg: 'c4_stana' }]);
-  BTS.Story.calls.goto = function (id) { setTimeout(function () { BTS.Story.goto(id, true); }, 0); };
+  add('jessica', [{ beats: 'c4_jessica', if: '!flag:jessica_talked', dlg: 'c4_jessica_talk' }, { beats: 'c4_jessica', dlg: 'c4_jessica_again' }]);
+  add('stana', [{ beats: 'c4_jessica', dlg: 'c4_stana' }]);
 })();

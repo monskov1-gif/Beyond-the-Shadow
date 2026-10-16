@@ -10,15 +10,16 @@ BTS.PortraitLib = (function () {
   function hairMat(a, c, o) {
     o = o || {};
     var L = lum(c), M = a.mat;
-    if (L < 40) return M(c, { n: 5, lo: 0.55, hi: 2.0 + (o.hiBoost || 0), shadow: [6, 5, 10], light: o.sheen || [100, 110, 140], warm: 0.22, shift: 0.2, spec: 0.9, shine: 14, hiCol: C.mix(c, o.sheen || [150, 158, 178], 0.6), dither: 0.4, rim: 0.4 });
-    if (L < 90) return M(c, { n: 5, lo: 0.5, hi: 1.55, shadow: [30, 16, 30], warm: 0.5, spec: 0.8, shine: 14, hiCol: C.mix(C.mul(c, 1.7), [255, 236, 200], 0.3), dither: 0.4 });
-    return M(c, { n: 5, lo: 0.45, hi: 1.22, shadow: [60, 40, 70], warm: 0.6, spec: 0.7, shine: 16, dither: 0.4 });
+    var warmHue = c[0] > c[2] + 6;
+    if (L < 40) return M(c, { n: 6, lo: 0.55, hi: 2.0 + (o.hiBoost || 0), shadow: [6, 5, 10], light: o.sheen || (warmHue ? [140, 112, 90] : [100, 110, 140]), warm: 0.22, shift: 0.2, spec: 0.9, shine: 14, hiCol: C.mix(c, o.sheen || [150, 158, 178], 0.6), dither: 0.4, rim: 0.4 });
+    if (L < 90) return M(c, { n: 6, lo: 0.5, hi: 1.55, shadow: [30, 16, 30], warm: 0.5, spec: 0.8, shine: 14, hiCol: C.mix(C.mul(c, 1.7), [255, 236, 200], 0.3), dither: 0.4 });
+    return M(c, { n: 6, lo: 0.42, hi: 1.25, shadow: [60, 40, 70], warm: 0.6, spec: 0.7, shine: 16, dither: 0.4 });
   }
   function cloth(a, c, o) {
     o = o || {};
     var L = lum(c);
-    if (L < 45) return a.mat(c, { n: 5, lo: 0.6, hi: 2.0, shadow: [10, 8, 18], light: o.light || [130, 130, 150], warm: 0.25, shift: 0.2, dither: 0.6, rim: 0.4, spec: o.spec, shine: o.shine });
-    return a.mat(c, { n: 5, lo: 0.42, hi: 1.2, dither: 0.6, rim: 0.3, spec: o.spec, shine: o.shine, hiCol: o.hiCol, shadow: o.shadow });
+    if (L < 45) return a.mat(c, { n: 5, lo: 0.6, hi: 2.0, shadow: [10, 8, 18], light: o.light || [130, 130, 150], warm: 0.25, shift: 0.2, dither: 0.3, rim: 0.4, spec: o.spec, shine: o.shine });
+    return a.mat(c, { n: 5, lo: 0.42, hi: 1.2, dither: 0.3, rim: 0.3, spec: o.spec, shine: o.shine, hiCol: o.hiCol, shadow: o.shadow });
   }
   function metal(a, c) { return a.mat(c, { n: 5, lo: 0.4, hi: 1.4, spec: 1.2, shine: 10, hiCol: [255, 250, 230], dither: 0, rim: 0.1 }); }
 
@@ -41,147 +42,162 @@ BTS.PortraitLib = (function () {
     var ph = Math.abs(phiOf(X, Z));
     var front = o.front === undefined ? -0.66 : o.front, temple = o.temple === undefined ? -0.5 : o.temple;
     var side = o.side === undefined ? 0.12 : o.side, ear = o.ear === undefined ? -0.12 : o.ear, back = o.back === undefined ? 0.95 : o.back;
-    if (ph < 0.45) return front;
-    if (ph < 1.05) return front + (temple - front) * (ph - 0.45) / 0.6;
-    if (ph < 1.42) return side;
-    if (ph < 1.95) return ear;
+    var K = [[0, front], [0.42, front], [0.95, temple], [1.18, side], [1.38, side], [1.52, ear], [1.95, ear], [2.25, back], [4, back]];
+    for (var i = 1; i < K.length; i++) if (ph <= K[i][0]) { var t = (ph - K[i - 1][0]) / (K[i][0] - K[i - 1][0]); t = t * t * (3 - 2 * t); return K[i - 1][1] + (K[i][1] - K[i - 1][1]) * t; }
     return back;
   }
 
   /* ================= HAIR ================= */
   var HAIR = {};
-  function addHair(a, part) { part.F = part.F || a.F; part.mat = part.mat || 'hair'; a.parts.push(part); return part; }
+  /* flow coordinates: u runs across the strands, v along them */
+  function flowUV(kind, X, Y, Z) {
+    if (kind === 'back') return [Math.atan2(X, -(Y + 0.2)) * 1.1, Z];          // combed back from the hairline
+    if (kind === 'sweep') return [phiOf(X, Z) + Y * 0.7, Y];                    // swept to one side
+    if (typeof kind === 'function') return kind(X, Y, Z);
+    return [phiOf(X, Z), Y];                                                    // falling down from the crown
+  }
+  /* one mass of hair: o.prims volume, o.lim(X,Y,Z,strand,|phi|) = lowest Y the hair reaches there */
+  function hairPart(a, o) {
+    var seed = o.seed || 7, freq = o.freq || 8, cy0 = cranY(a.f);
+    function st(X, Y, Z, f2, amp, sd, wa) { var uv = flowUV(o.flow, X, Y, Z); return strands(a, uv[0] + (sd !== seed ? 0.013 : 0), uv[1], { freq: f2, amp: amp, seed: sd, wave: o.wave || 2.5, waveAmp: wa }); }
+    var pt = { name: o.name || 'hair', F: a.F, mat: o.mat || 'hair', prims: o.prims, k: o.k || 0.15, taper: o.inf === undefined ? 0.1 : o.inf, taperW: o.taperW || 0.2, lineGap: o.lineGap || 2.2,
+      mask: function (X, Y, Z) {
+        var s = st(X, Y, Z, freq, 1, seed, o.waveAmp === undefined ? 0.25 : o.waveAmp);
+        var lim = o.lim(X, Y, Z, s, Math.abs(phiOf(X, Z)));
+        if (o.tip) lim -= o.tip * Math.pow(Math.abs(s.fr - 0.5) * 2, 2) * (o.tipWhere ? o.tipWhere(X, Y, Z) : 1);
+        // break the silhouette into locks: where the surface turns away from the viewer, cut between clumps
+        if (o.rough !== 0) {
+          var R = a.F.R, ny = Y - cy0, nz = Z + 0.1, nl = Math.hypot(X, ny, nz) || 1;
+          var nzW = (R[2][0] * X + R[2][1] * ny + R[2][2] * nz) / nl;
+          var edge = Math.max(0, Math.min(1, 1 - (nzW + 0.05) / 0.32));
+          if (edge > 0 && Math.abs(s.fr - 0.5) * 2 > 1 - edge * (o.rough || 0.5)) return 0;
+        }
+        return lim - Y;
+      },
+      disp: function (X, Y, Z) {
+        var s1 = st(X, Y, Z, freq, o.amp || 0.06, seed, o.waveAmp === undefined ? 0.25 : o.waveAmp);
+        var s2 = st(X, Y, Z, freq * 3.1, o.fine || 0.018, seed + 1, 0.1);
+        return s1.d + s2.d + (o.extra ? o.extra(X, Y, Z) : 0);
+      } };
+    a.parts.push(pt);
+    if (o.fly !== 0) a.overlays.push(function (pen, ctx) {     // a few loose strands leaving the silhouette
+      var pi = ctx.parts.indexOf(pt), M = a.mats[pt.mat] || a.mats.hair, c0 = a.F.w(0, cranY(a.f), 0), n = 0;
+      for (var y = 1; y < 119; y++) for (var x = 1; x < 119; x++) {
+        var i = y * 120 + x; if (ctx.top[i] !== pi) continue;
+        if (ctx.top[i - 1] >= 0 && ctx.top[i + 1] >= 0 && ctx.top[i - 120] >= 0 && ctx.top[i + 120] >= 0) continue;
+        if (a.hash(x * 7.1, y * 3.3 + seed) > (o.fly || 0.07)) continue;
+        var dx = x - c0[0], dy = y - c0[1] - 6, dl = Math.hypot(dx, dy) || 1; dx /= dl; dy /= dl;
+        var len = 2 + Math.floor(a.hash(x, y) * 4), bend = (a.hash(y, x) - 0.5) * 0.6;
+        for (var k = 1; k <= len; k++) { var px = Math.round(x + dx * k + dy * bend * k * 0.3), py = Math.round(y + dy * k + (dy > 0 ? 0.3 : 0) * k - dx * bend * k * 0.3); var j = py * 120 + px; if (j >= 0 && j < 14400 && ctx.top[j] < 0) pen.px(px, py, M.ramp[k < 2 ? 2 : 1], k < len ? 1 : 0.6); }
+        if (++n > 30) return;
+      }
+    });
+    return pt;
+  }
+  function front(ph) { return ph < 0.95; }
 
-  /* Đorđe: thick black shaggy mop, bangs hanging to the eyes, locks over the ears to the jaw */
+  /* Đorđe: thick black shaggy mop, heavy bangs to the lashes, locks over the ears to the jaw */
   HAIR.shaggy = function (a, o) {
-    var f = a.f, E = a.E, fringe = o.fringe === undefined ? 0.06 : o.fringe, len = o.len === undefined ? 0.75 : o.len;
-    var prims = [shell(a, 0.2, { wide: 0.04, tall: 0.03 }), E([-0.86, 0.15, -0.15], [0.3, 0.75, 0.6]), E([0.86, 0.15, -0.15], [0.3, 0.75, 0.6]), E([0, 0.0, -0.55], [0.95, 1.05, 0.7])];
-    // tufts on the crown
-    [[-0.5, -1.25, 0.3], [0.1, -1.38, 0.2], [0.55, -1.2, 0.25], [-0.15, -1.32, -0.3], [0.8, -0.9, 0.2], [-0.9, -0.85, 0.0]].forEach(function (t, k) {
+    var E = a.E, fringe = o.fringe === undefined ? -0.1 : o.fringe, len = o.len === undefined ? 0.72 : o.len;
+    var prims = [shell(a, 0.2, { wide: 0.04, tall: 0.04 }), E([-0.86, 0.12, -0.15], [0.3, 0.72, 0.6]), E([0.86, 0.12, -0.15], [0.3, 0.72, 0.6]), E([0, 0.0, -0.55], [0.95, 1.05, 0.7])];
+    [[-0.5, -1.22, 0.3], [0.1, -1.36, 0.2], [0.55, -1.18, 0.25], [-0.15, -1.3, -0.3], [0.8, -0.88, 0.2], [-0.92, -0.82, 0.0]].forEach(function (t) {
       prims.push(E([t[0], t[1] + 0.08, t[2]], [0.22, 0.3, 0.22], { rot: [0, 0, t[0] * 0.6] }));
     });
-    addHair(a, { name: 'hair', prims: prims, k: 0.16, line: true,
-      mask: function (X, Y, Z) {
-        var ph = Math.abs(phiOf(X, Z));
-        var s = strands(a, phiOf(X, Z), Y, { freq: 7, amp: 1, seed: 11 });
-        var tip = Math.pow(Math.abs(s.fr - 0.5) * 2, 2) * 0.12;
-        if (ph < 0.95) { var lim = fringe + (s.r - 0.5) * 0.16 - tip; if (Math.abs(X - 0.05) < 0.12) lim -= 0.08; return Y < lim; }
-        return Y < len + (s.r - 0.5) * 0.25 - tip * 1.5 - (ph > 2.2 ? -0.2 : 0);
-      },
-      disp: function (X, Y, Z) { var s = strands(a, phiOf(X, Z), Y, { freq: 7, amp: 0.05, seed: 11, wave: 3, waveAmp: 0.3 }); var s2 = strands(a, phiOf(X, Z) + 0.07, Y, { freq: 15, amp: 0.02, seed: 4 }); return s.d + s2.d; } });
+    hairPart(a, { prims: prims, k: 0.16, inf: 0.12, freq: 7, amp: 0.07, seed: 11, wave: 3, waveAmp: 0.3, tip: 0.2,
+      lim: function (X, Y, Z, s, ph) {
+        if (front(ph)) { var l = fringe + (s.r - 0.5) * 0.14; if (X > -0.05 && X < 0.12) l += 0.06; return l; }
+        return len + (s.r - 0.5) * 0.25 + (ph > 2.2 ? 0.2 : 0);
+      } });
   };
-
-  /* short hair, optional messy top; used for boys and men */
+  /* short hair, optional messy top / fringe; boys and men */
   HAIR.short = function (a, o) {
     var E = a.E, messy = o.messy || 0;
-    var prims = [shell(a, 0.07 + (o.volume || 0), { tall: 0.02 + (o.volume || 0) * 0.5 })];
-    if (messy) [[-0.4, -1.3, 0.35], [0.2, -1.38, 0.25], [0.6, -1.15, 0.35], [-0.2, -1.3, -0.25]].forEach(function (t) { prims.push(E(t, [0.18, 0.2 + messy * 0.08, 0.18], { rot: [0, 0, t[0] * 0.7] })); });
-    addHair(a, { name: 'hair', prims: prims, k: 0.12,
-      mask: function (X, Y, Z) {
-        var s = strands(a, phiOf(X, Z), Y, { freq: 9, amp: 1, seed: 5 });
-        var lim = hairlineY(X, Z, { front: (o.front === undefined ? -0.66 : o.front) + (s.r - 0.5) * 0.06 * (1 + messy * 2), side: o.side, ear: o.ear, back: 0.9, temple: o.temple });
-        if (o.fringe !== undefined && Math.abs(phiOf(X, Z)) < 0.9) lim = o.fringe + (s.r - 0.5) * 0.1 - Math.pow(Math.abs(s.fr - 0.5) * 2, 2) * 0.08;
-        return Y < lim;
-      },
-      disp: function (X, Y, Z) { return strands(a, phiOf(X, Z), Y, { freq: 10, amp: 0.035, seed: 5, waveAmp: 0.15 + messy * 0.3 }).d; } });
+    var prims = [shell(a, 0.08 + (o.volume || 0), { tall: 0.03 + (o.volume || 0) * 0.6 })];
+    if (messy) [[-0.4, -1.28, 0.35], [0.2, -1.36, 0.25], [0.6, -1.12, 0.35], [-0.2, -1.3, -0.25]].forEach(function (t) { prims.push(E(t, [0.18, 0.2 + messy * 0.08, 0.18], { rot: [0, 0, t[0] * 0.7] })); });
+    hairPart(a, { prims: prims, k: 0.12, inf: o.fringe !== undefined ? 0.08 : 0.15, freq: 9, amp: 0.06 + messy * 0.02, seed: 5, waveAmp: 0.15 + messy * 0.3, tip: o.fringe !== undefined ? 0.1 : 0.03,
+      flow: o.fringe !== undefined ? null : 'back',
+      lim: function (X, Y, Z, s, ph) {
+        if (o.fringe !== undefined && front(ph)) return o.fringe + (s.r - 0.5) * 0.1;
+        return hairlineY(X, Z, { front: (o.front === undefined ? -0.66 : o.front) + (s.r - 0.5) * 0.04 * (1 + messy * 2), side: o.side, ear: o.ear, back: 0.9, temple: o.temple });
+      } });
   };
-  /* receding crop, flattened (Gorazd with the cap off) */
+  /* receding crop, flattened by the cap (Gorazd bare-headed) */
   HAIR.crop = function (a, o) {
-    addHair(a, { name: 'hair', prims: [shell(a, 0.05, {})], k: 0.1,
-      mask: function (X, Y, Z) {
-        var ph = Math.abs(phiOf(X, Z)), lim = hairlineY(X, Z, { front: -0.82, temple: -0.62, side: 0.05, ear: -0.15, back: 0.85 });
-        if (ph < 0.6) lim = -0.86 - 0.05 * Math.cos(ph * 5);
-        return Y < lim + (a.hash(Math.floor(X * 30), Math.floor(Y * 30)) - 0.5) * 0.04;
-      },
-      disp: function (X, Y, Z) { return strands(a, phiOf(X, Z), Y, { freq: 14, amp: 0.02, seed: 9 }).d - (Y < -1.1 ? 0.02 : 0); } });
+    hairPart(a, { prims: [shell(a, 0.06, {})], k: 0.1, inf: 0.1, freq: 14, amp: 0.02, seed: 9, flow: 'back', taperW: 0.12, rough: 0.2,
+      lim: function (X, Y, Z, s, ph) { var l = hairlineY(X, Z, { front: -0.84, temple: -0.6, side: 0.05, ear: -0.15, back: 0.85 }); if (ph < 0.55) l = -0.88 - 0.06 * Math.cos(ph * 5.5); return l + (s.r - 0.5) * 0.03; },
+      extra: function (X, Y, Z) { return Math.abs(Y + 0.75) < 0.05 && Math.abs(phiOf(X, Z)) > 1.1 ? -0.02 : 0; } });   // dent left by the cap band
   };
   HAIR.bald = function (a, o) {
-    addHair(a, { name: 'hair', prims: [shell(a, 0.035, {})], k: 0.1,
-      mask: function (X, Y, Z) { var ph = Math.abs(phiOf(X, Z)); if (ph < 1.3) return false; if (ph < 1.55) return Y > -0.45 && Y < 0.12; if (ph < 1.95) return Y > -0.45 && Y < -0.1; return Y > -0.5 && Y < 0.9; },
-      disp: function (X, Y, Z) { return strands(a, Y * 2, phiOf(X, Z), { freq: 10, amp: 0.02, seed: 2 }).d; } });
+    hairPart(a, { prims: [shell(a, 0.04, {})], k: 0.1, inf: 0.04, freq: 12, amp: 0.025, seed: 2, taperW: 0.1, flow: 'back', rough: 0.2,
+      lim: function (X, Y, Z, s, ph) { return ph < 1.15 ? -9 : hairlineY(X, Z, { front: -9, temple: -9, side: 0.05, ear: -0.12, back: 0.85 }); } });
+    var pt = a.parts[a.parts.length - 1], m = pt.mask;
+    pt.mask = function (X, Y, Z) { var v = m(X, Y, Z); var top = Y + 0.42 + Math.max(0, -Z) * 0.25; return Math.min(v, top); };
   };
   /* copper bob with blunt bangs (Jaglika early) */
   HAIR.bob = function (a, o) {
     var E = a.E;
-    var prims = [shell(a, 0.24, { wide: 0.08, tall: 0.05 }), E([-0.92, 0.2, -0.12], [0.36, 0.72, 0.68]), E([0.92, 0.2, -0.12], [0.36, 0.72, 0.68]), E([0, 0.15, -0.5], [1.1, 0.95, 0.7])];
-    addHair(a, { name: 'hair', prims: prims, k: 0.2,
-      mask: function (X, Y, Z) {
-        var ph = Math.abs(phiOf(X, Z));
-        if (ph < 0.98) return Y < -0.36 + 0.03 * Math.cos(X * 14);
-        var lim = 0.68 - (ph < 1.3 ? (1.3 - ph) * 0.4 : 0);
-        return Y < lim + 0.025 * Math.sin(phiOf(X, Z) * 18);
-      },
-      disp: function (X, Y, Z) { var ph = phiOf(X, Z); var s = strands(a, ph, Y, { freq: 11, amp: 0.035, seed: 21, waveAmp: 0.12 }); var curl = Y > 0.4 ? -(Y - 0.4) * 0.15 : 0; return s.d + curl; } });
+    var prims = [shell(a, 0.24, { wide: 0.08, tall: 0.06 }), E([-0.92, 0.2, -0.12], [0.36, 0.72, 0.68]), E([0.92, 0.2, -0.12], [0.36, 0.72, 0.68]), E([0, 0.15, -0.5], [1.1, 0.95, 0.7])];
+    hairPart(a, { prims: prims, k: 0.22, inf: 0.1, freq: 9, amp: 0.08, seed: 21, waveAmp: 0.12, tip: 0.05,
+      lim: function (X, Y, Z, s, ph) { if (ph < 0.98) return -0.38 + (s.r - 0.5) * 0.03; return 0.66 - (ph < 1.3 ? (1.3 - ph) * 0.45 : 0) + (s.r - 0.5) * 0.05; },
+      extra: function (X, Y, Z) { return Y > 0.4 ? -(Y - 0.4) * 0.18 : 0; } });
   };
   /* hair pulled back into a ponytail (Lisa) */
   HAIR.ponytail = function (a, o) {
     var E = a.E;
-    addHair(a, { name: 'hair', prims: [shell(a, 0.08, { tall: 0.03 })], k: 0.1,
-      mask: function (X, Y, Z) { var lim = hairlineY(X, Z, { front: -0.64 - 0.06 * Math.max(0, -X), temple: -0.42, side: 0.0, ear: -0.15, back: 0.7 }); return Y < lim; },
-      disp: function (X, Y, Z) { var ph = phiOf(X, Z); var s = strands(a, ph * 0.6 + (X > 0.15 ? 0.3 : 0), Y + Math.abs(X) * 0.5, { freq: 16, amp: 0.025, seed: 7, waveAmp: 0.05 }); return s.d; } });
-    // a strand loose at the temple, the tail behind
-    addHair(a, { name: 'tail', prims: [E([-0.05, -0.45, -1.15], [0.22, 0.24, 0.2]), E([-0.12, 0.25, -1.28], [0.2, 0.7, 0.2], { rot: [0, 0.35, 0] }), E([-0.18, 0.9, -1.15], [0.15, 0.45, 0.15], { rot: [0, 0.4, 0.1] })], k: 0.15,
-      disp: function (X, Y, Z) { return strands(a, X * 2.5, Y, { freq: 6, amp: 0.04, seed: 8, waveAmp: 0.3 }).d; } });
-    addHair(a, { name: 'band', mat: 'band', prims: [E([-0.06, -0.33, -1.2], [0.15, 0.08, 0.15])], k: 0.02 });
+    hairPart(a, { prims: [shell(a, 0.11, { tall: 0.06 }), a.E([0.1, -1.05, 0.25], [0.7, 0.4, 0.6])], k: 0.2, inf: 0.18, freq: 13, amp: 0.07, seed: 7, flow: 'back', waveAmp: 0.1, fly: 0.12,
+      lim: function (X, Y, Z, s, ph) { return hairlineY(X, Z, { front: -0.64 - 0.05 * Math.max(0, -X), temple: -0.4, side: 0.02, ear: 0.0, back: 0.7 }) + (s.r - 0.5) * 0.04; } });
+    hairPart(a, { name: 'tail', prims: [E([-0.05, -0.45, -1.15], [0.24, 0.26, 0.22]), E([-0.12, 0.25, -1.3], [0.22, 0.72, 0.22], { rot: [0, 0.35, 0] }), E([-0.18, 0.95, -1.18], [0.16, 0.45, 0.16], { rot: [0, 0.4, 0.1] })], k: 0.15, inf: 0.05, freq: 5, amp: 0.05, seed: 8, waveAmp: 0.3,
+      flow: function (X, Y, Z) { return [X * 3 + Z, Y]; }, lim: function () { return 9; }, rough: 0 });
+    a.parts.push({ name: 'band', F: a.F, mat: 'band', prims: [E([-0.06, -0.33, -1.22], [0.16, 0.08, 0.16])], k: 0.02 });
   };
   /* short layered blonde hair with a side-swept fringe (Jessica) */
   HAIR.pixie = function (a, o) {
     var E = a.E;
-    addHair(a, { name: 'hair', prims: [shell(a, 0.15, { wide: 0.04, tall: 0.04 }), E([-0.88, 0.05, -0.15], [0.25, 0.55, 0.55]), E([0.88, 0.05, -0.15], [0.25, 0.55, 0.55])], k: 0.15,
-      mask: function (X, Y, Z) {
-        var ph = phiOf(X, Z), s = strands(a, ph, Y, { freq: 9, amp: 1, seed: 31 });
-        if (Math.abs(ph) < 0.95) { var lim = -0.62 + (X + 0.5) * 0.32 + (s.r - 0.5) * 0.06 - Math.pow(Math.abs(s.fr - 0.5) * 2, 2) * 0.08; return Y < Math.min(lim, -0.1); }
-        return Y < 0.35 + (s.r - 0.5) * 0.15 - Math.pow(Math.abs(s.fr - 0.5) * 2, 2) * 0.12;
-      },
-      disp: function (X, Y, Z) { var ph = phiOf(X, Z); return strands(a, ph + Y * 0.6, Y, { freq: 10, amp: 0.04, seed: 31, waveAmp: 0.2 }).d; } });
+    hairPart(a, { prims: [shell(a, 0.15, { wide: 0.04, tall: 0.05 }), E([-0.88, 0.05, -0.15], [0.25, 0.55, 0.55]), E([0.88, 0.05, -0.15], [0.25, 0.55, 0.55])], k: 0.15, inf: 0.1, freq: 9, amp: 0.05, seed: 31, flow: 'sweep', waveAmp: 0.2, tip: 0.12,
+      lim: function (X, Y, Z, s, ph) { if (ph < 0.95) return Math.min(-0.6 + (X + 0.5) * 0.34, -0.12) + (s.r - 0.5) * 0.06; return 0.34 + (s.r - 0.5) * 0.15; } });
   };
   /* hair gathered into a bun at the back (Stana, Zlatko) */
   HAIR.bun = function (a, o) {
     var E = a.E;
-    addHair(a, { name: 'hair', prims: [shell(a, 0.09, { tall: 0.04 })], k: 0.1,
-      mask: function (X, Y, Z) { return Y < hairlineY(X, Z, { front: -0.64, temple: -0.45, side: -0.05, ear: -0.12, back: 0.65 }) + 0.015 * Math.sin(X * 30); },
-      disp: function (X, Y, Z) { var ph = phiOf(X, Z); var part = X - 0.18; return strands(a, ph * 0.7 + (part > 0 ? 0.4 : 0), Y + Math.abs(part) * 0.7, { freq: 13, amp: 0.03, seed: 41, waveAmp: 0.08 }).d; } });
-    addHair(a, { name: 'bun', prims: [E([-0.15, -0.75, -1.08], [0.42, 0.38, 0.32])], k: 0.1,
-      disp: function (X, Y, Z) { var an = Math.atan2(Y + 0.75, X + 0.15); return strands(a, an, Math.hypot(X + 0.15, Y + 0.75), { freq: 3, amp: 0.05, seed: 43 }).d; } });
+    hairPart(a, { prims: [shell(a, 0.11, { tall: 0.07 }), a.E([0.05, -1.0, 0.3], [0.75, 0.42, 0.62])], k: 0.2, inf: 0.18, freq: 13, amp: 0.07, seed: 41, flow: 'back', waveAmp: 0.1, fly: 0.12,
+      lim: function (X, Y, Z, s) { return hairlineY(X, Z, { front: -0.64, temple: -0.42, side: 0.02, ear: 0.02, back: 0.65 }) + (s.r - 0.5) * 0.04; } });
+    hairPart(a, { name: 'bun', prims: [E([-0.3, -0.85, -1.08], [0.46, 0.42, 0.36])], k: 0.1, inf: 0, freq: 3, amp: 0.06, seed: 43,
+      flow: function (X, Y, Z) { return [Math.atan2(Y + 0.78, X + 0.12), Math.hypot(X + 0.12, Y + 0.78)]; }, lim: function () { return 9; }, rough: 0 });
   };
   /* parted hair with one long braid over the shoulder (Vesna, Mila) */
   HAIR.braid = function (a, o) {
     var E = a.E;
-    addHair(a, { name: 'hair', prims: [shell(a, 0.08, { tall: 0.03 })], k: 0.1,
-      mask: function (X, Y, Z) { return Y < hairlineY(X, Z, { front: -0.6 + Math.abs(X - 0.05) * 0.18, temple: -0.32, side: 0.1, ear: 0.0, back: 0.7 }); },
-      disp: function (X, Y, Z) { var part = X - 0.05; return strands(a, part * 2.2, Y, { freq: 8, amp: 0.03, seed: 51, waveAmp: 0.05 }).d - (Math.abs(part) < 0.025 && Z > 0.3 ? 0.03 : 0); } });
-    // the braid comes from behind the near ear and falls over the shoulder in front
+    hairPart(a, { prims: [shell(a, 0.11, { tall: 0.05 })], k: 0.1, inf: 0.18, freq: 11, amp: 0.07, seed: 51, waveAmp: 0.05, fly: 0.1,
+      flow: function (X, Y, Z) { var part = X - 0.08; return [part * 2.2 + (part > 0 ? 0.5 : 0), Y]; },
+      lim: function (X, Y, Z, s) { return hairlineY(X, Z, { front: -0.6 + Math.abs(X - 0.08) * 0.16, temple: -0.3, side: 0.12, ear: 0.06, back: 0.7 }); },
+      extra: function (X, Y, Z) { return Math.abs(X - 0.08) < 0.025 && Z > 0.2 && Y < -0.6 ? -0.04 : 0; } });
     var B = [];
     for (var k = 0; k < 6; k++) B.push(E([-0.95 + k * 0.03, 0.65 + k * 0.32, -0.25 + Math.min(k, 3) * 0.18], [0.17 - k * 0.008, 0.2, 0.15]));
-    addHair(a, { name: 'braid', prims: B, k: 0.04, disp: function (X, Y, Z) { var t = (Y - 0.65) / 0.32; var fr = t - Math.floor(t); return -0.04 * Math.pow(Math.abs(fr - 0.5) * 2, 3) + (X + 0.92 > 0 ? -0.01 : 0); } });
+    a.parts.push({ name: 'braid', F: a.F, mat: 'hair', prims: B, k: 0.04, disp: function (X, Y, Z) { var t = (Y - 0.65) / 0.32, fr = t - Math.floor(t); return -0.04 * Math.pow(Math.abs(fr - 0.5) * 2, 3) + 0.012 * Math.sin((X * 3 + Y) * 30); } });
     if (a.spec.ribbon) a.parts.push({ name: 'ribbon', F: a.F, mat: 'ribbon', prims: [E([-0.81, 2.6, 0.25], [0.18, 0.06, 0.1]), E([-0.86, 2.72, 0.24], [0.06, 0.16, 0.08], { rot: [0, 0, 0.3] })], k: 0.05 });
   };
-  /* shoulder-length dark wavy hair, side part (Milka) */
+  /* shoulder-length dark wavy hair with a side part (Milka) */
   HAIR.wavy = function (a, o) {
     var E = a.E;
-    var prims = [shell(a, 0.18, { wide: 0.1, tall: 0.05 }), E([-0.98, 0.35, -0.2], [0.42, 0.95, 0.7]), E([0.98, 0.35, -0.2], [0.42, 0.95, 0.7]), E([0, 0.4, -0.6], [1.2, 1.15, 0.7])];
-    addHair(a, { name: 'hair', prims: prims, k: 0.22,
-      mask: function (X, Y, Z) {
-        var ph = Math.abs(phiOf(X, Z));
-        if (ph < 0.95) { var sweep = -0.62 - 0.1 * Math.cos((X + 0.25) * 3); return Y < sweep; }
-        return Y < 1.12 + 0.08 * Math.sin(phiOf(X, Z) * 9);
-      },
-      disp: function (X, Y, Z) { var ph = phiOf(X, Z); var wave = Math.sin(Y * 9 + ph * 2) * 0.03; var s = strands(a, ph + Math.sin(Y * 6) * 0.08, Y, { freq: 9, amp: 0.04, seed: 61, waveAmp: 0.2 }); return s.d + wave; } });
+    var prims = [shell(a, 0.2, { wide: 0.1, tall: 0.06 }), E([-0.98, 0.35, -0.2], [0.42, 0.95, 0.7]), E([0.98, 0.35, -0.2], [0.42, 0.95, 0.7]), E([0, 0.4, -0.6], [1.2, 1.15, 0.7])];
+    hairPart(a, { prims: prims, k: 0.22, inf: 0.12, freq: 8, amp: 0.06, seed: 61, wave: 7, waveAmp: 0.45, tip: 0.1,
+      flow: function (X, Y, Z) { var ph = phiOf(X, Z); return [ph + (X > -0.3 && Y < -0.4 ? 0.4 : 0) + Math.sin(Y * 7) * 0.06, Y]; },
+      lim: function (X, Y, Z, s, ph) { if (ph < 0.95) return -0.6 - 0.12 * Math.cos((X + 0.3) * 3); return 1.1 + (s.r - 0.5) * 0.15; },
+      extra: function (X, Y, Z) { return Math.sin(Y * 8 + phiOf(X, Z) * 2) * 0.03; } });
   };
   /* long hair tied back under the kamilavka (Father Sava) */
   HAIR.priest = function (a, o) {
     var E = a.E;
-    addHair(a, { name: 'hair', prims: [shell(a, 0.1, { wide: 0.02 }), E([-0.2, 0.6, -0.95], [0.4, 0.8, 0.35])], k: 0.18,
-      mask: function (X, Y, Z) { return Y < hairlineY(X, Z, { front: -0.7, temple: -0.5, side: 0.15, ear: 0.0, back: 1.4 }); },
-      disp: function (X, Y, Z) { return strands(a, phiOf(X, Z), Y, { freq: 12, amp: 0.03, seed: 71, waveAmp: 0.2 }).d; } });
+    hairPart(a, { prims: [shell(a, 0.1, { wide: 0.02 }), E([-0.2, 0.6, -0.95], [0.4, 0.8, 0.35])], k: 0.18, inf: 0.16, freq: 10, amp: 0.04, seed: 71, flow: 'back', waveAmp: 0.25,
+      lim: function (X, Y, Z) { return hairlineY(X, Z, { front: -0.7, temple: -0.5, side: 0.15, ear: 0.0, back: 1.4 }); } });
   };
   /* tight navy head-wrap with folds and a knot (Jaglika late) */
   HAIR.wrap = function (a, o) {
     var E = a.E;
-    addHair(a, { name: 'wrap', mat: 'wrap', prims: [shell(a, 0.13, { tall: 0.1, lift: 0.04 })], k: 0.12,
-      mask: function (X, Y, Z) { var ph = Math.abs(phiOf(X, Z)); var lim = ph < 1.0 ? -0.6 + ph * 0.08 : ph < 1.95 ? -0.26 : 0.55; return Y < lim; },
+    a.parts.push({ name: 'wrap', F: a.F, mat: 'wrap', prims: [shell(a, 0.13, { tall: 0.1, lift: 0.04 })], k: 0.12, taper: 0.06, taperW: 0.08,
+      mask: function (X, Y, Z) { var ph = Math.abs(phiOf(X, Z)); var lim = ph < 1.0 ? -0.6 + ph * 0.08 : ph < 1.95 ? -0.26 : 0.55; return lim - Y; },
       disp: function (X, Y, Z) { var ph = phiOf(X, Z); var u = ph * 1.2 + Y * 2.4; var fr = u * 2.2 - Math.floor(u * 2.2); var u2 = -ph * 1.1 + Y * 2.2, fr2 = u2 * 1.6 - Math.floor(u2 * 1.6); return -0.035 * Math.pow(1 - Math.sin(Math.PI * fr), 3) * (X < 0.1 ? 1 : 0.4) - 0.03 * Math.pow(1 - Math.sin(Math.PI * fr2), 4) * (X >= 0.1 ? 1 : 0.3); } });
-    addHair(a, { name: 'knot', mat: 'wrap', prims: [E([0.25, -1.36, 0.25], [0.3, 0.2, 0.26], { rot: [0.3, 0, 0.5] }), E([0.5, -1.25, 0.05], [0.22, 0.16, 0.2], { rot: [0, 0, 0.9] }), E([0.0, -1.3, 0.42], [0.18, 0.14, 0.18])], k: 0.06,
+    a.parts.push({ name: 'knot', F: a.F, mat: 'wrap', prims: [E([0.25, -1.36, 0.25], [0.3, 0.2, 0.26], { rot: [0.3, 0, 0.5] }), E([0.5, -1.25, 0.05], [0.22, 0.16, 0.2], { rot: [0, 0, 0.9] }), E([0.0, -1.3, 0.42], [0.18, 0.14, 0.18])], k: 0.06,
       disp: function (X, Y, Z) { return -0.03 * Math.pow(Math.abs(Math.sin((X + Y) * 12)), 6); } });
   };
   /* headscarf: tied under the chin (Baka) or at the nape (Pečko) */
@@ -190,25 +206,25 @@ BTS.PortraitLib = (function () {
     var prims = [shell(a, 0.13, { tall: 0.04, wide: 0.02 })];
     if (chin) prims.push(E([-0.9, 0.45, -0.1], [0.28, 0.9, 0.62]), E([0.9, 0.45, -0.1], [0.28, 0.9, 0.62]), E([0, 0.4, -0.6], [1.0, 1.1, 0.6]));
     else prims.push(E([0, 0.05, -0.75], [0.9, 0.85, 0.5]));
-    a.parts.push({ name: 'scarf', F: a.F, mat: function (X, Y, Z) { return pattern(a, X, Y, Z) ? 'scarfP' : 'scarf'; }, prims: prims, k: 0.18,
+    a.parts.push({ name: 'scarf', F: a.F, mat: function (X, Y, Z) { return pattern(a, X, Y, Z) ? 'scarfP' : 'scarf'; }, prims: prims, k: 0.18, taper: 0.05, taperW: 0.06,
       mask: function (X, Y, Z) {
         var ph = Math.abs(phiOf(X, Z));
         if (chin) { // face opening
-          if (Z > 0 && ph < 1.45) { var oy = Y - 0.25, ox = X; var r = (ox * ox) / (0.78 * 0.78) + (oy * oy) / (1.02 * 1.02); if (Y > -0.62 && r < 1) return false; }
-          return Y < (ph < 1.6 ? 1.15 : 1.5);
+          if (Z > 0 && ph < 1.45) { var oy = Y - 0.25, ox = X; var r = (ox * ox) / (0.78 * 0.78) + (oy * oy) / (1.02 * 1.02); if (Y > -0.62 && r < 1) return 0; }
+          return (ph < 1.6 ? 1.15 : 1.5) - Y;
         }
-        var front = -0.58 + 0.04 * Math.cos(X * 6);
-        if (ph < 1.0) return Y < front;
-        if (ph < 1.9) return Y < front + (ph - 1.0) * 0.55;
-        return Y < 0.9;
+        var fr = -0.58 + 0.04 * Math.cos(X * 6);
+        if (ph < 1.0) return fr - Y;
+        if (ph < 1.9) return fr + (ph - 1.0) * 0.55 - Y;
+        return 0.9 - Y;
       },
       disp: function (X, Y, Z) { var u = phiOf(X, Z); return -0.025 * Math.pow(Math.abs(Math.sin(u * 5 + Y * 2)), 6) - 0.02 * Math.pow(Math.abs(Math.sin(Y * 7 - u * 2)), 8); } });
     if (chin) a.parts.push({ name: 'knot', F: a.F, mat: 'scarf', prims: [E([0.08, f.chinY + 0.18, 0.42], [0.2, 0.14, 0.18]), E([-0.12, f.chinY + 0.35, 0.36], [0.12, 0.3, 0.1], { rot: [0, 0, 0.4] }), E([0.24, f.chinY + 0.36, 0.34], [0.12, 0.28, 0.1], { rot: [0, 0, -0.5] })], k: 0.05 });
     else a.parts.push({ name: 'knot', F: a.F, mat: 'scarf', prims: [E([-0.35, 0.7, -0.95], [0.25, 0.18, 0.2]), E([-0.55, 1.2, -0.85], [0.14, 0.42, 0.12], { rot: [0, 0, 0.3] })], k: 0.05 });
-    if (o.hairCol !== false && !chin) addHair(a, { name: 'hair', prims: [shell(a, 0.06, {})], k: 0.1, mask: function (X, Y, Z) { return Y < -0.52 && Z > 0.5; }, disp: function (X, Y, Z) { return strands(a, X, Y, { freq: 14, amp: 0.02, seed: 3 }).d; } });
+    if (o.hairCol !== false && !chin) hairPart(a, { prims: [shell(a, 0.06, {})], k: 0.1, inf: 0.05, freq: 12, amp: 0.02, seed: 3, flow: 'sweep', lim: function (X, Y, Z, s, ph) { return Z > 0.5 ? -0.5 : -9; } });
   };
   function pattern(a, X, Y, Z) {
-    if (!a.spec.scarfPattern) return false;
+    if (!a.spec.scarfPattern && !a.d.scarfPattern) return false;
     var u = phiOf(X, Z) * 5.5, v = Y * 5.5;
     var cu = Math.round(u), cv = Math.round(v + (cu & 1) * 0.5);
     var du = u - cu, dv = v + (cu & 1) * 0.5 - cv;
@@ -220,27 +236,33 @@ BTS.PortraitLib = (function () {
   function beard(a, kind, colr) {
     var f = a.f, E = a.E, my = f.mouthY, ny = f.noseY;
     var full = kind === 'full' || kind === 'long', long = kind === 'long';
-    var prims = [E([0, 0.32, 0.1], [0.84 + f.stout * 0.08, 1.0, 0.86]), E([-f.jawX, f.jawY, -0.02], [0.36, 0.48, 0.5]), E([f.jawX, f.jawY, -0.02], [0.36, 0.48, 0.5]), E([0, f.chinY - 0.12, f.chinZ + 0.06], [f.chinW + 0.1, 0.3, 0.3])];
-    if (long) prims.push(E([0, f.chinY + 0.35, f.chinZ - 0.05], [0.42, 0.6, 0.32]));
-    if (kind === 'short') prims.push(E([0, f.chinY - 0.05, f.chinZ], [f.chinW + 0.06, 0.24, 0.28]));
-    a.parts.push({ name: 'beard', F: a.F, mat: 'beard', prims: prims, k: 0.12, lineGap: 1.6,
+    var prims = a.hp.shell(long ? 0.1 : 0.07);
+    if (long) prims.push(E([0, f.chinY + 0.3, f.chinZ - 0.02], [0.4, 0.62, 0.3]));
+    if (kind === 'full') prims.push(E([0, f.chinY - 0.05, f.chinZ], [f.chinW + 0.12, 0.26, 0.3]));
+    a.parts.push({ name: 'beard', F: a.F, mat: 'beard', prims: prims, k: 0.2, lineGap: 1.6, taper: 0.06, taperW: 0.1,
       mask: function (X, Y, Z) {
         var ax = Math.abs(X);
         if (Z < -0.35 && Y < 0.6) return false;
-        if (Y < ny + 0.02 - ax * 0.35 + (ax > 0.35 ? 0.15 : 0)) return Y > -0.1 && Math.abs(phiOf(X, Z)) > 1.15 && Math.abs(phiOf(X, Z)) < 1.5;  // sideburns
+        var top = ny + 0.04 - ax * 0.3 + (ax > 0.3 ? 0.12 : 0) - (ax > 0.6 ? (ax - 0.6) * 1.2 : 0);
+        if (Y < top) return (Y > -0.12 && Math.abs(phiOf(X, Z)) > 1.12 && Math.abs(phiOf(X, Z)) < 1.45) ? 1 : 0;  // sideburns
         // keep the lips clear
         if (Y > my - 0.07 && Y < my + 0.13 && ax < 0.2 * f.lipW) return false;
-        if (!full && kind !== 'short') return false;
-        return true;
+        return Math.min(1, (Y - top) * 4 + 0.05);
       },
       disp: function (X, Y, Z) { var s = strands(a, X * 3, Y, { freq: 6, amp: 0.035, seed: 81, waveAmp: 0.3 }); return s.d + (a.hash(Math.floor(X * 40), Math.floor(Y * 40)) - 0.5) * 0.02; } });
   }
   function mustache(a, kind) {
     var f = a.f, E = a.E, my = f.mouthY, ny = f.noseY;
-    var w = kind === 'walrus' ? 0.32 : kind === 'thin' ? 0.22 : 0.27, h = kind === 'walrus' ? 0.14 : 0.08;
-    a.parts.push({ name: 'mustache', F: a.F, mat: 'beard', prims: [E([-0.13, my - 0.08, 0.86], [w * 0.62, h, 0.11], { rot: [0.3, 0, 0.35] }), E([0.13, my - 0.08, 0.86], [w * 0.62, h, 0.11], { rot: [-0.3, 0, -0.35] })], k: 0.08, lineGap: 1,
-      mask: function (X, Y, Z) { return Y > ny + 0.03 && Y < my + (kind === 'walrus' ? 0.06 : 0.0) + Math.abs(X) * (kind === 'walrus' ? 0.4 : 0.15); },
-      disp: function (X, Y, Z) { return strands(a, X * 2, Y, { freq: 14, amp: 0.02, seed: 83 }).d; } });
+    var w = kind === 'walrus' ? 0.42 : kind === 'thin' ? 0.28 : 0.36, h = kind === 'walrus' ? 0.13 : 0.08;
+    var mp = a.hp.muzzle, lp = a.hp.lipU;
+    a.parts.push({ name: 'mustache', F: a.F, mat: 'beard', prims: [E(mp.c, [mp.r[0] + 0.06, mp.r[1] + 0.05, mp.r[2] + 0.06], { k: 0.15 }), E(lp.c, [lp.r[0] + 0.07, lp.r[1] + 0.05, lp.r[2] + 0.05])], k: 0.12, lineGap: 1.2, taper: 0.04, taperW: 0.05,
+      mask: function (X, Y, Z) {
+        var ax = Math.abs(X); if (ax > w) return 0;
+        var bot = my - 0.02 + (kind === 'walrus' ? 0.07 : 0.02) + ax * ax * (kind === 'walrus' ? 1.6 : 1.0) * (1 - ax / w * 0.3);
+        var tp = ny + 0.03 + ax * 0.12;
+        return Math.min(Y - tp, bot - Y) * 6;
+      },
+      disp: function (X, Y, Z) { return strands(a, X * 2.2 + Y * Math.sign(X) * 1.8, Y, { freq: 9, amp: 0.035, seed: 83 }).d; } });
   }
 
   /* ================= HATS ================= */
@@ -263,10 +285,10 @@ BTS.PortraitLib = (function () {
   };
   HAT.brim = function (a) {
     var E = a.E;
-    a.parts.push({ name: 'crown', F: a.F, mat: 'hat', prims: [E([0, -1.25, -0.08], [0.92, 0.55, 0.95])], k: 0.1, mask: function (X, Y, Z) { return Y > -1.62; },
-      disp: function (X, Y, Z) { return Y < -1.4 && Math.abs(X) < 0.2 ? -0.05 : 0; } });
-    a.parts.push({ name: 'band', F: a.F, mat: 'hatBand', prims: [E([0, -0.95, -0.08], [0.95, 0.1, 0.99])], k: 0.02 });
-    a.parts.push({ name: 'brim', F: a.F, mat: 'hatD', prims: [E([0, -0.84, -0.06], [1.52, 0.06, 1.48], { rot: [0, 0.06, 0] })], k: 0.05, lineGap: 1.5 });
+    a.parts.push({ name: 'crown', F: a.F, mat: 'hat', prims: [E([0, -1.25, -0.1], [0.98, 0.95, 1.02], { clip: function (X, Y, Z) { return Y > -1.9; } }), E([0, -1.86, -0.1], [0.78, 0.1, 0.82])], k: 0.15,
+      disp: function (X, Y, Z) { return Y < -1.55 && Math.abs(X) < 0.15 ? -0.06 : 0; } });
+    a.parts.push({ name: 'band', F: a.F, mat: 'hatBand', prims: [E([0, -1.2, -0.1], [1.03, 0.75, 1.07], { clip: function (X, Y, Z) { return Y > -1.08 && Y < -0.92; } })], k: 0.02, lineGap: 1 });
+    a.parts.push({ name: 'brim', F: a.F, mat: 'hatD', prims: [E([0, -0.9, -0.08], [1.5, 0.1, 1.45], { rot: [0, 0.14, 0], clip: function (X, Y, Z) { return true; } }), E([0, -0.84, 0.9], [0.8, 0.07, 0.5], { rot: [0, 0.3, 0] })], k: 0.2, lineGap: 1.5 });
   };
   HAT.kamilavka = function (a) {
     var E = a.E;
@@ -293,9 +315,9 @@ BTS.PortraitLib = (function () {
     var sy = o.slope || 0;
     return [
       E([0, 2.9, -0.22], [1.3 * w + i, 1.2 + i, 0.8 + i + f.stout * 0.08]),
-      E([-1.24 * w, 2.5 + sy, -0.4], [0.55 + i, 0.44 + i, 0.55 + i]), E([1.24 * w, 2.5 + sy, -0.4], [0.55 + i, 0.44 + i, 0.55 + i]),
+      E([-1.22 * w, 2.75 + sy, -0.4], [0.58 + i, 0.75 + i, 0.58 + i]), E([1.22 * w, 2.75 + sy, -0.4], [0.58 + i, 0.75 + i, 0.58 + i]),
       E([-0.58 * w, 2.0 + sy * 0.5, -0.42], [0.62 * w + i, 0.33 + i, 0.46 + i]), E([0.58 * w, 2.0 + sy * 0.5, -0.42], [0.62 * w + i, 0.33 + i, 0.46 + i]),
-      E([-1.48 * w, 3.75, -0.4], [0.5 + i, 1.1 + i, 0.56 + i]), E([1.48 * w, 3.75, -0.4], [0.5 + i, 1.1 + i, 0.56 + i])
+      E([-1.42 * w, 3.9, -0.4], [0.55 + i, 1.0 + i, 0.58 + i]), E([1.42 * w, 3.9, -0.4], [0.55 + i, 1.0 + i, 0.58 + i])
     ];
   }
   /* cloth folds: grooves from the armpits toward the chest and a few soft creases */
@@ -305,8 +327,8 @@ BTS.PortraitLib = (function () {
       // armpit folds
       var t = (Y - 2.9) / 0.7; if (t > -0.2 && t < 1.2) { var lx = 1.05 - t * 0.45; d -= 0.04 * amt * a.g2((ax - lx) / 0.05, 0) * (1 - Math.abs(t - 0.5)); }
       // shoulder creases
-      d -= 0.02 * amt * Math.pow(Math.abs(Math.sin(X * 3.1 + Y * 1.7 + seed)), 12);
-      d += 0.012 * amt * (a.vnoise(X * 2.2 + seed, Y * 1.6, 5) - 0.5);
+      d -= 0.015 * amt * Math.pow(Math.abs(Math.sin(X * 2.4 + Y * 1.3 + seed)), 16);
+      d += 0.006 * amt * (a.vnoise(X * 1.6 + seed, Y * 1.2, 5) - 0.5);
       return d;
     };
   }
@@ -318,10 +340,12 @@ BTS.PortraitLib = (function () {
   /* neck-hole shapes, in body-local coordinates */
   function crewHole(r) { return function (X, Y, Z) { return Z > -0.2 && (X * X) / (r * r) + Math.pow((Y - 1.84) / (r * 0.9), 2) < 1; }; }
   function vHole(depth, wid) { return function (X, Y, Z) { return Z > -0.1 && Y > 1.6 && Y < depth && Math.abs(X) < wid * (depth - Y) / (depth - 1.6) + 0.02; }; }
+  /* a collar hugging the neck: the neck volume inflated by r - neck, clipped to a band around y0 (dips in front) */
   function collarRing(a, name, matName, r, y0, h, o) {
-    o = o || {}; var E = a.E, prims = [];
-    for (var k = 0; k < 18; k++) { var an = k / 18 * Math.PI * 2; prims.push(E([Math.sin(an) * r, y0 + (o.dip || 0) * Math.max(0, Math.cos(an)), Math.cos(an) * r * 0.95 - 0.22], [o.t || 0.16, h, o.t || 0.16])); }
-    var pt = { name: name, F: a.F, mat: matName, prims: prims, k: 0.2, mask: o.mask, disp: o.disp, lineGap: 1.5 };
+    o = o || {}; var E = a.E, f = a.f, t = Math.max(0.05, r - f.neck), dip = o.dip || 0;
+    var band = function (X, Y, Z) { var c = y0 + dip * Math.max(0, Z / (f.neck + t)); return Y > c - h && Y < c + h; };
+    var prims = [E([0, 1.5, -0.3], [f.neck + f.stout * 0.15 + t, 0.95 + t, f.neck * 1.1 + f.stout * 0.1 + t], { rot: [0, -0.15, 0], clip: band })];
+    var pt = { name: name, F: a.F, mat: matName, prims: prims, k: 0.05, mask: o.mask, disp: o.disp, lineGap: 1.5 };
     a.parts.push(pt); return pt;
   }
   var OUT = {};
@@ -356,9 +380,9 @@ BTS.PortraitLib = (function () {
   };
   OUT.shirtvest = function (a, o) {
     var E = a.E;
-    body(a, 'shirt', function (X, Y, Z) { return vHole(2.35, 0.2)(X, Y, Z) ? 'skin' : 'under'; }, 0, { folds: 0.8 });
-    collarRing(a, 'shirtCol', 'under', a.f.neck + 0.06, 1.84, 0.13, { t: 0.11, mask: function (X, Y, Z) { return !(Z > 0.2 && Math.abs(X) < 0.16); } });
-    body(a, 'vest', 'top', 0.07, { mask: function (X, Y, Z) { if (Math.abs(X) > 1.05 * a.f.sh + 0.1 && Y < 2.9) return false; if (Y < 2.2 && Z < 0.3 && Math.abs(X) > 0.9 * a.f.sh) return false; return !(Z > -0.1 && Math.abs(X - 0.02) < 0.26 + (3.9 - Y) * 0.05 && Y < 3.9); }, folds: 0.7 });
+    body(a, 'shirt', function (X, Y, Z) { return vHole(2.35, 0.2)(X, Y, Z) ? 'skin' : 'top'; }, 0, { folds: 0.8 });
+    collarRing(a, 'shirtCol', 'top', a.f.neck + 0.1, 1.8, 0.12, { dip: 0.25, mask: function (X, Y, Z) { return !(Z > 0.2 && Math.abs(X) < 0.14); } });
+    body(a, 'vest', 'vest', 0.07, { mask: function (X, Y, Z) { if (Math.abs(X) > 1.18 * a.f.sh + 0.1) return false; if (Y < 2.15 && Z < 0.2 && Math.abs(X) > 0.95 * a.f.sh) return false; return !(Z > -0.1 && Math.abs(X - 0.02) < 0.24 + (3.9 - Y) * 0.06 && Y < 3.9); }, folds: 0.7 });
     a.overlays.push(function (pen, ctx) { // vest buttons
       for (var k = 0; k < 3; k++) { var p = a.Fb.w(0.36, 3.45 + k * 0.34, 0.66); pen.zpx(p[0], p[1], p[2] + 5, a.mats.button.ramp[3]); }
     });
@@ -478,9 +502,9 @@ BTS.PortraitLib = (function () {
   ACC.camera = function (a, o) {
     var E = a.E;
     a.parts.push({ name: 'camStrap', F: a.Fb, mat: 'strap', prims: torso(a, 0.1), k: 0.22, lineGap: 1,
-      mask: function (X, Y, Z) { return Z > -0.2 && Y > 1.84 && Y < 3.6 && Math.abs(Math.abs(X) - (0.48 + (Y - 2) * 0.06)) < 0.05; } });
-    a.parts.push({ name: 'camera', F: a.Fb, mat: 'camera', prims: [E([0.05, 3.75, 0.72], [0.44, 0.27, 0.2]), E([0.05, 3.48, 0.7], [0.14, 0.08, 0.15])], k: 0.03, lineGap: 1 });
-    a.parts.push({ name: 'lens', F: a.Fb, mat: 'lens', prims: [E([0.12, 3.78, 0.92], [0.17, 0.17, 0.12])], k: 0.02, lineGap: 1 });
+      mask: function (X, Y, Z) { return Z > -0.2 && Y > 1.84 && Y < 2.85 && Math.abs(Math.abs(X) - (0.42 - (Y - 1.84) * 0.25)) < 0.05; } });
+    a.parts.push({ name: 'camera', F: a.Fb, mat: 'camera', prims: [E([0.05, 3.0, 0.78], [0.44, 0.26, 0.2]), E([-0.18, 2.74, 0.74], [0.12, 0.07, 0.14])], k: 0.03, lineGap: 1 });
+    a.parts.push({ name: 'lens', F: a.Fb, mat: 'lens', prims: [E([0.12, 3.02, 0.98], [0.17, 0.17, 0.12])], k: 0.02, lineGap: 1 });
   };
   ACC.cross = function (a, o) {
     a.overlays.push(function (pen) {
@@ -545,7 +569,7 @@ BTS.PortraitLib = (function () {
       M.hairGrey = gm;
       a.parts.forEach(function (pt) {
         if (pt.mat !== 'hair') return;
-        pt.mat = function (X, Y, Z) { var ph = Math.abs(Math.atan2(X, Z)); var g = (ph > 0.7 ? 1 : 0.4) * sp.grey + (a.vnoise(Math.atan2(X, Z) * 12, Y * 4, 3) - 0.5) * 0.6; return g > 0.5 ? 'hairGrey' : 'hair'; };
+        pt.mat = function (X, Y, Z) { var ph = Math.abs(Math.atan2(X, Z)); var g = (ph > 0.7 ? 1 : 0.45) * sp.grey + (a.vnoise(Math.atan2(X, Z) * 40, Y * 1.2, 3) - 0.5) * 0.9; return g > 0.55 ? 'hairGrey' : 'hair'; };
       });
     }
   }

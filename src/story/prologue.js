@@ -160,7 +160,7 @@
             .then(function () { return C.wait(2.2); })
             .then(function () { C.despawn('jaglika'); });
         } },
-        { loc: 'djordje_house', id: 'bed', box: [-1, -1, 40, 40], run: function (C) {
+        { loc: 'djordje_house', id: 'bed', box: [-30, -10, 40, 30], run: function (C) {
           return C.walk('player', 'bed', {}).then(function () { C.anim('player', 'sit'); return C.say('p_bed'); })
             .then(function () { return C.fade(1, 0.6); });
         }, then: 'c1_start' }

@@ -88,27 +88,37 @@
       // shepherd's meadow across the river
       L.fence([[60, 64], [78, 64], [78, 70]], { h: 1, rails: 2 });
       // forest
-      function belt(x0, z0, x1, z1, n, kinds) { for (var q = 0; q < n; q++) { var tx = x0 + R() * (x1 - x0), tz = z0 + R() * (z1 - z0); if (tileAt(tx, tz) === 'dirt' || riverD(tx, tz) < 3.5 || BTS.Physics.pointBlocked(tx, tz, 1.2, L.colliders)) continue; L.tree(R.pick(kinds), tx, tz, { scale: 1 + R() * 0.35 }); } }
-      belt(0, 0, 100, 24, 150, ['tree_pine', 'tree_pine', 'tree_oak', 'tree_birch', 'tree_dead']);
-      belt(0, 24, 16, 70, 50, ['tree_oak', 'tree_pine', 'tree_birch']);
+      function belt(x0, z0, x1, z1, n, kinds) { for (var q = 0; q < n; q++) { var tx = x0 + R() * (x1 - x0), tz = z0 + R() * (z1 - z0); if (tileAt(tx, tz) === 'dirt' || riverD(tx, tz) < 3.5 || Math.hypot(tx - 93.5, tz - 20.2) < 4 || Math.hypot(tx - 93.5, tz - 53.8) < 3.5 || BTS.Physics.pointBlocked(tx, tz, 1.2, L.colliders)) continue; L.tree(R.pick(kinds), tx, tz, { scale: 1 + R() * 0.35 }); } }
+      belt(0, 0, 100, 24, 160, ['tree_spruce', 'tree_pine', 'tree_oak', 'tree_spruce2', 'tree_birch', 'tree_dead', 'tree_spruce']);
+      belt(0, 24, 16, 70, 50, ['tree_oak', 'tree_spruce', 'tree_birch', 'tree_spruce2']);
       belt(70, 24, 100, 50, 26, ['tree_oak', 'tree_walnut', 'tree_poplar']);
       belt(0, 66, 100, 76, 26, ['tree_poplar', 'tree_oak', 'tree_birch']);
-      for (var i = 0; i < 16; i++) { var px = 10 + i * 5.6, pz = polyRiverZ(px) - 4.2; if (!BTS.Physics.pointBlocked(px, pz, 1.2, L.colliders)) L.tree('tree_poplar', px, pz); }
+      for (var i = 0; i < 16; i++) { var px = 10 + i * 5.6, pz = polyRiverZ(px) - 4.2; if (!BTS.Physics.pointBlocked(px, pz, 1.2, L.colliders) && Math.hypot(px - 93.5, pz - 53.8) > 3) L.tree('tree_poplar', px, pz); }
       L.scatter(['reeds'], 0, 34, 100, 66, 240, { avoid: function (x, z) { var d = riverD(x, z); return d < 2.2 || d > 3.6; }, wind: 0.8 });
       L.scatter(['grass_tuft', 'grass_tuft2', 'grass_tall', 'flowers_wild', 'fern'], 4, 4, 96, 70, 800, { avoid: function (x, z) { return /dirt|water|flags|field/.test(tileAt(x, z)) || BTS.Physics.pointBlocked(x, z, 0.4, L.colliders); } });
       L.scatter(['bush', 'bush_dark', 'bush_berry', 'rock'], 4, 4, 96, 70, 70, { avoid: function (x, z) { return /dirt|water|flags/.test(tileAt(x, z)) || BTS.Physics.pointBlocked(x, z, 1, L.colliders); }, wind: 0.2 });
       L.emitter({ type: 'fireflies', x: 50, y: 0.2, z: 50, rate: 2, area: [70, 14], night: true, fx: true });
       L.emitter({ type: 'leaves', x: 50, y: 0, z: 14, rate: 2, area: [80, 16], fx: true });
       L.box(-2, 0, 3.5, 74); L.box(96.5, 0, 102, 17.5); L.box(96.5, 22.5, 102, 55.5); L.box(96.5, 60.5, 102, 74); L.box(0, -2, 100, 4.5); L.box(0, 69.5, 100, 76);
-      L.spot('from_village_w', 94, 20, 'left'); L.spot('from_village_s', 93, 54, 'left'); L.spot('default', 90, 21, 'left');
+      L.spot('from_village_w', 92.4, 20.3, 'left'); L.spot('from_village_s', 92.2, 53.6, 'left'); L.spot('default', 90, 21, 'left');
+      // where the two village roads come in: a roadside signpost and a wooden gate frame at the forest path
+      (function () {
+        var mb = L.propMB(95, 20), y = height(95.6, 18.4);
+        [[95.6, 18.6], [95.6, 21.8]].forEach(function (p) { mb.post(p[0], height(p[0], p[1]) - 0.15, p[1], y + 2.6 - height(p[0], p[1]), 0.2, 'wood_dark', { mat: BTS.MAT.WOOD }); L.circle(p[0], p[1], 0.2, 'gate'); });
+        mb.box(95.6, y + 2.45, 20.2, 0.24, 0.18, 3.6, { all: 'wood_beam' }, { mat: BTS.MAT.WOOD });
+        mb.gableRoof(95.6, 20.2, 0.9, 3.8, y + 2.6, 0.45, 'roof_shingle', { mat: BTS.MAT.WOOD, axis: 'z', overhang: 0.12, gableTile: 'wood_dark' });
+        var sy = height(94.6, 51.6); mb.post(94.6, sy - 0.1, 51.6, 2.3, 0.12, 'wood_dark', { mat: BTS.MAT.WOOD });
+        mb.box(95.1, sy + 1.8, 51.62, 1.1, 0.24, 0.05, { all: 'wood_light' }, { mat: BTS.MAT.WOOD }); mb.box(94.2, sy + 1.45, 51.62, 1.0, 0.22, 0.05, { all: 'wood_light' }, { mat: BTS.MAT.WOOD });
+        L.circle(94.6, 51.6, 0.15, 'sign');
+      })();
       L.spot('field_mid', 40, 36, 'down'); L.spot('field_end', 22, 34); L.spot('river_bank', 60, 44, 'down'); L.spot('bridge', 88, 54, 'down'); L.spot('forest_mid', 74, 18.5, 'left'); L.spot('pit', 30, 36);
       L.area('forest', 40, 4, 96, 24); L.area('viewpoint', 20, 4, 40, 20); L.area('fields', 16, 24, 70, 41); L.area('river', 4, 41, 96, 62); L.area('mill', 38, 40, 52, 50);
-      belt(-24, -20, 124, 0, 50, ['tree_pine', 'tree_oak']); belt(-24, 0, 0, 96, 40, ['tree_pine', 'tree_oak']); belt(100, 0, 124, 96, 40, ['tree_oak', 'tree_pine']); belt(-24, 74, 124, 96, 30, ['tree_oak', 'tree_poplar']);
+      belt(-24, -20, 124, 0, 50, ['tree_spruce', 'tree_oak', 'tree_spruce2']); belt(-24, 0, 0, 96, 40, ['tree_spruce', 'tree_oak']); belt(100, 0, 124, 96, 40, ['tree_oak', 'tree_spruce2']); belt(-24, 74, 124, 96, 30, ['tree_oak', 'tree_poplar']);
       L.ground(-24, -20, 124, 96, { waterLevel: -0.8 });
     },
     exits: [
-      { id: 'to_village_w', at: [95.2, 20], to: 'village', spawn: 'from_outskirts_w', label: 'loc.village', verb: 'verb.go', door: false },
-      { id: 'to_village_s', at: [95.2, 54], to: 'village', spawn: 'from_outskirts_s', label: 'loc.village', verb: 'verb.go', door: false }
+      { id: 'to_village_w', at: [95.8, 20.2], to: 'village', spawn: 'from_outskirts_w', label: 'loc.village', verb: 'verb.go', door: false },
+      { id: 'to_village_s', at: [95.8, 54], to: 'village', spawn: 'from_outskirts_s', label: 'loc.village', verb: 'verb.go', door: false }
     ],
     examine: [
       { id: 'x_os_cross', at: [63.5, 17], label: 'it.stone_cross', dlg: 'x_os_cross' },

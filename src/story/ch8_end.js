@@ -1,7 +1,7 @@
 /* CHAPTER 8 — the legend. CHAPTER 9 — rising threat. CHAPTER 10 — the rite. CHAPTER 11 — release. EPILOGUE. */
 'use strict';
 (function () {
-  var D = BTS.D, U = BTS.StoryUtil, when = U.when, add = U.add, S = BTS.State;
+  var D = BTS.D, U = BTS.StoryUtil, when = U.when, add = U.add, S = BTS.State, A = BTS.SpotAt;
   var LISA_FOLLOW = { loc: '*', follow: true, act: 'idle' };
   function setSheet(id) { var p = BTS.World.player; p.add('anim', new BTS.Animator(id)); }
 
@@ -69,6 +69,9 @@
     Rd.pushFx(3, [[83.2, wy, 76.9], [84.8, wy, 76.9], [85.2 + sway, wy + 6, 76.9], [82.8 + sway, wy + 6, 76.9]], BTS.Atlas.get('shadow_beast_2'), [0.01, 0, 0.02, 0.55]);
   }
 
+  /* ---------- final titles: what became of Đorđe (and the others) ---------- */
+  var ENDING_CARDS = [['e.t1', 'e.s1'], ['e.t2', 'e.s2'], ['e.t3', 'e.s3'], ['e.t4', 'e.s4'], ['e.t5', 'e.s5'], ['e.t6', 'e.s6'], ['e.t7', 'e.s7'], ['e.t8', 'e.s8'], ['e.t9', 'e.s9'], ['e.t10', null, 6]];
+
   /* ---------- climax helpers ---------- */
   var VICTIMS = ['zajko', 'pecko', 'gvozdin', 'gorazd', 'jessica', 'tihomir', 'vil_man1', 'vil_woman1', 'vil_old', 'vil_woman2', 'vil_man2', 'vil_boy', 'dancer1', 'dancer2', 'vil_old', 'vil_woman1', 'vil_man1', 'vil_woman2'];
   function spawnShades(cx, cz, n, rad) {
@@ -88,17 +91,22 @@
   BTS.Story.define([
     /* ================= CHAPTER 8 ================= */
     { id: 'c8_chest', chapter: 'ch8', obj: 'obj.c8_chest', env: { time: 'night', weather: 'overcast', horror: 0.35 }, music: 'explore',
-      npcs: { lisa: { loc: 'djordje_house', at: 'lisa_table', act: 'idle', dir: 'left' } },
-      interact: [{ loc: 'djordje_house', id: 'chest', at: [8.7, 6.9], label: 'it.chest', verb: 'verb.open', dlg: 'c8_chest', item: 'grandma_cloth', hint: true, sfx: 'drawer', then: 'c8_memory' }]
+      npcs: { lisa: { loc: 'djordje_house', at: A('lisa_table', [6.4, 5.4]), act: 'idle', dir: 'left' } },
+      interact: [{ loc: 'djordje_house', id: 'chest', at: A('chest', [8.7, 6.7]), label: 'it.chest', verb: 'verb.open', dlg: 'c8_chest', item: 'grandma_cloth', hint: true, sfx: 'drawer', then: 'c8_memory' }]
     },
     { id: 'c8_memory', chapter: 'ch8', loc: 'djordje_house', spawn: 'table', forceSpawn: true, chapterCard: 'loc.memory', chapterSub: 'sub.c8', obj: 'obj.c8_memory', music: 'memory', noSave: true,
       env: { time: 'evening', weather: 'clear', horror: 0 }, envInstant: true,
-      npcs: { baka: { loc: 'djordje_house', at: 'baka_chair', act: 'sit', dir: 'down' }, lisa: null },
+      npcs: { baka: { loc: 'djordje_house', at: A('baka_chair', [6.4, 3.8]), act: 'sit', dir: 'down', noTalk: true }, lisa: null },
+      /* Grandmother's legend is performed as a shadow-puppet theatre (BTS.Theatre); the plain dialogue is the fallback */
+      interact: [{ loc: 'djordje_house', id: 'baka_tale', at: A('baka_chair', [6.4, 3.8], 0, 0.9), label: 'name.baka', verb: 'verb.listen', hint: true, r: 1.8, run: function (C) {
+        if (BTS.Theatre && BTS.Theatre.play) return BTS.Theatre.play().then(function (how) { if (how === 'abort') return C.say('c8_legend'); });
+        return C.say('c8_legend');
+      }, clue: 'fact_legend', then: 'c8_back' }],
       onPopulate: function () { setSheet('djordje_young'); BTS.Env.sepiaGoal = 0.85; BTS.Env.sepia = 0.85; },
       scene: function (C) { return C.say('c8_mem_in'); }
     },
     { id: 'c8_back', chapter: 'ch8', loc: 'djordje_house', spawn: 'chest', forceSpawn: true, obj: null, env: { time: 'night', weather: 'overcast', horror: 0.35 }, envInstant: true, music: 'explore',
-      npcs: { lisa: { loc: 'djordje_house', at: 'lisa_table', act: 'idle', dir: 'left' } },
+      npcs: { lisa: { loc: 'djordje_house', at: A('lisa_table', [6.4, 5.4]), act: 'idle', dir: 'left' } },
       onPopulate: function () { setSheet('djordje'); BTS.Env.sepiaGoal = 0; BTS.Env.sepia = 0; },
       scene: function (C) { return C.say('c8_back').then(function () { C.clue('hyp_needle_rule'); return C.fade(1, 0.6); }); }, after: 'c9_silence'
     },
@@ -126,9 +134,9 @@
       blockExit: { west: 'block_night', south: 'block_night' }
     },
     { id: 'c9_lisa', chapter: 'ch9', obj: 'obj.c9_lisa', music: 'tension', env: { time: 'night', weather: 'overcast', horror: 0.55 },
-      npcs: { lisa: { loc: 'djordje_house', at: 'lisa_table', act: 'idle', dir: 'left' } },
-      triggers: [{ loc: 'djordje_house', box: [-1, -1, 19, 10], run: function (C) {
-        C.place('lisa', 'lisa_table', 'left');
+      npcs: { lisa: { loc: 'djordje_house', at: A('lisa_table', [6.4, 5.4]), act: 'idle', dir: 'left' } },
+      triggers: [{ loc: 'djordje_house', box: [-30, -10, 40, 30], run: function (C) {
+        C.place('lisa', U.spot('lisa_table', [6.4, 5.4]), 'left');
         return C.say('c9_decide');
       }, set: 'tihomir_open', then: 'c9_needle' }],
       blockExit: { west: 'block_night', south: 'block_night' }
@@ -139,7 +147,7 @@
       blockExit: { west: 'block_night', south: 'block_night' }
     },
     { id: 'c9_prepare', chapter: 'ch9', obj: 'obj.c9_prepare', music: 'tension', npcs: { lisa: LISA_FOLLOW },
-      interact: [{ loc: 'djordje_house', id: 'lantern', at: [1.6, 2.4], label: 'it.lantern', verb: 'verb.take', dlg: 'c9_lantern', item: 'lantern', hint: true, once: true }],
+      interact: [{ loc: 'djordje_house', id: 'lantern', at: A('stove', [1.6, 2.4]), label: 'it.lantern', verb: 'verb.take', dlg: 'c9_lantern', item: 'lantern', hint: true, once: true }],
       tick: when('c9_ready', 'item:lantern', function (C) { return C.say('c9_ready').then(function () { return C.fade(1, 0.6); }); }, 'c10_meadow'),
       blockExit: { west: 'block_night', south: 'block_night' }
     },
@@ -237,44 +245,50 @@
     /* ================= EPILOGUE ================= */
     { id: 'e_dawn', chapter: 'epilogue', loc: 'village', spawn: 'fair_center', forceSpawn: true, chapterCard: 'chap.epilogue', chapterSub: 'sub.e', day: 95, deaths: ['jaglika'],
       env: { time: 'morning', weather: 'clear', horror: 0 }, envInstant: true, obj: 'obj.e_dawn', music: 'epilogue',
-      npcs: { lisa: LISA_FOLLOW, milka: { loc: 'village', at: 'milka_bench', act: 'sit', dir: 'down' }, sava: { loc: 'village', at: 'churchyard', act: 'pray', dir: 'up' }, stana: { loc: 'village', at: 'guest_bench', act: 'sit', dir: 'down' }, dragan: { loc: 'village', at: 'kafana_table', act: 'idle', dir: 'down' } },
-      hideAll: true, keep: ['lisa', 'milka', 'sava', 'stana', 'dragan'],
+      npcs: { lisa: LISA_FOLLOW, milka: { loc: 'village', at: 'milka_bench', act: 'sit', dir: 'down' }, sava: { loc: 'village', at: 'churchyard', act: 'pray', dir: 'up' }, stana: { loc: 'village', at: 'guest_bench', act: 'sit', dir: 'down' }, dragan: { loc: 'village', at: 'kafana_table', act: 'idle', dir: 'down' },
+        zlatko: { loc: 'village', at: [93.6, 32.6], act: 'mourn', dir: 'up' }, jablan: { loc: 'village', at: [94.8, 32.4], act: 'idle', dir: 'up' } },
+      hideAll: true, keep: ['lisa', 'milka', 'sava', 'stana', 'dragan', 'zlatko', 'jablan'],
       onPopulate: function (loc) { BTS.World.player.hidden = false; if (BTS.World.player.shadow) BTS.World.player.shadow.setStage(0); },
       scene: function (C) { C.hide('player', false); return C.say('e_dawn'); },
-      interact: [{ loc: 'village', id: 'leave_toy', at: 'grave_zajko', label: 'it.grave_zajko', verb: 'verb.leave', dlg: 'e_toy', hint: true, once: true, need: 'item:zajko_toy' }],
-      tick: when('e_ready', 'flag:e_toy_left&flag:e_milka', function (C) { return C.say('e_ready'); }, 'e_leave')
+      interact: [
+        { loc: 'village', id: 'leave_toy', at: 'grave_zajko', label: 'it.grave_zajko', verb: 'verb.leave', dlg: 'e_toy', hint: true, once: true, need: 'item:zajko_toy' },
+        { loc: 'village', id: 'parents_grave', at: 'grave_pecko', label: 'it.grave_parents', verb: 'verb.pray', dlg: 'e_parents', set: 'e_parents', hint: true, once: true }
+      ],
+      tick: when('e_ready', 'flag:e_toy_left&flag:e_milka&flag:e_parents', function (C) { return C.say('e_ready'); }, 'e_leave')
     },
     { id: 'e_leave', chapter: 'epilogue', obj: 'obj.e_leave', music: 'epilogue',
       npcs: { lisa: LISA_FOLLOW, milka: { loc: 'village', at: 'milka_bench', act: 'sit', dir: 'down' } }, hideAll: true, keep: ['lisa', 'milka'],
       triggers: [{ loc: 'village', box: [49, 82, 57, 89], run: function (C) {
-        return C.say('e_bridge').then(function () { return C.fade(1, 1.2); }).then(function () { return C.title('e.card1', 'e.card1b'); }).then(function () { return C.title('e.card2', 'e.card2b'); });
+        return C.say('e_bridge').then(function () { return C.fade(1, 1.2); });
       }, then: 'e_final' }]
     },
+    /* the next Vidovdan: Đorđe comes back for the fair — and looks at his own shadow. Then the final titles. */
     { id: 'e_final', chapter: 'epilogue', ambience: { crowd: 0.8, fire: 0.8, firePos: [90.5, 82] }, loc: 'village', spawn: 'fair_edge', forceSpawn: true, chapterCard: 'date.next_june', chapterSub: 'sub.e_final', day: 365,
-      env: { time: 'night', weather: 'clear', horror: 0.1 }, envInstant: true, obj: null, music: 'fair', noSave: true,
-      npcs: { mila: { loc: 'village', at: [89.4, 80.4], act: 'wander', radius: 1.6, stage: 1 }, luka: { loc: 'village', at: [92, 81.8], act: 'wander', radius: 1.5 }, milka: { loc: 'village', at: [76.2, 79.6], act: 'sit', dir: 'down' } },
-      hideAll: true, keep: ['mila', 'luka', 'milka'],
+      env: { time: 'night', weather: 'clear', horror: 0 }, envInstant: true, obj: null, music: 'fair', noSave: true,
+      npcs: { mila: { loc: 'village', at: [89.4, 80.4], act: 'wander', radius: 1.6, stage: 0 }, luka: { loc: 'village', at: [92, 81.8], act: 'wander', radius: 1.5 }, milka: { loc: 'village', at: [76.2, 79.6], act: 'sit', dir: 'down' },
+        lisa: { loc: 'village', at: [101.4, 85.2], act: 'idle', dir: 'left', noTalk: true } },
+      hideAll: true, keep: ['mila', 'luka', 'milka', 'lisa'],
       extras: [
         { loc: 'village', sheet: 'dancer1', at: [82.6, 78.2], act: 'wander', radius: 1.6 }, { loc: 'village', sheet: 'dancer2', at: [85.6, 78.6], act: 'wander', radius: 1.6 },
-        { loc: 'village', sheet: 'vil_man1', at: [75, 73.8], act: 'idle', dir: 'up' }, { loc: 'village', sheet: 'vil_boy', at: [88, 83], act: 'wander', radius: 2 },
-        { loc: 'village', sheet: 'vil_woman2', at: [103, 86.2], act: 'idle', dir: 'left', talk: false }
+        { loc: 'village', sheet: 'vil_man1', at: [75, 73.8], act: 'idle', dir: 'up' }, { loc: 'village', sheet: 'vil_boy', at: [88, 83], act: 'wander', radius: 2 }
       ],
-      onPopulate: function (loc, W) { W.player.hidden = true; var s = W.get('extra4'); if (s && s.add) { s.tint = [0.5, 0.5, 0.55]; } },
+      onPopulate: function (loc, W) { W.player.hidden = false; if (W.player.shadow) W.player.shadow.setStage(0); },
       scene: function (C) {
-        return C.cam({ target: [90, 0.5, 81], dist: 28, time: 0.1 }).then(function () { return C.wait(2); })
+        return C.cam({ target: [95, 0.5, 83], dist: 22, time: 0.1 }).then(function () { return C.wait(1.5); })
           .then(function () { return C.say('e_final'); })
-          .then(function () { return C.cam({ target: [101, 1, 85], dist: 20, time: 3 }); })
-          .then(function () { var o = C.ent('extra4'); if (o && o.shadow) { o.shadow.lag = 0.6; o.shadow.lenMul = 1.8; } return C.wait(2.5); })
-          .then(function () { return C.say('e_question'); })
-          .then(function () { return C.fade(1, 0.5); })
-          .then(function () { BTS.Music.set('epilogue', 1); return C.title('ui.the_end'); })
+          .then(function () { C.walk('player', [96.6, 83.6]); return C.wait(1.8); })
+          .then(function () { C.face('player', 'left'); return C.say('e_final_b'); })
+          .then(function () { C.anim('player', 'point'); return C.wait(1.6); })
+          .then(function () { C.anim('player', null); return C.say('e_final_c'); })
+          .then(function () { return C.fade(1, 1.2); })
+          .then(function () { BTS.Music.set('epilogue', 1.5); return U.cards(ENDING_CARDS); })
+          .then(function () { return C.title('ui.the_end'); })
           .then(function () { S.set('game_complete'); S.markDone('scene:e_final'); BTS.Save.write('auto', BTS.Save.snapshot()); BTS.Screens.credits(true); });
       }
     }
   ]);
 
   /* memory: talking to grandmother */
-  add('baka', [{ beats: 'c8_memory', dlg: 'c8_legend', clue: 'fact_legend', then: 'c8_back' }]);
   add('lisa', [
     { beats: 'c8_chest', dlg: 'c8_lisa' }, { beats: 'c9_silence..c9_prepare', dlg: 'c9_lisa_any' }, { beats: 'c10_meadow', dlg: 'c10_lisa' },
     { beats: 'e_dawn..e_leave', dlg: 'e_lisa' }
@@ -282,13 +296,15 @@
   add('milka', [{ beats: 'e_dawn', dlg: 'e_milka', set: 'e_milka' }, { beats: 'e_leave', dlg: 'e_milka2' }, { beats: 'c9_silence..c10_meadow', dlg: 'c9_milka' }]);
   add('sava', [{ beats: 'e_dawn..e_leave', dlg: 'e_sava' }, { beats: 'c9_silence..c9_prepare', dlg: 'c9_sava' }]);
   add('stana', [{ beats: 'e_dawn..e_leave', dlg: 'e_stana' }]);
+  add('zlatko', [{ beats: 'e_dawn..e_leave', dlg: 'e_zlatko' }]);
+  add('jablan', [{ beats: 'e_dawn..e_leave', dlg: 'e_jablan' }]);
   add('dragan', [{ beats: 'e_dawn..e_leave', dlg: 'e_dragan' }, { beats: 'c9_silence..c9_prepare', dlg: 'c9_dragan' }]);
   BTS.Data.globalProps.push({ beats: 'c9_dusk..', loc: 'village', sprite: 'cross_grave_new', at: 'grave_tihomir', scale: 1.1 });
   BTS.Story.calls.leaveToy = function () { S.removeItem('zajko_toy'); S.set('e_toy_left'); };
 
   D('c8_chest', [['*', '1'], ['>', '2'], ['*', '3'], ['>', '4'], ['>', '5']]);
   D('c8_lisa', [['lisa', '1', { p: 'worried' }]]);
-  D('c8_mem_in', [['*', '1'], ['baka', '2', { p: 'smile' }], ['>', '3']]);
+  D('c8_mem_in', [['*', '1'], ['baka', '2', { p: 'smile' }], ['>', '3'], ['>', '4']]);
   D('c8_legend', [
     ['baka', '1', { p: 'smile' }], ['baka', '2'], ['baka', '3'], ['*', '4'], ['baka', '5'],
     { label: 'q' }, { choice: [['c1', 'eat', { once: true }], ['c2', 'needle', { once: true }], ['c3', 'kill', { once: true }], ['c4', 'you', { once: true }], ['c5', 'end']] },
@@ -303,7 +319,7 @@
   D('c9_wake', [['>', '1'], ['>', '2'], ['>', '3'], ['lisa', '4', { p: 'worried' }], ['lisa', '6', { p: 'sad' }], ['>', '5']]);
   D('c9_village', [['*', '1'], ['vesna', '2', { p: 'sad' }], ['radoje', '3'], ['*', '4'], ['>', '5'], ['>', '6']]);
   D('c9_beast', [['*', '1'], ['*', '2'], ['lisa', '3', { p: 'scared' }], ['>', '4'], ['>', '5'], ['*', '6']]);
-  D('c9_decide', [['lisa', '1', { p: 'tired' }], ['lisa', '2'], ['lisa', '3'], { choice: [['c1', 'a'], ['c2', 'b']] },
+  D('c9_decide', [['lisa', '1', { p: 'tired' }], ['lisa', '2'], ['>', '18'], ['lisa', '3'], { choice: [['c1', 'a'], ['c2', 'b']] },
     { label: 'a' }, ['dj', '4'], { goto: 'm' }, { label: 'b' }, ['*', '5'], ['>', '6'], ['dj', '7'],
     { label: 'm' }, ['lisa', '8', { p: 'worried' }], ['*', '9'], ['dj', '10'], ['dj', '11'], ['lisa', '12', { p: 'sad' }], ['lisa', '13'], ['dj', '14'], ['lisa', '15', { p: 'worried' }], ['lisa', '16'], ['>', '17']]);
   D('c9_pillow', [['*', '1'], ['>', '2'], ['>', '3'], ['lisa', '4', { p: 'worried' }]]);
@@ -323,12 +339,12 @@
   D('c10_miss_early', [['lisa', '1', { p: 'scared' }]]);
   D('c10_miss_far', [['>', '1']]);
   D('c11_pierce', [['*', '1'], ['*', '2'], ['>', '3']]);
-  D('c11_shades', [['*', '1'], ['>', '2'], ['jaglika', '3'], ['*', '4']]);
+  D('c11_shades', [['*', '1'], ['>', '2'], ['>', '5'], ['>', '6'], ['jaglika', '3'], ['*', '4']]);
   D('c11_fall', [['*', '1'], ['jaglika', '2'], ['*', '3']]);
   D('c11_silence', [['*', '1'], ['>', '2']]);
   D('e_dawn', [['*', '1'], ['lisa', '2', { p: 'tired' }], ['dj', '3'], ['lisa', '4'], ['>', '5']]);
   D('e_toy', [['*', '1'], ['>', '2'], ['>', '3'], { call: 'leaveToy' }]);
-  D('e_milka', [['milka', '1', { p: 'sad' }], ['milka', '2'], ['dj', '3'], ['milka', '4', { p: 'smile' }]]);
+  D('e_milka', [['milka', '1', { p: 'sad' }], ['milka', '2'], ['dj', '3'], ['milka', '4', { p: 'smile' }], ['milka', '5']]);
   D('e_milka2', [['milka', '1', { p: 'smile' }]]);
   D('e_sava', [['sava', '1'], ['sava', '2']]);
   D('e_stana', [['stana', '1', { p: 'sad' }]]);
@@ -336,6 +352,10 @@
   D('e_lisa', [['lisa', '1']]);
   D('e_ready', [['lisa', '1'], ['>', '2']]);
   D('e_bridge', [['*', '1'], ['>', '2'], ['>', '3'], ['lisa', '4', { p: 'smile' }], ['dj', '5'], ['*', '6']]);
-  D('e_final', [['*', '1'], ['*', '2'], ['mila', '3', { p: 'smile' }], ['*', '4']]);
-  D('e_question', [['*', '1']]);
+  D('e_final', [['*', '1'], ['>', '2'], ['lisa', '3', { p: 'smile' }], ['dj', '4'], ['milka', '5', { p: 'smile' }], ['*', '6'], ['mila', '7', { p: 'smile' }], ['*', '8']]);
+  D('e_final_b', [['>', '1'], ['>', '2']]);
+  D('e_final_c', [['>', '1'], ['>', '2'], ['lisa', '3', { p: 'smile' }], ['dj', '4'], ['>', '5']]);
+  D('e_parents', [['*', '1'], ['>', '2'], ['>', '3'], ['>', '4'], ['>', '5']]);
+  D('e_zlatko', [['zlatko', '1', { p: 'sad' }], ['zlatko', '2'], ['dj', '3'], ['>', '4']]);
+  D('e_jablan', [['jablan', '1', { p: 'tired' }]]);
 })();

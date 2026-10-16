@@ -17,9 +17,21 @@ BTS.Test = (function () {
     if (name === 'audio') T.audioTest();
     if (name === 'loading') T.loadingTest();
     if (name === 'collision') T.collisionTest();
+    if (name === 'theatre') T.theatreTest();
     BTS.UI.toast('TEST: ' + name);
     BTS.Music.set(q.get('music') || 'village');
   };
+  /* ?test=theatre — grandmother's shadow puppet theatre in Đorđe's house (&speed=2 for quicker pauses) */
+  T.theatreTest = function () {
+    BTS.World.load('djordje_house', 'table');
+    BTS.Env.set({ time: 'evening', weather: 'clear', horror: 0 }, true);
+    BTS.Env.sepiaGoal = 0.85; BTS.Env.sepia = 0.85;
+    setTimeout(function () {
+      BTS.Cutscene.play(function () { return BTS.Theatre.play({ speed: +(q().get('speed') || 1), test: true }); }, 'theatre')
+        .then(function () { T.theatreDone = true; BTS.UI.toast('TEST: theatre done'); });
+    }, 600);
+  };
+  function q() { return BTS.Game.query; }
   T.audioTest = function () {
     var names = Object.keys(BTS.SFX).filter(function (k) { return typeof BTS.SFX[k] === 'function'; });
     var i = 0;

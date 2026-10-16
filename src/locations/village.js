@@ -49,6 +49,7 @@
     h += (M.fbm(x * 0.07, z * 0.07, 3) - 0.5) * 0.7;
     var meadow = M.smooth(10, 3, Math.max(Math.abs(x - 85) - 14, Math.abs(z - 77) - 8, 0));
     h = M.lerp(h, 0.05, meadow * 0.85);
+    h = M.lerp(h, 7.0 + (h - 7.0) * 0.12, M.smooth(9, 6, Math.hypot((x - 55) * 0.85, z - 12.8)));   // levelled hilltop yard around the house
     h -= 1.5 * M.smooth(2.6, 0.6, creekD(x, z));          // creek bed
     return h;
   }
