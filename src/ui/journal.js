@@ -30,10 +30,16 @@ BTS.Journal = (function () {
       if (J.tab === 'sketch') renderSketches(s, body);
       else if (J.tab === 'tasks') renderTasks(s, body);
       else renderClues(s, body, J.tab);
+      var hl = body.querySelector('.hinted'); if (hl) setTimeout(function () { try { hl.scrollIntoView({ block: 'center' }); } catch (e) { } }, 30);
       var foot = el('div', 'row foot', null, s.el);
       if (J.tab === 'obs' || J.tab === 'hyp' || J.tab === 'fact') {
         U.button(s, foot, linkSel ? t('jr.cancel_link') : t('jr.link'), function () { linkSel = linkSel ? null : []; s.refresh(); }, { cls: 'link' });
       }
+      U.button(s, foot, '?', function () {
+        var h = J.hint(); J.hintIds = [h.a, h.b].filter(Boolean); J.lastResult = h.text; BTS.Audio.play('page');
+        if (J.hintIds.length && J.tab !== 'tasks' && J.tab !== 'sketch') { if (!linkSel) linkSel = []; }
+        s.refresh();
+      }, { cls: 'hintbtn' });
       U.button(s, foot, t('ui.close'), function () { U.pop(); }, { sound: 'ui_back' });
       s.cols = 1;
     };
@@ -46,7 +52,7 @@ BTS.Journal = (function () {
       if (!ids.length) { el('p', 'empty', esc(t('jr.empty_' + cat)), body); return; }
       ids.slice().reverse().forEach(function (id) {
         var def = BTS.Data.clues[id], st = BTS.State.d.clues[id];
-        var e = el('div', 'entry nav' + (st.isNew ? ' new' : '') + (linkSel && linkSel.indexOf(id) >= 0 ? ' sel' : ''), null, body);
+        var e = el('div', 'entry nav' + (st.isNew ? ' new' : '') + (linkSel && linkSel.indexOf(id) >= 0 ? ' sel' : '') + (J.hintIds && J.hintIds.indexOf(id) >= 0 ? ' hinted' : ''), null, body);
         U.bindNav(s, e);
         el('div', 'et', esc(t(def.title)) + ' <span class="cat">' + esc(t('jr.cat_' + st.cat)) + '</span>', e);
         el('div', 'ed', U.fmt(t(def.text)), e);
@@ -58,7 +64,7 @@ BTS.Journal = (function () {
           if (!linkSel) return;
           var i = linkSel.indexOf(id);
           if (i >= 0) linkSel.splice(i, 1); else linkSel.push(id);
-          if (linkSel.length === 2) { var res = J.tryLink(linkSel[0], linkSel[1]); linkSel = null; if (res) J.tab = 'hyp'; }
+          if (linkSel.length === 2) { var res = J.tryLink(linkSel[0], linkSel[1]); linkSel = null; J.hintIds = null; if (res) J.tab = 'hyp'; }
           s.refresh();
         });
       });
@@ -100,23 +106,64 @@ BTS.Journal = (function () {
   }
   J.sketchList = sketchList;
 
+  /* sources(c): the entries a conclusion was drawn from, recursively (a hypothesis "contains" its evidence) */
+  function sources(c, seen) {
+    seen = seen || {}; if (seen[c]) return []; seen[c] = true;
+    var out = [c];
+    BTS.Data.deductions.forEach(function (d) { if (d.result === c) out = out.concat(sources(d.a, seen), sources(d.b, seen)); });
+    return out;
+  }
+  function relates(x, c) { return sources(c).indexOf(x) >= 0; }
+  /* make sure every intermediate conclusion of d exists (linking the raw evidence skips a step) */
+  function grantChain(c) {
+    if (BTS.State.hasClue(c)) return;
+    BTS.Data.deductions.forEach(function (d) { if (d.result === c) { grantChain(d.a); grantChain(d.b); } });
+    if (BTS.Data.clues[c] && BTS.Data.clues[c].cat === 'hyp') { BTS.State.addClue(c); BTS.Data.deductions.forEach(function (d) { if (d.result === c && d.flag) BTS.State.set(d.flag); }); }
+  }
+  function haveOrDerivable(c) {
+    if (BTS.State.hasClue(c)) return true;
+    var d = BTS.Data.deductions.filter(function (x) { return x.result === c; })[0];
+    return !!d && haveOrDerivable(d.a) && haveOrDerivable(d.b) && (!d.cond || BTS.Cond.eval(d.cond));
+  }
+
   J.tryLink = function (a, b) {
-    var ds = BTS.Data.deductions;
-    for (var i = 0; i < ds.length; i++) {
-      var d = ds[i];
-      if ((d.a === a && d.b === b) || (d.a === b && d.b === a)) {
-        if (BTS.State.hasClue(d.result)) { J.lastResult = t('jr.link_known'); BTS.UI.toast(J.lastResult); return false; }
-        if (d.cond && !BTS.Cond.eval(d.cond)) { J.lastResult = t('jr.link_notyet'); BTS.UI.toast(J.lastResult); return false; }
-        BTS.State.addClue(d.result);
-        if (d.flag) BTS.State.set(d.flag);
-        J.lastResult = d.thought ? t(d.thought) : null; if (d.thought) BTS.UI.toast(t(d.thought));
-        BTS.Events.emit('deduced', d.result);
-        return true;
-      }
+    var ds = BTS.Data.deductions, known = false, notyet = false;
+    // exact pairs first, then pairs where either entry is part of the evidence behind the needed one
+    var order = ds.filter(function (d) { return (d.a === a && d.b === b) || (d.a === b && d.b === a); })
+      .concat(ds.filter(function (d) { return (relates(a, d.a) && relates(b, d.b)) || (relates(b, d.a) && relates(a, d.b)); }));
+    for (var i = 0; i < order.length; i++) {
+      var d = order[i];
+      if (BTS.State.hasClue(d.result)) { known = true; continue; }
+      if (d.cond && !BTS.Cond.eval(d.cond)) { notyet = true; continue; }
+      if (!haveOrDerivable(d.a) || !haveOrDerivable(d.b)) { notyet = true; continue; }
+      grantChain(d.a); grantChain(d.b);
+      BTS.State.addClue(d.result);
+      if (d.flag) BTS.State.set(d.flag);
+      J.lastResult = d.thought ? t(d.thought) : null; if (d.thought) BTS.UI.toast(t(d.thought));
+      BTS.Events.emit('deduced', d.result);
+      return true;
     }
     BTS.Audio.play('ui_denied');
-    J.lastResult = t('jr.link_fail'); BTS.UI.toast(J.lastResult);
+    J.lastResult = t(known ? 'jr.link_known' : notyet ? 'jr.link_notyet' : 'jr.link_fail'); BTS.UI.toast(J.lastResult);
     return false;
+  };
+
+  /* "?" — which two entries to link next (the simplest available pair), or what is still missing */
+  J.hint = function () {
+    var ds = BTS.Data.deductions, has = BTS.State.hasClue;
+    for (var i = 0; i < ds.length; i++) {
+      var d = ds[i];
+      if (has(d.result) || (d.cond && !BTS.Cond.eval(d.cond))) continue;
+      if (has(d.a) && has(d.b)) return { a: d.a, b: d.b, text: t('jr.hint_try', { a: t(BTS.Data.clues[d.a].title), b: t(BTS.Data.clues[d.b].title) }) };
+    }
+    for (i = 0; i < ds.length; i++) {
+      d = ds[i];
+      if (has(d.result) || (has(d.a) === has(d.b))) continue;
+      var got = has(d.a) ? d.a : d.b;
+      return { a: got, text: t('jr.hint_half', { a: t(BTS.Data.clues[got].title) }) };
+    }
+    var obj = BTS.State.d.objectiveKey;
+    return { text: t('jr.hint_none', { obj: obj ? t(obj) : '—' }) };
   };
 
   /* ---------- pencil drawing helpers ---------- */

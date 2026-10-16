@@ -32,8 +32,8 @@ BTS.Locale.en = {
     cat_obs: 'observation', cat_fact: 'fact', cat_hyp: 'hypothesis', cat_sketch: 'sketch',
     empty_obs: 'Nothing written down yet.', empty_fact: 'No confirmed facts yet.', empty_hyp: 'No hypotheses yet. Try linking two entries.', empty_sketch: 'No sketches yet. Press F to study the shadow of a person nearby.',
     link: 'Link two entries', cancel_link: 'Cancel linking', link_hint: 'Choose two entries you think belong together. Selected: {n} of 2.',
-    link_fail: 'Đorđe stares at the two entries for a long time. No — together they don’t say anything yet.', link_known: 'Đorđe has already written this connection down.', link_notyet: 'Something is missing. One more confirmation is needed.',
-    current: 'Now'
+    link_fail: 'Đorđe stares at the two entries for a long time. No — together they don’t say anything yet. (Not sure what to link? Press “?”.)', link_known: 'Đorđe has already written this connection down.', link_notyet: 'Something is missing. One more confirmation is needed.',
+    current: 'Now', hint_try: 'Hint: link “{a}” and “{b}”. Tap both entries — they are highlighted.', hint_half: 'Hint: “{a}” connects to something you haven’t found yet. Follow your goal — the clue will turn up.', hint_none: 'Nothing to link right now. You need new clues. Goal: {obj}'
   },
   map: { legend: '← → village / outskirts. The red dot is Đorđe.', unknown: 'This place is not on the map yet.', you: 'Đorđe', north: 'N ↑' },
   inv: { empty: 'Empty pockets.', state: 'Condition:', use: 'Useful for:' },
