@@ -2,10 +2,20 @@
    shadows, music, sfx, flags...). Game-time timers respect pause. Saving is blocked while running. */
 'use strict';
 BTS.Cutscene = (function () {
-  var CS = { running: 0, timers: [], tweens: [], skipRequested: false };
+  var CS = { running: 0, timers: [], tweens: [], tickers: [], cues: {}, skipRequested: false };
   var keyN = 0;
+  /* staging cues bound to dialogue lines, wherever the dialogue is started from (scenes, talk, interactables):
+     CS.cue('dlg_id', { lineId: function (C) {...} }) */
+  CS.cue = function (dlg, map) { var m = CS.cues[dlg] || (CS.cues[dlg] = {}); for (var k in map) m[k] = map[k]; };
+  BTS.Events.on('dlg_line', function (line) {
+    var k = line && line.key || ''; if (k.indexOf('dlg.') !== 0) return;
+    var rest = k.slice(4), dot = rest.lastIndexOf('.'); if (dot < 0) return;
+    var m = CS.cues[rest.slice(0, dot)], f = m && m[rest.slice(dot + 1)];
+    if (f) { try { f(C); } catch (e) { BTS.Log.error('cue', k, e); } }
+  });
 
   CS.update = function (dt) {
+    for (var ti = CS.tickers.length - 1; ti >= 0; ti--) { var tk = CS.tickers[ti]; var keep; try { keep = tk(dt); } catch (e) { BTS.Log.error('ticker', e); keep = false; } if (keep === false) CS.tickers.splice(ti, 1); }
     for (var j = CS.tweens.length - 1; j >= 0; j--) {
       var tw = CS.tweens[j]; tw.t += dt; var k = Math.min(1, tw.t / tw.dur);
       try { tw.fn(k); } catch (e) { BTS.Log.error('tween', e); k = 1; }
@@ -119,6 +129,8 @@ BTS.Cutscene = (function () {
         return wait(o.cower ? 0.9 : 0.2);
       }).then(function () { if (o.cower && p.anim && !o.keepCower) p.anim.lock = null; });
     },
+    /* per-frame function on the cutscene clock until it returns false */
+    ticker: function (fn) { CS.tickers.push(fn); },
     /* time-based tween run by the cutscene clock: fn(k) with k 0..1 */
     tween: function (dur, fn) { return new Promise(function (res) { CS.tweens.push({ t: 0, dur: dur, fn: fn, done: res }); }); },
     place: function (id, p, dir) { var e = ent(id), q = pos(p); if (!e || !q) return; e.x = q[0]; e.z = q[1]; e.path = null; e._fpStep = 0; if (e._autoNoClip) { e._autoNoClip = false; e.noClip = false; } if (dir) e.dir = dir; e.y = BTS.World.heightAt(e.x, e.z); },

@@ -502,6 +502,160 @@ BTS.PortraitLib = (function () {
     }
   };
 
+  /* ================= HATS ================= */
+  var HAT = {};
+  function shapeFill(a, layer, pts, T, o) {
+    o = o || {};
+    var d = o.d || smooth(pts, true, o.ten === undefined ? 0.9 : o.ten), b = bbox(pts);
+    var s = a.el(d, T.base) + a.g(a.el(d, a.lin(b.x0, b.y0, b.x1, b.y1, [[0, T.light, o.lo === undefined ? 0.7 : o.lo], [0.5, T.base, 0], [1, T.deep, o.hiOp === undefined ? 0.8 : o.hiOp]])) + (o.inner || ''), { clip: a.clip(d) });
+    if (o.line !== false) s += a.el(d, 'none', { stroke: rgb(T.line), sw: o.lw || 1.5 });
+    a.add(layer, s);
+    return d;
+  }
+  function multShadow(a, pts, op, blur) { a.add('hairShadow', a.g(a.g(a.el(smooth(pts, true), a.mulTint(a.skin.deep), { op: op }), { clip: a.skinClip, blur: blur || 2.4 }), { mode: 'multiply' })); }
+  /* flat cap: soft crown pulled forward over a short stiff peak */
+  HAT.flatcap = function (a, c) {
+    var S = a.S, T = clothTones(c), r = rnd(61);
+    var crown = a.rims([[156, 0.12], [172, 0.26], [195, 0.34], [225, 0.36], [255, 0.34], [285, 0.3], [312, 0.27], [338, 0.24], [356, 0.16], [12, 0.06]]);
+    var front = a.onL([[1.02, -0.45], [0.75, -0.7, 0.35], [0.2, -0.8, 0.55], [-0.45, -0.78, 0.48], [-0.9, -0.66, 0.3], [-1.05, -0.45, 0.15]], 0.12);
+    var pts = crown.concat(front), inner = '';
+    // tweed: fine hatching
+    for (var k = 0; k < 70; k++) { var p = a.rim(160 + r() * 200, r() * 0.25); inner += a.ink([p, [p[0] + 2.5, p[1] + 1.2]], [0.2, 0.9, 0.2], { col: rgb(r() > 0.5 ? T.light : T.deep), op: 0.45 }); }
+    // the seam where the crown folds over the band, and the button
+    inner += a.ink(a.onL([[-1.0, -0.62], [-0.4, -0.95], [0.2, -1.0], [0.85, -0.82]], 0.4), [0.4, 1.4, 0.4], { col: rgb(T.deep), op: 0.7 });
+    var bt = a.on(-0.05, -1.25, 0.6);
+    inner += '<circle cx="' + f(bt[0]) + '" cy="' + f(bt[1]) + '" r="' + f(S * 0.07) + '" fill="' + rgb(T.shadow) + '" stroke="' + rgb(T.line) + '" stroke-width="0.8"/>';
+    shapeFill(a, 'hat', pts, T, { inner: inner });
+    // the peak
+    var pk = a.onL([[-0.92, -0.66, 0.3], [-0.45, -0.76, 0.5], [0.2, -0.78, 0.6], [0.78, -0.66, 0.38], [0.98, -0.5, 0.2], [0.72, -0.58, 0.62], [0.15, -0.62, 0.86], [-0.45, -0.62, 0.74], [-0.85, -0.56, 0.45]], 0.12);
+    shapeFill(a, 'hat', pk, clothTones(mul(hx(c), 0.85)), { lo: 0.4 });
+    multShadow(a, [a.on(-1.2, -0.7, 0), a.on(-0.9, -0.42, 0), a.on(0, -0.36, 0), a.on(0.9, -0.38, 0), a.on(1.2, -0.7, 0)], 0.7, 3);
+  };
+  HAT.kamilavka = function (a, c) {
+    var S = a.S, T = clothTones(c);
+    var bl = a.rim(188, 0.08), br = a.rim(352, 0.06), front = a.on(0.05, -1.0, 0.25);
+    var h = S * 1.15, wid = 1.08;
+    var bot = [bl, [lerp(bl[0], front[0], 0.5), front[1] + S * 0.05], front, [lerp(front[0], br[0], 0.5), front[1] + S * 0.02], br];
+    var tl = [bl[0] - S * 0.12, bl[1] - h], tr = [br[0] + S * 0.1, br[1] - h];
+    var pts = [K(bl), K(tl), [lerp(tl[0], tr[0], 0.5), tl[1] - S * 0.04], K(tr), K(br)].concat(bot.slice(1, 4).reverse());
+    var inner = '';
+    inner += a.el(poly([[tl[0] + S * 0.3, tl[1]], [tl[0] + S * 0.5, tl[1]], [bl[0] + S * 0.55, bl[1] + S * 0.1], [bl[0] + S * 0.32, bl[1] + S * 0.1]], true), T.hi, { op: 0.3, blur: 2 });
+    shapeFill(a, 'hat', pts, T, { inner: inner, ten: 0.6 });
+    // the flat top seen just from below its rim
+    var top = [tl, [lerp(tl[0], tr[0], 0.5), tl[1] - S * 0.07], tr, [lerp(tl[0], tr[0], 0.5), tl[1] + S * 0.06]];
+    a.add('hat', a.el(smooth(top, true), T.shadow, { stroke: rgb(T.line), sw: 1.3 }));
+    a.add('hat', a.ink(bot, [1.4, 2, 1.4], { col: rgb(T.line) }));
+    multShadow(a, [a.on(-1.2, -1.0, 0), a.on(-0.9, -0.82, 0), a.on(0, -0.78, 0), a.on(0.9, -0.82, 0), a.on(1.2, -1.0, 0)], 0.6, 2.6);
+  };
+  /* felt hat with a brim (Radoje) */
+  HAT.brim = function (a, c) {
+    var S = a.S, T = clothTones(c);
+    // brim: an ellipse ring around the head, tipped down at the front
+    var ring = [];
+    for (var k = 0; k < 24; k++) { var t = k / 24 * Math.PI * 2, X = Math.cos(t) * 1.75, Z = Math.sin(t) * 1.7 - 0.05, Y = -0.95 + Math.max(0, Math.sin(t)) * 0.18; ring.push(a.P(X, Y, Z)); }
+    var back = ring.filter(function (p, i) { return i >= 12; }), frontR = ring.filter(function (p, i) { return i <= 12; });
+    var bd = smooth(ring, true);
+    a.add('hairBack', a.el(bd, T.shadow, { stroke: rgb(T.line), sw: 1.4 }));
+    // crown with a pinched crease
+    var cr = [a.P(-0.95, -0.95, 0.05), a.P(-0.98, -1.55, 0.0), a.P(-0.6, -2.0, 0.0), a.P(0, -1.85, 0.1), a.P(0.6, -2.0, 0.0), a.P(0.96, -1.55, 0.05), a.P(0.95, -0.95, 0.05), a.P(0, -0.9, 1.0)];
+    var inner = a.ink([a.P(-0.4, -1.95, 0.4), a.P(0, -1.75, 0.6), a.P(0.4, -1.95, 0.4)], [0.4, 1.6, 0.4], { col: rgb(T.deep), op: 0.8 });
+    // band
+    var band = [a.P(-0.97, -1.18, 0.05), a.P(0, -1.1, 1.0), a.P(0.97, -1.18, 0.05), a.P(0.96, -0.98, 0.05), a.P(0, -0.92, 1.0), a.P(-0.96, -0.98, 0.05)];
+    shapeFill(a, 'hat', cr, T, { inner: inner });
+    shapeFill(a, 'hat', band, clothTones(mul(hx(c), 0.6)), { lw: 1 });
+    // front of the brim over the face
+    var fb = frontR.concat([a.P(1.0, -0.96, 0.4), a.P(0, -0.9, 1.05), a.P(-1.0, -0.96, 0.4)]);
+    shapeFill(a, 'hat', fb, clothTones(mul(hx(c), 1.1)), { lo: 0.5 });
+    multShadow(a, [a.on(-1.3, -1.0, 0), a.on(-1.0, -0.2, 0), a.on(0, -0.12, 0), a.on(1.0, -0.2, 0), a.on(1.3, -1.0, 0)], 0.65, 3.5);
+  };
+  /* a boy's peaked cap (Luka) */
+  HAT.peaked = function (a, c) {
+    var S = a.S, T = clothTones(c);
+    var crown = a.rims([[158, 0.1], [175, 0.2], [200, 0.25], [230, 0.27], [260, 0.27], [290, 0.26], [320, 0.23], [345, 0.18], [5, 0.1], [18, 0.04]]);
+    var front = a.onL([[1.0, -0.5], [0.6, -0.78, 0.3], [0, -0.84, 0.45], [-0.6, -0.8, 0.35], [-1.0, -0.55, 0.15]], 0.1);
+    var inner = '';
+    [[-0.5], [0.15], [0.7]].forEach(function (q) { inner += a.ink(a.onL([[q[0], -0.85, 0.42], [q[0] * 0.6, -1.4, 0.5], [q[0] * 0.2, -1.7, 0.2]], 0.15), [0.4, 1.0, 0.2], { col: rgb(T.deep), op: 0.6 }); });
+    shapeFill(a, 'hat', crown.concat(front), T, { inner: inner });
+    var pk = a.onL([[-0.75, -0.76, 0.35], [0, -0.84, 0.5], [0.7, -0.74, 0.35], [0.85, -0.62, 0.7], [0.1, -0.6, 1.25], [-0.6, -0.64, 0.95]], 0.1);
+    shapeFill(a, 'hat', pk, clothTones(mul(hx(c), 0.75)), { lo: 0.4 });
+    var bt = a.on(0, -1.62, 0.35);
+    a.add('hat', '<circle cx="' + f(bt[0]) + '" cy="' + f(bt[1]) + '" r="' + f(S * 0.07) + '" fill="' + rgb(T.shadow) + '" stroke="' + rgb(T.line) + '" stroke-width="0.8"/>');
+    multShadow(a, [a.on(-1.2, -0.7, 0), a.on(-0.8, -0.4, 0), a.on(0.1, -0.3, 0), a.on(0.9, -0.42, 0), a.on(1.2, -0.7, 0)], 0.7, 3);
+  };
+  /* flower wreath (Mila) */
+  HAT.wreath = function (a) {
+    var S = a.S, s = '', sb = '', r = rnd(88);
+    var cols = [[196, 52, 48], [236, 226, 206], [70, 96, 170], [222, 170, 60], [196, 52, 48]];
+    for (var k = 0; k <= 16; k++) {
+      var t = Math.PI * (0.98 + k / 16 * 1.04), X = Math.cos(t) * 1.1, Z = -Math.sin(t) * 1.05 - 0.15, Y = -1.18 + Math.sin(t) * -0.05;
+      var p = a.P(X, Y, Z), front = Z > -0.2, out = front ? s : sb;
+      var rr = S * (0.1 + r() * 0.04);
+      var leaf = '<ellipse cx="' + f(p[0] + rr) + '" cy="' + f(p[1] + rr * 0.3) + '" rx="' + f(rr * 1.1) + '" ry="' + f(rr * 0.45) + '" transform="rotate(' + Math.round(r() * 180) + ' ' + f(p[0]) + ' ' + f(p[1]) + ')" fill="#4a6a34" stroke="#1e2a14" stroke-width="0.7"/>';
+      var cc = cols[k % cols.length], fl = '<g transform="translate(' + f(p[0]) + ' ' + f(p[1]) + ')">';
+      for (var j = 0; j < 5; j++) fl += '<ellipse cx="0" cy="' + f(-rr * 0.6) + '" rx="' + f(rr * 0.45) + '" ry="' + f(rr * 0.65) + '" transform="rotate(' + (j * 72 + k * 11) + ')" fill="' + rgb(cc) + '" stroke="' + rgb(mul(cc, 0.4)) + '" stroke-width="0.6"/>';
+      fl += '<circle r="' + f(rr * 0.3) + '" fill="#e8c850"/></g>';
+      if (front) s += leaf + fl; else sb += leaf + fl;
+    }
+    a.add('hairBack', sb); a.add('hat', s);
+  };
+
+  /* ================= BEARDS ================= */
+  var BEARD = {};
+  function beardShape(a, o) {
+    var fc = a.fc, b = fc.chinB;
+    var outer = [];
+    var o2 = a.outline();
+    var top = o.top || 0.15;
+    o2.L.forEach(function (p, i) { var Y = lerp(fc.crown, b, 0.5 - 0.5 * Math.cos(i / (o2.L.length - 1) * Math.PI)); if (Y > top) outer.push(p); });
+    var Ls = outer.map(function (p, i) { var t = i / (outer.length - 1); return [p[0] - a.S * o.pad * t, p[1] + a.S * o.pad * t * 1.2]; });
+    var Rs = [];
+    o2.R.forEach(function (p, i) { var Y = lerp(fc.crown, b, 0.5 - 0.5 * Math.cos(i / (o2.R.length - 1) * Math.PI)); if (Y > top) Rs.push(p); });
+    Rs = Rs.map(function (p, i) { var t = i / (Rs.length - 1); return [p[0] + a.S * o.pad * t * 0.6, p[1] + a.S * o.pad * t * 1.2]; });
+    var chin = a.P(0.02, b + o.drop, 0.75);
+    return { L: Ls, R: Rs, chin: chin };
+  }
+  BEARD.full = function (a, c, o) { beardGeneric(a, c, { pad: 0.2, drop: 0.38, top: 0.05, cheek: 0.48, inner: 0.8 }); };
+  BEARD.short = function (a, c, o) { beardGeneric(a, c, { pad: 0.07, drop: 0.14, top: 0.2, cheek: 0.62, inner: 0.5 }); };
+  BEARD.long = function (a, c, o) { beardGeneric(a, c, { pad: 0.22, drop: 1.6, top: 0.05, cheek: 0.5, inner: 0.9, long: 1 }); };
+  function beardGeneric(a, c, o) {
+    var S = a.S, T = hairTones(c), fc = a.fc, g = beardShape(a, o), my = fc.mouthY, mw = fc.mouthW;
+    var cheekL = a.onL([[-0.9, o.top + 0.05], [-0.7, o.cheek], [-mw - 0.12, my - 0.08]], 0.05), cheekR = a.onL([[mw + 0.12, my - 0.08], [0.68, o.cheek], [0.9, o.top + 0.05]], 0.05);
+    var bot = o.long ? [[g.L[g.L.length - 1][0] - S * 0.2, g.L[g.L.length - 1][1] + S * 0.6], [g.chin[0] - S * 0.3, g.chin[1]], K([g.chin[0] + S * 0.05, g.chin[1] + S * 0.25]), [g.chin[0] + S * 0.4, g.chin[1] - S * 0.05], [g.R[g.R.length - 1][0] + S * 0.1, g.R[g.R.length - 1][1] + S * 0.5]] : [g.chin];
+    var pts = g.L.concat(bot).concat(g.R.slice().reverse()).concat(cheekR.slice().reverse().concat([])).concat([]);
+    pts = g.L.concat(bot).concat(g.R.slice().reverse()).concat(cheekR.slice().reverse()).concat(cheekL.slice().reverse());
+    // mouth hole: below the lower lip
+    var mi = a.mouthInfo, hole = '';
+    if (mi) { var hp = mi.LB.slice(2, mi.LB.length - 2).map(function (p) { return [p[0], p[1] + S * 0.04]; }); hole = smooth(hp.concat(mi.UT.slice(2, mi.UT.length - 2).reverse()), true); }
+    var d = smooth(pts, true, 0.8), b = bbox(pts), r = rnd(71), inner = '';
+    inner += a.el(d, a.lin(b.x0, b.y0, b.x1, b.y1, [[0, T.light, 0.6], [0.5, T.base, 0], [1, T.deep, 0.8]]));
+    for (var k = 0; k < (o.long ? 46 : 34); k++) {
+      var u = r(), v = r(), x = lerp(b.x0, b.x1, u), y = lerp(b.y0, b.y1, v), len = S * (o.long ? 0.3 + v * 0.3 : 0.15);
+      var dir = (x - (b.x0 + b.x1) / 2) * 0.012;
+      inner += a.ink([[x, y], [x + dir * len, y + len * 0.5], [x + dir * len * 1.5 - 1, y + len]], [0.2, 1.1, 0.1], { col: rgb(r() > 0.35 ? T.deep : T.hi), op: 0.6 });
+    }
+    var full = d + (hole ? ' ' + hole : '');
+    var s = '<path d="' + full + '" fill="' + rgb(T.base) + '" fill-rule="evenodd"/>';
+    var cid = a.id('cp'); a.addDef('<clipPath id="' + cid + '"><path d="' + full + '" clip-rule="evenodd"/></clipPath>');
+    s += a.g(inner, { clip: 'url(#' + cid + ')' });
+    s += '<path d="' + full + '" fill="none" fill-rule="evenodd" stroke="' + rgb(T.line) + '" stroke-width="1.3" opacity="0.85"/>';
+    a.add('beard', s);
+    MUST.thick(a, c, { beard: 1 });
+  }
+  var MUST = {};
+  function mustache(a, c, o) {
+    var S = a.S, T = hairTones(c), fc = a.fc, my = fc.mouthY, mw = fc.mouthW * (o.w || 1), ny = fc.noseY;
+    var dr = o.droop || 0;
+    var top = a.onL([[-mw - 0.05, my + 0.02 + dr], [-mw * 0.6, ny + 0.12], [0, ny + 0.09], [mw * 0.6, ny + 0.12], [mw + 0.05, my + 0.02 + dr]], 0.1);
+    var botm = a.onL([[mw + 0.08 + dr * 0.2, my + 0.08 + dr], [mw * 0.55, my + 0.0 + (o.cover || 0)], [0, my - 0.02 + (o.cover || 0)], [-mw * 0.55, my + 0.0 + (o.cover || 0)], [-mw - 0.08 - dr * 0.2, my + 0.08 + dr]], 0.12);
+    var pts = [K(top[0])].concat(top.slice(1, 4)).concat([K(top[4])]).concat([K(botm[0])]).concat(botm.slice(1, 4)).concat([K(botm[4])]);
+    var b = bbox(pts), d = smooth(pts, true, 0.9), inner = '';
+    inner += a.el(d, a.lin(b.x0, b.y0, b.x1, b.y1, [[0, T.light, 0.7], [0.6, T.base, 0], [1, T.deep, 0.7]]));
+    for (var k = -6; k <= 6; k++) { var X = k / 6 * mw, q0 = a.on(X * 0.3, ny + 0.1, 0.12), q1 = a.on(X, my + 0.03 + Math.abs(k / 6) * dr, 0.12); inner += a.ink([q0, q1], [0.3, 1.1, 0.1], { col: rgb(k % 2 ? T.deep : T.hi), op: 0.6 }); }
+    a.add('beard', a.el(d, T.base) + a.g(inner, { clip: a.clip(d) }) + a.el(d, 'none', { stroke: rgb(T.line), sw: 1.3 }));
+  }
+  MUST.thick = function (a, c, o) { mustache(a, c, { droop: o && o.beard ? 0.06 : 0.08, w: 1.05, cover: 0.02 }); };
+  MUST.walrus = function (a, c, o) { mustache(a, c, { droop: 0.2, w: 1.2, cover: 0.06 }); };
+
   /* ================= OUTFITS ================= */
   var OUT = {};
   /* body frame: x in head units from the head axis, y in head units below the neck base; the torso turns less than the head */
@@ -580,8 +734,11 @@ BTS.PortraitLib = (function () {
     pd.hairCol = hairCol;
     if (pd.outfit && OUT[pd.outfit]) OUT[pd.outfit](a, pd.top || def.topColor, pd.outfitOpt || {});
     if (pd.hair && HAIR[pd.hair]) HAIR[pd.hair](a, hairCol, pd.hairOpt || {});
+    if (pd.beard && BEARD[pd.beard]) BEARD[pd.beard](a, pd.beardCol || def.beard || hairCol, {});
+    else if (pd.mustache && MUST[pd.mustache]) MUST[pd.mustache](a, pd.mustacheCol || def.mustache || hairCol, {});
+    if (pd.hat && HAT[pd.hat]) HAT[pd.hat](a, pd.hatCol || def.hatColor || [60, 54, 48], {});
     (pd.acc || []).forEach(function (x) { var t = typeof x === 'string' ? x : x.type; if (ACC[t]) ACC[t](a, typeof x === 'string' ? {} : x); });
   }
 
-  return { dress: dress, HAIR: HAIR, OUT: OUT, ACC: ACC, hairTones: hairTones, clothTones: clothTones, paintMass: paintMass, strand: strand, sheen: sheen, fringe: fringe, torso: torso, fillBody: fillBody, bodyFrame: bodyFrame };
+  return { dress: dress, HAIR: HAIR, HAT: HAT, BEARD: BEARD, MUST: MUST, OUT: OUT, ACC: ACC, hairTones: hairTones, clothTones: clothTones, paintMass: paintMass, strand: strand, sheen: sheen, fringe: fringe, torso: torso, fillBody: fillBody, bodyFrame: bodyFrame };
 })();

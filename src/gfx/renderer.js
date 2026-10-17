@@ -251,7 +251,7 @@ BTS.Renderer = (function () {
       pass(T.qB, progBlur); bindTex(0, T.qA.color); gl.uniform1i(progBlur.u.uSrc, 0); gl.uniform2f(progBlur.u.uDir, 1 + it, 0); quad();
       pass(T.qA, progBlur); bindTex(0, T.qB.color); gl.uniform2f(progBlur.u.uDir, 0, 1 + it); quad();
     }
-    var dof = effects > 0 ? (env.dof === undefined ? 1 : env.dof) : 0;
+    var dof = (effects > 0 && !R.noDof) ? (env.dof === undefined ? 1 : env.dof) : 0;
     if (dof > 0) {
       pass(T.halfA, progCopy); bindTex(0, T.scene.color); gl.uniform1i(progCopy.u.uSrc, 0); quad();
       pass(T.halfB, progBlur); bindTex(0, T.halfA.color); gl.uniform1i(progBlur.u.uSrc, 0); gl.uniform2f(progBlur.u.uDir, 1.3, 0); quad();
