@@ -67,7 +67,7 @@ BTS.Locale.en_parts.push({
     c10_arrive: { 1: 'Out of the dark, from the field, comes Jaglika. The wind tugs at her headscarf. The rain does not touch her.',
       2: 'The twenty-ninth, boy. You came yourself. You lit the fire yourself.', 3: 'Your grandmother found the needle too. Desa was braver than you.', 4: 'Grandmother stayed.',
       5: 'She stayed. And I came for her grandson. Shadows know how to wait.', 6: 'You’re afraid of your shadow, Đorđe. I saw. At the fair. Give it to me — and there’ll be nothing left to fear.', 7: 'Her voice is like rustling paper. But her words land precisely. Like a needle.' },
-    c10_grow: { 1: 'Jaglika’s shadow tears free of her feet and grows. It crawls across the grass, up the pole, over the stalls.', 2: 'Arms. Too many arms. A long, thorned head lashing round the ring.',
+    c10_grow: { 1: 'Jaglika’s shadow swells out from under her feet and grows. It crawls across the grass, up the pole, over the stalls.', 2: 'Arms. Too many arms. A long, thorned head lashing round the ring.',
       3: 'Đorđe! Her shadow… I’m shining on it! I’m shining!', 4: 'Grandmother: “Wait until the shadow is full. Until it freezes.”', 5: 'The shadow’s head circles the ring. I need to be close when it freezes.' },
     c10_hint_freeze: { 1: 'Lightning — and the shadow froze. Full. That’s grandmother’s “freezes”. Next time — be by the head.' },
     c10_fear: { 1: 'I’m standing on her shadow. My legs are heavy, as in a dream. Whispering from every side.', 2: 'It’s just a shadow. Shadows aren’t enemies.', 3: 'My own shadow is me. I’m not afraid of it.' },

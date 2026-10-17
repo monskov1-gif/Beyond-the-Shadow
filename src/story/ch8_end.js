@@ -9,6 +9,16 @@
   var R = null;
   var RING = [90.5, 82];
   BTS.Rite = { get: function () { return R; } };
+  /* dev: replay the last moments of chapter 11 in place (outskirts field) — used by the staging screenshots */
+  BTS.Rite.testSink = function () {
+    BTS.Cutscene.play(function (C) {
+      C.load('outskirts', 'field_mid'); C.env({ time: 'night', weather: 'rain', horror: 0.8 }, true); C.hide('player', true);
+      var jj = C.spawn('jaglika', [42, 36.5], { noTalk: true, dir: 'left' }); if (jj.brain) { jj.brain.paused = true; jj.keepPaused = true; } jj.shadow.visible = false; jj.anim.lock = 'fear';
+      var sh = []; for (var i = 0; i < 20; i++) { var a = i / 20 * 6.283; sh.push(makeShade(C, i, 42 + Math.cos(a) * 2, 36.5 + Math.sin(a) * 1.6)); }
+      C.keyLight(42, 36.5, { color: [0.5, 0.58, 0.85], radius: 7, intensity: 1.25, kind: 'fill', dz: 1.8 });
+      return C.cam({ target: [42, 0.5, 36.5], dist: 13, time: 0.5 }).then(function () { return sinkScene(C, jj, sh, 42, 36.5); });
+    }, 'test_sink');
+  };
   function riteStart(W) {
     R = { t: 0, head: [RING[0] + 3, RING[1] - 1], ang: 0, freeze: 0, nextStrike: 5, misses: 0, knock: 0, onShadow: 0, said: {}, done: false, cool: 0 };
     var j = W.get('jaglika');
@@ -73,19 +83,123 @@
   var ENDING_CARDS = [['e.t1', 'e.s1'], ['e.t2', 'e.s2'], ['e.t3', 'e.s3'], ['e.t4', 'e.s4'], ['e.t5', 'e.s5'], ['e.t6', 'e.s6'], ['e.t7', 'e.s7'], ['e.t8', 'e.s8'], ['e.t9', 'e.s9'], ['e.t10', null, 6]];
 
   /* ---------- climax helpers ---------- */
-  var VICTIMS = ['zajko', 'pecko', 'gvozdin', 'gorazd', 'jessica', 'tihomir', 'vil_man1', 'vil_woman1', 'vil_old', 'vil_woman2', 'vil_man2', 'vil_boy', 'dancer1', 'dancer2', 'vil_old', 'vil_woman1', 'vil_man1', 'vil_woman2'];
-  function spawnShades(cx, cz, n, rad) {
-    var list = [];
-    for (var i = 0; i < n; i++) {
-      var a = i / n * 6.283, sh = VICTIMS[i % VICTIMS.length];
-      var e = new BTS.Entity({ id: 'shade' + i, kind: 'npc', sheet: sh, x: cx + Math.cos(a) * rad, z: cz + Math.sin(a) * rad * 0.8, speed: 3.4 + Math.random() * 0.6, shadow: false });
-      e.tint = [0.03, 0.03, 0.06]; e.solid = false; e.pathRun = true;
-      BTS.World.addEntity(e); list.push(e);
-    }
-    return list;
+  /* the people she took, in the order they step out of her torn shadow: the four Đorđe names first */
+  var VICTIMS = ['zajko', 'gvozdin', 'pecko', 'jessica', 'gorazd', 'tihomir', 'vil_man1', 'vil_woman1', 'vil_old', 'vil_woman2', 'vil_man2', 'vil_boy', 'dancer1', 'dancer2', 'vil_old', 'vil_woman1', 'vil_man1', 'vil_woman2', 'vil_man2', 'dancer1'];
+  /* a shade: a black silhouette of a victim. Ghost (no collisions), rises out of the ground where it is born. */
+  function makeShade(C, i, x, z, rise) {
+    var e = new BTS.Entity({ id: 'shade' + i, kind: 'npc', sheet: VICTIMS[i % VICTIMS.length], x: x, z: z, speed: 3.2 + (i % 5) * 0.12, shadow: false });
+    e.tint = [0.02, 0.02, 0.05]; e.solid = false; e.noClip = true; e.shade = true;
+    BTS.World.addEntity(e);
+    if (rise) { e.lift = -1.9; e.alpha = 0; C.tween(rise, function (k) { e.lift = -1.9 * (1 - k) * (1 - k); e.alpha = Math.min(1, k * 1.6); }); }
+    return e;
   }
-  function chase(list, target, spread) {
-    list.forEach(function (e, i) { var a = i * 2.4; e.path = [[target[0] + Math.cos(a) * spread, target[1] + Math.sin(a) * spread * 0.7]]; e.pathRun = true; e.pathSpeed = 1; });
+  /* a route through open ground: the waypoints are joined by navigation paths, so it never runs into a wall */
+  function navRoute(pts) {
+    var W = BTS.World, out = [pts[0].slice()];
+    for (var i = 1; i < pts.length; i++) {
+      var a = out[out.length - 1], seg = W.findPath(a[0], a[1], pts[i][0], pts[i][1]) || [pts[i].slice()];
+      seg.forEach(function (q) { var l = out[out.length - 1]; if (Math.hypot(q[0] - l[0], q[1] - l[1]) > 0.05) out.push([q[0], q[1]]); });
+    }
+    var cum = [0]; for (i = 1; i < out.length; i++) cum.push(cum[i - 1] + Math.hypot(out[i][0] - out[i - 1][0], out[i][1] - out[i - 1][1]));
+    return { pts: out, cum: cum, len: cum[cum.length - 1], at: function (s) {
+      s = BTS.M.clamp(s, 0, this.len); var k = 1; while (k < cum.length - 1 && cum[k] < s) k++;
+      var a = out[k - 1], b = out[k], f = (s - cum[k - 1]) / Math.max(1e-4, cum[k] - cum[k - 1]);
+      return [a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f];
+    } };
+  }
+  /* the chase: Jaglika runs the route at a constant speed (through nothing — the route is clear, and she is a ghost
+     to colliders anyway); the shades follow her trail at a lag, spread across it, never faster than a run.
+     Resolves when she reaches the end. Optional slowAt: distance from the end where she starts to stumble. */
+  function runRoute(C, j, shades, R0, speed, o) {
+    o = o || {};
+    var s = 0, t = 0;
+    j.noClip = true; j.path = null; if (j.brain) { j.brain.paused = true; j.keepPaused = true; } if (j.anim) j.anim.lock = null;
+    return new Promise(function (res) {
+      C.ticker(function (dt) {
+        t += dt;
+        var left = R0.len - s, sp = speed * (o.slowAt && left < o.slowAt ? 0.45 + 0.55 * left / o.slowAt : 1);
+        var q0 = R0.at(s); s = Math.min(R0.len, s + sp * dt); var q = R0.at(s);
+        j.x = q[0]; j.z = q[1]; if (Math.hypot(q[0] - q0[0], q[1] - q0[1]) > 1e-4) j.faceTo(q[0] + (q[0] - q0[0]) * 9, q[1] + (q[1] - q0[1]) * 9);
+        if (j.anim) j.anim.set(sp > 2.4 ? 'run' : 'walk'); j.moving = true;
+        if (o.onS) o.onS(s, R0.len);
+        shades.forEach(function (e, i) {
+          var lagS = 2.2 + i * 0.55, side = Math.sin(i * 2.17 + t * 1.3) * (0.7 + (i % 4) * 0.35);
+          var a = R0.at(Math.max(0, s - lagS)), b2 = R0.at(Math.max(0, s - lagS + 0.4)), dx = b2[0] - a[0], dz = b2[1] - a[1], dl = Math.hypot(dx, dz) || 1;
+          var gx = a[0] - dz / dl * side, gz = a[1] + dx / dl * side;
+          var ex = gx - e.x, ez = gz - e.z, ed = Math.hypot(ex, ez), mv = Math.min(ed, (speed * 1.25) * dt);
+          if (ed > 1e-3) { e.x += ex / ed * mv; e.z += ez / ed * mv; e.faceTo(gx + ex, gz + ez); }
+          if (e.anim) e.anim.set(ed > 0.15 ? 'run' : 'idle');
+        });
+        if (s >= R0.len) { j.moving = false; res(); return false; }
+      });
+    });
+  }
+  /* the earth opening under her: a darkening pool, cracks running out from it, closing again */
+  var SINK = null;
+  function sinkRender(Rd) {
+    if (!SINK) return;
+    var W = BTS.World, x = SINK.x, z = SINK.z, y = W.heightAt(x, z) + 0.04, r = SINK.r;
+    if (r > 0.02) {
+      var dot = BTS.Atlas.get('soft_dot');
+      Rd.pushFx(0, [[x - r, y, z + r * 0.8], [x + r, y, z + r * 0.8], [x + r, y, z - r * 0.8], [x - r, y, z - r * 0.8]], dot, [0, 0, 0.01, 0.95]);
+      Rd.pushFx(3, [[x - r * 1.5, y, z + r * 1.2], [x + r * 1.5, y, z + r * 1.2], [x + r * 1.5, y, z - r * 1.2], [x - r * 1.5, y, z - r * 1.2]], dot, [0.01, 0, 0.02, 0.6]);
+    }
+    var blob = BTS.Atlas.get('blob_shadow');
+    SINK.cracks.forEach(function (c) {
+      var L = c.len * SINK.crack; if (L < 0.05) return;
+      var ux = Math.cos(c.a), uz = Math.sin(c.a) * 0.8, px = -uz * c.w, pz = ux * c.w;
+      var x0 = x + ux * r * 0.6, z0 = z + uz * r * 0.6, x1 = x0 + ux * L, z1 = z0 + uz * L, y1 = W.heightAt(x1, z1) + 0.04;
+      Rd.pushFx(0, [[x0 - px, y, z0 - pz], [x0 + px, y, z0 + pz], [x1 + px * 0.2, y1, z1 + pz * 0.2], [x1 - px * 0.2, y1, z1 - pz * 0.2]], blob, [0, 0, 0.01, 0.92 * SINK.crackA]);
+    });
+  }
+
+  /* the end of her: the shades grab from all sides and drag her down; the ground cracks and darkens, she claws at it,
+     screams, and the earth closes over. Impressionistic — silhouettes, darkness, shaking — nothing explicit. */
+  function sinkScene(C, jj, shades, cx, cz) {
+    var W = BTS.World;
+    SINK = { x: cx, z: cz, r: 0, crack: 0, crackA: 1, cracks: [] };
+    for (var i = 0; i < 11; i++) SINK.cracks.push({ a: i / 11 * 6.283 + Math.sin(i * 3.7) * 0.25, len: 1.2 + (i * 7 % 5) * 0.45, w: 0.09 + (i % 3) * 0.03 });
+    W.extraRender = sinkRender;
+    var done;
+    var finished = new Promise(function (res) { done = res; });
+    var claw = function (n) {   // between the jerks she claws at the earth
+      var q = Promise.resolve();
+      for (var k = 0; k < n; k++) q = q.then(function () { jj.anim.lock = 'interact'; jj.dir = 'down'; return C.wait(0.22); }).then(function () { jj.anim.lock = 'cower'; return C.wait(0.22); });
+      return q;
+    };
+    var jerk = function (to, hard) {   // a pull from below: everything lurches down
+      C.shake(hard ? 1.3 : 0.7); C.sfx('shadow_absorb', { vol: 0.8 }); if (hard) { C.sfx('sting_low', {}); BTS.Env.strike(); }
+      var f = jj.lift || 0;
+      shades.forEach(function (e, k) { var a = Math.atan2(cz - e.z, cx - e.x); e.x += Math.cos(a) * 0.25; e.z += Math.sin(a) * 0.25; e.lift = Math.min(e.lift || 0, to * (1.1 + (k % 3) * 0.15)); });
+      return C.tween(0.18, function (k) { jj.lift = f + (to - f) * k; });
+    };
+    return C.say('c11_fall', { at: {
+      1: function () {   // she falls to her knees; the ring closes; the ground under her starts to go dark
+        jj.anim.lock = 'kneel'; C.shake(0.6); C.sfx('cloth', {});
+        // the ring: tight behind her, crouched and a little wider in front so she stays in sight between them
+        shades.forEach(function (e, k) { var a = k / shades.length * 6.283, front = Math.sin(a) > 0.15, r = (front ? 1.9 : 0.9) + (k % 2) * 0.3; e.front = front; e.path = [[cx + Math.cos(a) * r, cz + Math.sin(a) * r * 0.8]]; e.pathRun = false; e.pathSpeed = 0.5; });
+        C.wait(1.2).then(function () { shades.forEach(function (e) { e.path = null; e.faceTo(cx, cz); if (e.anim) e.anim.lock = e.front ? 'cower' : 'interact'; if (e.front) C.tween(0.8, function (k) { e.lift = -0.7 * k; }); }); });   // the near ones half in the ground already, reaching
+        C.tween(2.5, function (k) { SINK.r = 0.4 + k * 0.9; SINK.crack = k * 0.4; });
+        C.cam({ target: [cx, 0.4, cz], dist: 11, time: 1.4 });
+      },
+      2: function () { jj.anim.lock = 'point'; jj.dir = 'down'; C.sfx('breath', { vol: 0.8 }); },   // a hand toward Đorđe
+      3: function () {   // dragged down in jerks; she claws at the earth; a scream; the earth closes
+        C.sfx('scream_far', {}); C.sfx('thunder', { vol: 0.5 });
+        C.tween(1.2, function (k) { SINK.r = 1.3 + k * 0.7; SINK.crack = 0.4 + k * 0.6; });
+        jerk(-0.35, true).then(function () { return claw(3); })
+          .then(function () { return jerk(-0.8, false); }).then(function () { C.sfx('scream_far', {}); return claw(2); })
+          .then(function () { return jerk(-1.3, true); }).then(function () { jj.anim.lock = 'interact'; return C.wait(0.5); })
+          .then(function () { return jerk(-2.4, true); })
+          .then(function () {
+            jj.hidden = true; shades.forEach(function (e) { e.hidden = true; });
+            C.particles({ type: 'smoke', x: cx, y: W.heightAt(cx, cz) + 0.1, z: cz, rate: 14, area: [2.2, 1.6], col: [0.2, 0.18, 0.17] });
+            C.shake(1.6); C.sfx('anvil', { vol: 0.35 }); C.sfx('shadow_absorb', {});
+            // the earth closes: the dark shrinks to nothing, the cracks fade
+            return C.tween(1.6, function (k) { SINK.r = 2.0 * (1 - k) * (1 - k); SINK.crackA = 1 - k; });
+          })
+          .then(function () { SINK.r = 0; SINK.crackA = 0; done(); });
+      }
+    } }).then(function () { return finished; });
   }
 
   BTS.Story.define([
@@ -187,60 +301,90 @@
       hideAll: true, keep: ['lisa', 'jaglika'],
       scene: function (C) {
         BTS.Camera.setPreset({ dist: 21 });
-        var W = BTS.World, j = C.ent('jaglika'), shades, relT = null;
+        var W = BTS.World, j = W.get('jaglika') || C.spawn('jaglika', [96.5, 81.5], { noTalk: true, dir: 'left' }), shades = [], relT = null, sc = j.shadow;
         W.extraRender = null;
         C.musicCut(); C.timeScale(0.35); C.sfx('shadow_tear', {}); C.shake(1.4);
-        if (j) { j.shadow.beast = 0; j.shadow.visible = false; j.anim.lock = 'fear'; }
-        return C.say('c11_pierce').then(function () {
+        // the pierced shadow: the beast lies frozen on the grass, pinned
+        var hd = R && R.head ? [R.head[0] - j.x, R.head[1] - j.z] : [1, -0.12], hl = Math.hypot(hd[0], hd[1]) || 1; hd = [hd[0] / hl, hd[1] / hl];
+        { if (j.brain) { j.brain.paused = true; j.keepPaused = true; } sc.visible = true; sc.beast = 1; sc.fixDir = hd; sc.lenMul = 1.2; j.anim.lock = 'fear'; C.face('jaglika', hd[0] > 0 ? 'right' : 'left'); }
+        var P0 = [j.x, j.z];
+        // the bonfire still burns high, and a cold light keeps her and what comes out of her readable
+        BTS.Env.lights.forEach(function (l) { if (Math.hypot(l.x - 90.5, l.z - 82.3) < 1) { l.off = false; l.radius = 15; l.intensity = 2.9; } }); W.statics.forEach(function (s2) { if (s2.fire || s2.pool) s2.off = false; });
+        C.keyLight(P0[0] + 1.5, P0[1], { color: [0.55, 0.65, 0.95], radius: 8, intensity: 1.2, kind: 'fill', dz: 2.2 });
+        // where the torn shadow lies: along its length, spread across it
+        var tear = function (k) { var d = 1.0 + k * Math.min(4.5, hl), w = Math.sin(k * 23) * 0.9; return [P0[0] + hd[0] * d - hd[1] * w, P0[1] + hd[1] * d + hd[0] * w]; };
+        return C.frame([P0, [P0[0] + hd[0] * 4, P0[1] + hd[1] * 4]], { dist: 14, time: 0.6 }).then(function () { return C.say('c11_pierce'); }).then(function () {
           C.timeScale(1); C.sfx('shadow_release', {}); C.music('release', 0.5); relT = BTS.Audio.now();
-          shades = spawnShades(j.x, j.z, 18, 1.2);
-          chase(shades, [j.x, j.z], 3.5);
-          return C.cam({ target: [93, 1, 81], dist: 28, time: 1.5 });
-        }).then(function () { return C.say('c11_shades'); }).then(function () { return C.wait(3); })
-          .then(function () {   // let at least ~10 s of the release choir sound before the chase cuts in
-            var left = BTS.Audio.ready && relT !== null ? 10 - (BTS.Audio.now() - relT) : 0;
-            return left > 0 ? C.wait(left) : null;
-          })
+          return C.say('c11_shades', { at: {
+            1: function () {   // the shadow tears; silhouettes rise out of the rent — one, then five, then twenty
+              C.sfx('shadow_tear', {}); C.shake(0.9);
+              C.tween(2.4, function (k) { sc.lenMul = 1.2 + Math.sin(k * 30) * 0.2 * (1 - k); }).then(function () { sc.visible = false; sc.fixDir = null; sc.beast = 0; });
+              var born = 0;
+              var birth = function (n, gap) { var q = Promise.resolve(); for (var i = 0; i < n; i++) q = q.then(function () { var at = tear(born / 20); shades.push(makeShade(C, born, at[0], at[1], 1.1)); born++; C.sfx('shadow_detach', { vol: 0.4 }); return C.wait(gap); }); return q; };
+              birth(1, 0.9).then(function () { return birth(4, 0.35); }).then(function () { return birth(15, 0.12); }).then(function () {
+                // they step out of the rent into a loose ring round her
+                shades.forEach(function (e, i) { var a = i / shades.length * 6.283 + 0.4, r = 3.2 + (i % 3) * 0.6; e.path = [[P0[0] + Math.cos(a) * r, P0[1] + Math.sin(a) * r * 0.8]]; e.pathRun = false; e.pathSpeed = 0.6; });
+              });
+              C.frame([P0, [P0[0] + hd[0] * 3.5, P0[1] + hd[1] * 3.5]], { dist: 13, time: 1.2 });
+            },
+            2: function () {   // the four he knows: small and tousled, broad with a hammer, a headscarf, a camera — in front, facing us
+              var p = C.ent('player');
+              [0, 1, 2, 3].forEach(function (i) { var e = shades[i]; if (!e) return; e.path = [[P0[0] - 0.6 + i * 1.3, P0[1] + 1.9 + (i % 2) * 0.3]]; e.pathSpeed = 0.8; });
+              C.wait(1.2).then(function () { [0, 1, 2, 3].forEach(function (i) { var e = shades[i]; if (e) e.dir = 'down'; }); var g = shades[1]; if (g && g.anim) g.anim.lock = 'interact'; });
+              C.frame([[P0[0] + 1.3, P0[1] + 2]], { dist: 10, time: 1.2 });
+            },
+            3: function () { C.anim('jaglika', 'point'); C.face('jaglika', 'right'); C.shake(0.4); if (shades[1] && shades[1].anim) shades[1].anim.lock = null; C.frame(['jaglika', [P0[0] + 2, P0[1] + 1]], { dist: 12, time: 0.8 }); },
+            4: function () {   // all at once
+              shades.forEach(function (e) { e.path = null; e.faceTo(P0[0], P0[1]); });
+              C.sfx('whisper', { vol: 0.6, dur: 1.4 }); C.sfx('sting_low', {}); C.shake(0.5); C.anim('jaglika', 'fear');
+              C.frame([P0], { dist: 15, time: 1.0 });
+            },
+            5: function () {   // Mama's shade walks past him; Tata's raises a hand over his shoulder and does not touch
+              var p = C.ent('player'), m = shades[2], t2 = shades[1]; if (!p) return;
+              C.frame(['player', [P0[0], P0[1]]], { dist: 14, time: 1.2 });
+              if (m) { m.anim.lock = null; m.path = [[p.x + 0.9, p.z - 0.6], [p.x - 2.2, p.z + 0.6]]; m.pathSpeed = 0.5; }
+              if (t2) { t2.anim.lock = null; t2.path = [[p.x + 0.75, p.z + 0.15]]; t2.pathSpeed = 0.6; C.wait(2.0).then(function () { t2.faceTo(p.x, p.z); t2.anim.lock = 'point'; C.sfx('breath', { vol: 0.5 }); }); }
+            },
+            6: function () { C.face('player', 'left'); }
+          } });
+        }).then(function () {   // let at least ~10 s of the release choir sound before the chase cuts in
+          if (shades[1] && shades[1].anim) shades[1].anim.lock = null;
+          var left = BTS.Audio.ready && relT !== null ? 10 - (BTS.Audio.now() - relT) : 0;
+          return left > 0 ? C.wait(Math.min(4, left)) : null;
+        }).then(function () {
+          /* the flight across the fair meadow to the south gate: a clear, precomputed route; the camera runs with her */
+          C.anim('jaglika', null); C.music('chase', 2); C.env({ weather: 'rain' });
+          shades.forEach(function (e) { e.path = null; if (e.anim) e.anim.lock = null; });
+          var R1 = navRoute([[j.x, j.z], [92, 86.6], [84.5, 87.6], [72, 87.2], [66.5, 85.6], [57.5, 84.6], [53, 84.6], [53, 88.4]]);
+          C.follow('jaglika', { dist: 17 });
+          var screamed = false;
+          return runRoute(C, j, shades, R1, 4.4, { onS: function (s2, L) { if (!screamed && s2 > L * 0.45) { screamed = true; C.sfx('scream_far', {}); } } });
+        })
+          .then(function () { return C.fade(1, 1.6); })
           .then(function () {
-            C.anim('jaglika', null); C.music('chase', 2); C.env({ weather: 'rain' });
-            BTS.Camera.followTarget = j; C.camRelease();
-            var route = [[100, 70], [91, 64.5], [70, 64.5], [52, 64], [49, 56], [30, 47], [14, 46.6], [11, 38], [6, 31.2]];
-            var step = function (k) {
-              if (k >= route.length) return Promise.resolve();
-              chase(shades, route[Math.max(0, k - 1)], 2.5);
-              if (k === 3) C.sfx('scream_far', {});
-              return C.walk('jaglika', route[k], { run: true, direct: true }).then(function () { return step(k + 1); });
-            };
-            j.speed = 3.6;
-            return step(0);
-          })
-          .then(function () { return C.fade(1, 2.5); })
-          .then(function () {
-            BTS.Camera.followTarget = null;
-            C.load('outskirts', 'from_village_w'); C.env({ time: 'night', weather: 'rain', horror: 0.8 }, true);
+            /* across the bridge and into the field: the second leg starts where the south road enters the outskirts */
+            C.unfollow();
+            C.load('outskirts', 'from_village_s'); C.env({ time: 'night', weather: 'rain', horror: 0.8 }, true);
             C.hide('player', true);
-            var j2 = C.spawn('jaglika', [94, 21], { noTalk: true, dir: 'left' }); j2.speed = 3.4;
-            shades = spawnShades(97, 21, 18, 1.4);
-            BTS.Camera.followTarget = j2;
-            return C.fade(0, 2).then(function () {
-              var route2 = [[84, 21], [74, 17.5], [62, 18], [60, 28], [46, 34], [36, 35.5]];
-              var step2 = function (k) { if (k >= route2.length) return Promise.resolve(); chase(shades, route2[Math.max(0, k - 1)], 2.5); return C.walk('jaglika', route2[k], { run: true, direct: true }).then(function () { return step2(k + 1); }); };
-              return step2(0);
-            }).then(function () {
-              var jj = C.ent('jaglika'); jj.anim.lock = 'fear';
-              chase(shades, [jj.x, jj.z], 1.6);
-              return C.cam({ target: [jj.x, 0.5, jj.z], dist: 22, time: 1.5 });
-            }).then(function () { return C.say('c11_fall'); })
-              .then(function () {
-                var jj = C.ent('jaglika'); jj.anim.lock = 'lie';
-                C.particles({ type: 'wisps', x: jj.x, y: BTS.World.heightAt(jj.x, jj.z) + 0.1, z: jj.z, rate: 14, area: [2, 1.5] });
-                C.sfx('shadow_absorb', {}); C.shake(1);
-                var t0 = 0;
-                return new Promise(function (res) { var iv = setInterval(function () { t0 += 0.05; jj.lift = -t0 * 0.9; shades.forEach(function (s) { s.lift = -t0 * 0.9; }); if (t0 > 3) { clearInterval(iv); res(); } }, 50); });
-              })
-              .then(function () { C.despawn('jaglika'); shades.forEach(function (s) { C.despawn(s.id); }); C.musicCut(); BTS.Particles.clear(); C.env({ weather: 'clear', horror: 0.1 }); return C.wait(2.5); })
+            var j2 = C.spawn('jaglika', [91.6, 53.4], { noTalk: true, dir: 'left' });
+            if (j2.shadow) j2.shadow.visible = false;
+            shades = []; for (var i = 0; i < 20; i++) shades.push(makeShade(C, i, 94.6 + (i % 4) * 0.5, 53 + (i % 5) * 0.35));
+            C.follow('jaglika', { dist: 17 });
+            var R2 = navRoute([[91.6, 53.4], [80, 49], [66, 44.5], [54, 40], [42, 36.5]]);
+            return C.fade(0, 1.4).then(function () { return runRoute(C, j2, shades, R2, 4.4, { slowAt: 6 }); }).then(function () {
+              /* she stumbles; they come at her from every side */
+              var jj = C.ent('jaglika'); jj.anim.lock = 'fear'; C.sfx('breath', { vol: 0.7 });
+              var cx = jj.x, cz = jj.z;
+              C.unfollow();
+              shades.forEach(function (e, k) { var a = k / shades.length * 6.283, r = 1.5 + (k % 3) * 0.45; e.path = [[cx + Math.cos(a) * r, cz + Math.sin(a) * r * 0.8]]; e.pathRun = true; e.pathSpeed = 1.2; });
+              C.ticker(function () { var any = false; shades.forEach(function (e) { if (e.path && e.path.length) any = true; else e.faceTo(cx, cz); }); return any; });
+              C.keyLight(cx, cz, { color: [0.5, 0.58, 0.85], radius: 7, intensity: 1.25, kind: 'fill', dz: 1.8 });
+              BTS.Env.strike();
+              return C.cam({ target: [cx, 0.5, cz], dist: 13, time: 1.2 }).then(function () { return C.wait(1.0); }).then(function () { return sinkScene(C, jj, shades, cx, cz); });
+            })
+              .then(function () { C.despawn('jaglika'); shades.forEach(function (s2) { C.despawn(s2.id); }); C.musicCut(); BTS.Particles.clear(); C.env({ weather: 'clear', horror: 0.1 }); return C.wait(2.5); })
               .then(function () { return C.say('c11_silence'); })
-              .then(function () { BTS.Camera.followTarget = null; return C.fade(1, 1.2); });
+              .then(function () { SINK = null; BTS.World.extraRender = null; BTS.Camera.followTarget = null; return C.fade(1, 1.2); });
           });
       }, after: 'e_dawn'
     },

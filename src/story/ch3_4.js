@@ -50,7 +50,29 @@
       env: { time: 'day', weather: 'overcast', horror: 0.25 }, envInstant: true, obj: null, music: 'explore', noSave: true,
       npcs: { lisa: null, sava: null },
       scene: function (C) {
-        return C.say('c4_window').then(function () { C.sfx('door_knock', {}); return C.wait(1.2); })
+        /* from his window: the two of them walking up from the bridge (a cut to the view he is describing), the flash */
+        var V = null;
+        var view = function () {
+          V = true; C.hide('player', true);
+          C.load('village', 'south_road'); C.env({ time: 'day', weather: 'overcast' }, true);
+          C.spawn('lisa', [53.4, 79.5], { dir: 'up', noTalk: true }); C.spawn('jessica', [52.4, 80.2], { dir: 'up', noTalk: true });
+          C.walk('lisa', [54.4, 66.5], { noWait: true, speed: 0.55 }); C.walk('jessica', [53.2, 67.4], { noWait: true, speed: 0.55 });
+          return C.cam({ target: [53.6, 0.5, 74], dist: 30, pitch: 0.75, time: 0.1, raw: true });
+        };
+        var back = function () {
+          if (!V) return; V = null;
+          C.despawn('lisa'); C.despawn('jessica');
+          C.load('djordje_house', 'window'); C.env({ time: 'day', weather: 'overcast' }, true); C.hide('player', false); C.camRelease();
+          C.anim('player', null); C.step('player', 0, 0.6, { dir: 'up' });
+        };
+        return C.say('c4_window', { at: {
+          1: function () { C.face('player', 'up'); },
+          3: function () { C.fade(1, 4).then(view).then(function () { return C.fade(0, 3); }); },
+          4: function () {   // she raises her camera toward our hill — a flash; he steps back from the window
+            var e = C.ent('jessica'); if (e) { e.path = null; C.face('jessica', 'up'); C.anim('jessica', 'point'); var fl = C.keyLight(e.x, e.z, { y: 1.6, dz: -0.3, radius: 6, intensity: 4, color: [1, 1, 1] }); C.wait(0.15).then(function () { C.unlight(fl); }); }
+            C.wait(0.9).then(function () { return C.fade(1, 5); }).then(back).then(function () { return C.fade(0, 4); });
+          }
+        } }).then(function () { if (V) { back(); BTS.Env.fadeBlack = 0; BTS.Env.fadeGoal = 0; } C.sfx('door_knock', {}); return C.wait(1.2); })
           .then(function () {
             C.sfx('door_open', {});
             var d = U.spot('door_in', [3.5, 7.6]);
@@ -58,7 +80,19 @@
             C.walk('sava', U.nearPlayer(1.6, 1.4), { noWait: true });
             return C.walk('lisa', U.nearPlayer(-0.9, 1.5));
           })
-          .then(function () { C.face('lisa', 'player'); C.face('sava', 'player'); return C.say('c4_meet'); })
+          .then(function () { C.face('lisa', 'player'); C.face('sava', 'player'); C.face('player', 'lisa'); return C.say('c4_meet', { at: {
+            4: function () { C.face('player', 'lisa'); C.frame(['lisa'], { dist: 7, y: 0.25, time: 1.0 }); },   // her shoes
+            5: function () { C.frame(['lisa', 'player'], { time: 1.0 }); },
+            13: function () { C.anim('lisa', 'sketch'); }, 14: function () { C.anim('lisa', null); },
+            21: function () { C.anim('lisa', null); C.wait(1.2).then(function () { C.anim('lisa', 'sketch'); }); }, 23: function () { C.anim('lisa', null); },
+            24: function () { C.face('player', 'down'); },
+            26: function () { C.face('lisa', 'up'); C.frame([[11.2, 1.6], 'lisa'], { dist: 10, y: 1.2, time: 1.2 }); },   // the drawings on the wall
+            31: function () { var p = C.ent('player'); C.step('player', 0.9, 0.4, { dir: 'left' }); C.walk('lisa', U.freeNear(11.3, 2.3), { dir: 'up' }); },
+            35: function () { C.walk('player', U.freeNear(11.3, 2.2), { dir: 'down' }); C.face('lisa', 'player'); },
+            40: function () { C.anim('lisa', 'sketch'); }, 41: function () { C.anim('lisa', null); },
+            43: function () { C.anim('lisa', null); C.face('lisa', 'player'); },
+            47: function () { C.anim('lisa', 'interact'); }, 48: function () { C.anim('lisa', null); C.face('lisa', 'sava'); }
+          } }); })
           .then(function () { var d = U.spot('door_in', [3.5, 7.6]); C.walk('sava', d, { noWait: true }); return C.walk('lisa', d); })
           .then(function () { C.sfx('door_close', {}); C.despawn('lisa'); C.despawn('sava'); return C.say('c4_meet_after'); })
           .then(function () { return C.fade(1, 0.8); });
@@ -77,13 +111,33 @@
       },
       triggers: [
         { loc: 'village', id: 'houses', box: [47, 44, 58, 54], run: function (C) {
-          return C.cam({ target: [53, 1, 50], time: 1.2 }).then(function () { return C.say('c4_houses'); })
+          return C.cam({ target: [53, 1, 50], time: 1.2 }).then(function () { return C.say('c4_houses', { at: {
+            1: function () { C.anim('player', 'point'); C.face('player', 'up'); },
+            2: function () { C.face('player', 'right'); }, 3: function () { C.face('player', 'left'); },
+            4: function () { C.anim('player', null); C.face('player', 'lisa'); },
+            8: function () { C.anim('lisa', 'talk'); }, 9: function () { C.anim('lisa', null); }
+          } }); })
             .then(function () { var m = C.ent('mila'); if (m) { C.face('mila', 'player'); return C.say('c4_mila_a').then(function () { C.walk('lisa', [m.x + 0.8, m.z + 0.5]); return C.wait(1.4); }).then(function () { C.anim('lisa', 'kneel'); C.face('lisa', 'mila'); return C.say('c4_mila_b'); }).then(function () { C.anim('lisa', null); }); } });
         }, set: 'c4_houses_done' },
         { loc: 'village', id: 'guest', box: [62, 38, 72, 46], cond: 'flag:c4_houses_done', run: function (C) {
-          return C.cam({ target: [67.5, 1, 43], time: 1.2 }).then(function () { C.face('jessica', 'player'); return C.say('c4_jess_meet'); })
-            .then(function () { C.spawn('jaglika', [72.5, 47.5], { dir: 'left', noTalk: true }); return C.walk('jaglika', [68.8, 43.6]); })
-            .then(function () { C.face('jaglika', 'jessica'); C.face('jessica', 'jaglika'); C.anim('jaglika', 'interact'); return C.say('c4_jag_gift'); })
+          C.walk('jessica', [68.6, 42.0], { noWait: true, dir: 'up' });   // at her easel
+          return C.cam({ target: [67.5, 1, 43], time: 1.2 }).then(function () { C.face('jessica', 'player'); return C.say('c4_jess_meet', { at: {
+            3: function () { C.face('jessica', 'player'); C.frame(['jessica', [69, 41]], { dist: 9, time: 1.0 }); },
+            7: function () { C.face('player', 'jessica'); },
+            9: function () { C.face('jessica', 'left'); },
+            10: function () { C.face('jessica', 'player'); }
+          } }); })
+            .then(function () { C.spawn('jaglika', [72.5, 47.5], { dir: 'left', noTalk: true }); return C.walk('jaglika', [69.6, 43.4]); })
+            .then(function () { C.face('jaglika', 'jessica'); C.face('jessica', 'jaglika'); return C.say('c4_jag_gift', { at: {
+              1: function () { C.frame(['jaglika', 'jessica'], { dist: 9, time: 1.0 }); },
+              3: function () { C.anim('jaglika', 'interact'); C.anim('jessica', 'interact'); },
+              4: function () { C.anim('jaglika', null); C.anim('jessica', null); },
+              5: function () { C.anim('player', 'point'); C.shake(0.2); },
+              6: function () { C.anim('player', null); C.anim('jessica', 'talk'); C.face('jessica', 'player'); },
+              8: function () { C.anim('jessica', null); C.face('lisa', 'player'); },
+              9: function () { C.face('jaglika', 'player'); C.frame(['jaglika'], { dist: 8, time: 1.0 }); },
+              12: function () { C.face('jaglika', 'player'); C.frame(['jaglika'], { dist: 8, time: 1.0 }); }
+            } }); })
             .then(function () { C.anim('jaglika', null); C.walk('jaglika', [82, 48], { noWait: true }); return C.wait(2.0); })
             .then(function () { C.despawn('jaglika'); return C.say('c4_jag_after'); })
             .then(function () { return C.fade(1, 0.8); });
@@ -95,7 +149,24 @@
     { id: 'c4_tea', chapter: 'ch4', loc: 'djordje_house', spawn: 'table', forceSpawn: true, chapterCard: 'sub.c4c', day: 70,
       env: { time: 'morning', weather: 'overcast', horror: 0.2 }, envInstant: true, obj: null, music: 'explore', noSave: true,
       npcs: { lisa: { loc: 'djordje_house', at: A('lisa_table', [6.4, 5.4]), act: 'idle', dir: 'left', noTalk: true } },
-      scene: function (C) { C.anim('player', 'sit'); C.face('lisa', 'player'); return C.say('c4_tea').then(function () { C.anim('player', null); }); }, after: 'c4_compare'
+      scene: function (C) {
+        C.anim('player', 'sit'); C.face('lisa', 'player');
+        var L0 = U.spot('lisa_table', [6.4, 5.4]);
+        return C.say('c4_tea', { at: {
+          7: function () { C.anim('lisa', 'interact'); }, 8: function () { C.anim('lisa', null); },
+          9: function () {   // she takes the lamp to the window; he gets up and takes it back
+            C.walk('lisa', [6.1, 1.3], { dir: 'up' }).then(function () { C.anim('lisa', 'interact'); return C.wait(0.6); }).then(function () { C.anim('lisa', null); return C.walk('lisa', L0, { dir: 'left' }); });
+            C.wait(2.4).then(function () { C.anim('player', null); return C.walk('player', [6.6, 1.4], { dir: 'up' }); }).then(function () { C.anim('player', 'interact'); return C.wait(0.6); })
+              .then(function () { C.anim('player', null); return C.walk('player', 'table', { dir: 'up' }); }).then(function () { C.anim('player', 'sit'); });
+          },
+          13: function () { C.step('lisa', 0.5, 0.4, { dir: 'left' }); },
+          15: function () { C.walk('lisa', [6.1, 1.4], { dir: 'up' }); },
+          18: function () { C.face('lisa', 'up'); },
+          19: function () { C.walk('lisa', L0, { dir: 'left' }).then(function () { C.face('lisa', 'player'); }); },
+          23: function () { C.anim('lisa', 'interact'); C.wait(0.8).then(function () { C.anim('lisa', null); }); },
+          36: function () { C.anim('player', null); C.face('player', 'lisa'); }
+        } }).then(function () { C.anim('player', null); });
+      }, after: 'c4_compare'
     },
     /* interactive: compare the guesthouse with the drawing from August 30 — what changed? */
     { id: 'c4_compare', chapter: 'ch4', obj: 'obj.c4_compare', music: 'village', musicByLoc: { djordje_house: 'explore' }, env: { time: 'day', weather: 'overcast', horror: 0.22 },
@@ -124,7 +195,15 @@
     { id: 'c4_evening', chapter: 'ch4', loc: 'djordje_house', spawn: 'table', forceSpawn: true, day: 73,
       env: { time: 'evening', weather: 'rain', horror: 0.3 }, envInstant: true, obj: null, music: 'explore', noSave: true,
       npcs: { lisa: { loc: 'djordje_house', at: A('lisa_table', [6.4, 5.4]), act: 'idle', dir: 'left', noTalk: true } },
-      scene: function (C) { C.anim('player', 'sit'); C.face('lisa', 'player'); return C.fade(0, 0.8).then(function () { return C.say('c4_lisa_wound'); }).then(function () { return C.fade(1, 1.0); }); },
+      scene: function (C) {
+        C.anim('player', 'sit'); C.face('lisa', 'player');
+        return C.fade(0, 0.8).then(function () { return C.say('c4_lisa_wound', { at: {
+          4: function () { C.anim('player', 'interact'); C.wait(0.8).then(function () { C.anim('player', 'sit'); }); },   // the needle on the table
+          7: function () { C.face('lisa', 'down'); }, 10: function () { C.face('lisa', 'player'); },
+          11: function () { C.face('lisa', 'up'); }, 12: function () { C.face('lisa', 'player'); },
+          19: function () { C.anim('lisa', 'talk'); }, 20: function () { C.anim('lisa', null); }
+        } }); }).then(function () { return C.fade(1, 1.0); });
+      },
       after: 'c4_gorazd_dead'
     }
   ]);
@@ -228,6 +307,44 @@
   D('c4_sava', [['sava', '1', { p: 'worried' }], ['sava', '2']]);
   D('c4_vesna', [['vesna', '1', { p: 'worried' }]]);
   D('c4_tihomir', [['tihomir', '1'], ['tihomir', '2', { p: 'worried' }]]);
+
+  /* ---------- staging cues for talk / interactable dialogues ---------- */
+  var Q = BTS.Cutscene.cue;
+  Q('c3_gorazd', {
+    1: function (C) { C.face('gorazd', 'down'); var n = 0; var chop = function () { if (n++ > 3) return; C.anim('gorazd', 'interact'); C.sfx('chop', {}); C.wait(0.35).then(function () { C.anim('gorazd', null); return C.wait(0.45); }).then(chop); }; chop(); },
+    2: function (C) { C.face('gorazd', 'player'); },
+    4: function (C) { C.anim('gorazd', 'point'); }, 5: function (C) { C.anim('gorazd', 'point'); C.shake(0.2); },
+    6: function (C) { C.anim('gorazd', 'point'); C.shadowFear({ look: 0.3 }); }, 7: function (C) { C.anim('gorazd', null); }
+  });
+  Q('c4_gorazd', {   // in the rain, cap to the eyebrows, looking over his shoulder
+    1: function (C) { C.face('gorazd', 'left'); C.wait(0.9).then(function () { C.face('gorazd', 'right'); return C.wait(0.9); }).then(function () { C.face('gorazd', 'up'); }); },
+    2: function (C) { C.face('gorazd', 'player'); },
+    5: function (C) { C.face('gorazd', 'up'); }, 6: function (C) { C.face('gorazd', 'player'); },
+    7: function (C) { C.anim('gorazd', 'point'); C.face('gorazd', 'up'); }
+  });
+  Q('c4_gorazd_inside', {
+    1: function (C) { C.anim('gorazd', 'fear'); C.sfx('door_close', {}); },
+    2: function (C) { C.anim('gorazd', 'interact'); C.frame(['gorazd'], { dist: 7.5, time: 0.8 }); },   // the cap comes off (sheet 'gorazd_bare')
+    3: function (C) { C.anim('gorazd', null); }
+  });
+  Q('c4_mirror', {
+    2: function (C) {   // in the mirror his shadow is standing; he is not — he cowers; on the wall the shadow stands
+      C.anim('gorazd', 'cower'); C.shadow('gorazd', { wall: { x: 7.4, z: 0.3, y: 0 } }); C.shadowPose('gorazd', 'idle', 0, 'up');
+      C.frame(['gorazd', [7.4, 0.9]], { dist: 9, y: 1.3, time: 1.0 });
+    },
+    4: function (C) { C.anim('gorazd', null); C.shadow('gorazd', { wall: null, pose: null, poseDir: null }); }
+  });
+  Q('c4_doorframe', { 1: function (C) { C.face('player', 'up'); C.anim('player', 'point'); }, 3: function (C) { C.anim('player', null); C.anim('gorazd', 'fear'); }, 4: function (C) { C.anim('gorazd', null); C.anim('player', 'interact'); } });
+  Q('c4_observe_gorazd', {
+    2: function (C) { C.shadow('gorazd', { lenMul: 2.3, angle: 1.3 }); C.sfx('shadow_stretch', { vol: 0.5 }); },
+    3: function (C) { C.anim('player', 'sketch'); }
+  });
+  Q('c4_gorazd_out', { 1: function (C) { C.shadow('gorazd', { lenMul: 1, angle: 0 }); C.anim('player', null); }, 4: function (C) { C.face('gorazd', 'player'); C.anim('gorazd', 'talk'); }, 5: function (C) { C.anim('gorazd', null); } });
+  Q('c4_compare', {
+    1: function (C) { C.face('player', 'up'); C.anim('player', 'point'); C.frame([[62, 40.75], 'player'], { dist: 10, y: 1.2, time: 1.0 }); },   // the drawing held up against the house
+    5: function (C) { C.frame([[62, 40.75]], { dist: 6.5, y: 2.1, time: 1.2 }); },                                                              // the herbs above the door
+    7: function (C) { C.anim('player', null); C.face('lisa', 'stana'); }, 8: function (C) { C.face('stana', 'lisa'); }
+  });
 
   add('sava', [{ beats: 'c3_graves..c3_link', dlg: 'c3_sava_register' }, { beats: 'c3_sightings..c3_warn', dlg: 'c3_sava' }, { beats: 'c4_start..c4_evening', dlg: 'c4_sava' }]);
   add('milka', [{ beats: 'c3_sightings..c3_predict', if: '!clue:obs_jag_gorazd', dlg: 'c3_milka' }, { beats: 'c3_start..c3_warn', dlg: 'c3_fear_milka' }, { beats: 'c4_start..c4_evening', dlg: 'c4_milka' }]);

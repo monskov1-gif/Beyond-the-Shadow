@@ -108,13 +108,14 @@ BTS.Animator = function (sheetId) {
   A.region = function (dir) { var c = this.clip(dir); return c ? c.frames[this.frame % c.frames.length] : null; };
 })();
 
-/* ShadowCaster: the shadow is its own simulated object — follows the light, can lag, stretch,
-   turn on its own, detach, vanish, or (Jaglika) grow into something inhuman. */
+/* ShadowCaster: the shadow is its own simulated object — follows the light, can lag, stretch, turn on its own,
+   strike a pose of its own (pose/poseDir), climb a wall, vanish, or (Jaglika) grow into something inhuman.
+   It is always fastened at the caster's feet: no stage detaches it from the body. */
 BTS.ShadowCaster = function (ent, o) {
   o = o || {};
-  this.stage = 0;          // 0 normal, 1 early, 2 middle, 3 late (detaching), 4 gone
+  this.stage = 0;          // 0 normal, 1 early, 2 middle, 3 late (straining at the feet), 4 gone
   this.history = [];       // past positions/frames for lag
-  this.lag = 0; this.lenMul = 1; this.angle = 0; this.alpha = 1; this.wander = [0, 0];
+  this.lag = 0; this.lenMul = 1; this.angle = 0; this.alpha = 1; this.pose = null; this.poseDir = null;
   this.beast = 0;          // 0..1 growth of an inhuman shadow
   this.beastFrame = 0;
   this.wallLean = 0;       // >0 draws a climbing silhouette on the nearest wall

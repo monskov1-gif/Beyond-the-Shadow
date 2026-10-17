@@ -79,7 +79,7 @@ BTS.Shadows = (function () {
   /* the single source of her shadow's size: len (length multiplier), width, beast (0 human .. 1 inhuman), lag */
   S.jaglikaGrowth = function (level) {
     var l = level === undefined ? S.jaglikaLevel() : level;
-    return { level: l, len: 1.15 + l * 0.2, width: 1 + l * 0.06, beast: BTS.M.clamp((l - 1.6) / 5, 0, 1), lag: Math.min(0.35, l * 0.04), alpha: 1 + Math.min(0.5, l * 0.07) };
+    return { level: l, len: 1.15 + l * 0.2, width: 1 + l * 0.06, beast: BTS.M.clamp((l - 1.5) / 6, 0, 1), lag: Math.min(0.35, l * 0.04), alpha: 1 + Math.min(0.5, l * 0.07) };
   };
 
   /* one silhouette layer: on the ground from the feet, or — with a wall — along the ground to the wall's foot and up it */
@@ -97,7 +97,7 @@ BTS.Shadows = (function () {
       var fx = bx + dx * gd, fz = Wl.z + 0.05, fy = Wl.y !== undefined ? Wl.y : heightAt(fx, fz - 0.3);
       var gy = heightAt(fx, fz + 0.2) + 0.03;
       R.pushFx(0, [[bx - px, by, bz - pz], [bx + px, by, bz + pz], [fx + px, gy, fz + pz], [fx - px, gy, fz - pz]], sreg, [COL[0], COL[1], COL[2], BTS.M.clamp(alpha, 0, 0.85)], [[0, q], [q, q], [q, vs], [0, vs]]);
-      var ww = Math.abs(px) * 2 || w, lean = Math.sin(t * 1.3 + sc.phase) * 0.18 * (sc.beast ? 1.5 : 1);
+      var ww = Math.abs(px) * 2 || w, lean = Math.sin(t * 1.3 + sc.phase) * 0.18 * (sc.beast ? 1.5 : 1) + (sc.wallLean || 0);   // wallLean: the top leans away on its own
       var x0 = fx - ww / 2, x1 = fx + ww / 2;
       R.pushFx(3, [[x0, fy, fz], [x1, fy, fz], [x1 + lean, fy + wallH, fz], [x0 + lean, fy + wallH, fz]], sreg, [COL[0], COL[1], COL[2], BTS.M.clamp(alpha * 1.15, 0, 0.82)], [[0, vs], [q, vs], [q, 0], [0, 0]]);
       return;
@@ -123,6 +123,7 @@ BTS.Shadows = (function () {
         var c3 = Math.cos(ang3), s3 = Math.sin(ang3), n3 = dx * c3 - dz * s3; dz = dx * s3 + dz * c3; dx = n3;
         len *= 1.6 + 0.3 * Math.sin(t * 0.7 + sc.phase); alpha *= 0.7 + 0.25 * Math.sin(t * 3 + sc.phase);
       }
+      if (sc.fixDir) { var fl = Math.hypot(sc.fixDir[0], sc.fixDir[1]) || 1; dx = sc.fixDir[0] / fl; dz = sc.fixDir[1] / fl; }   // scripted: it lies where it wants, not where the light says
       if (sc.angle) { var c2 = Math.cos(sc.angle), s2 = Math.sin(sc.angle), n2 = dx * c2 - dz * s2; dz = dx * s2 + dz * c2; dx = n2; }
       len *= sc.lenMul;
       var beast = sc.beast || 0, wscale = 1;
@@ -157,11 +158,17 @@ BTS.Shadows = (function () {
       var bw = 0.42 * (reg.w / 24) + 0.12, bd = 0.2;
       R.pushFx(3, [[e.x - bw, gy, e.z + bd], [e.x + bw, gy, e.z + bd], [e.x + bw, gy, e.z - bd], [e.x - bw, gy, e.z - bd]], blob, [COL[0], COL[1], COL[2], 0.55 * fade * sc.alpha]);
       var slots = smoothSlots(sc, candidates(e, env), S.dt || 0.016);
-      if (!slots.length && (sc.beast || sc.wall)) slots = [{ dx: 0.3, dz: -0.95, k: 1.2, a: 0.4 }];
+      if (!slots.length && (sc.beast || sc.wall || sc.fixDir || sc.pose)) slots = [{ dx: 0.3, dz: -0.95, k: 1.2, a: 0.4 }];
       var grow = e.id === 'jaglika' && !sc.noGrow ? S.jaglikaGrowth() : null;
       var src = { x: e.x, z: e.z, reg: reg };
+      /* the shadow acting on its own: it shows a different pose (and facing) from the body, still fastened at the feet */
+      if (sc.pose && e.anim) {
+        var shp = BTS.CharSprites.sheets[BTS.CharSprites.variant(e.anim.sheetId)] || e.anim.sheet;
+        var pc = shp && (shp.anims[sc.pose + '_' + (sc.poseDir || e.dir)]);
+        if (pc) src = { x: e.x, z: e.z, reg: pc.frames[Math.floor(t * pc.fps) % pc.frames.length] };
+      }
       var lag = Math.max(sc.lag, grow ? grow.lag : 0);
-      if (lag > 0) {   // a late shadow repeats an earlier pose of the body — always at the current feet
+      if (lag > 0 && !sc.pose) {   // a late shadow repeats an earlier pose of the body — always at the current feet
         var want = t - lag;
         for (var k = sc.history.length - 1; k >= 0; k--) if (sc.history[k].t <= want) { src = sc.history[k]; break; }
         if (k < 0 && sc.history.length) src = sc.history[0];

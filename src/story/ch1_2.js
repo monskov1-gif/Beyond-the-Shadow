@@ -29,7 +29,12 @@
       observe: { zajko: { run: function (C) { return C.say('c1_observe'); }, clue: 'sk_zajko_2' } },
       tick: when('c1_runaway', 'flag:talked_zajko&clue:sk_zajko_2&item:amulet_zajko', function (C) {
         C.face('zajko', 'player');
-        return C.say('c1_runaway').then(function () { C.flag('outskirts_open'); return C.walk('zajko', U.spot('door_in', [4, 7.6]), { run: true }); }).then(function () { C.sfx('door_close', {}); C.despawn('zajko'); return C.say('c1_after_run'); });
+        return C.say('c1_runaway', { at: {
+          1: function () { C.anim('zajko', 'fear'); C.shake(0.4); },
+          2: function () { C.anim('zajko', 'point'); C.face('zajko', 'player'); },
+          3: function () { C.anim('zajko', null); C.face('zajko', 'down'); },
+          4: function () { C.face('zlatko', 'zajko'); C.anim('zlatko', 'point'); }
+        } }).then(function () { C.flag('outskirts_open'); return C.walk('zajko', U.spot('door_in', [4, 7.6]), { run: true }); }).then(function () { C.sfx('door_close', {}); C.despawn('zajko'); return C.say('c1_after_run'); });
       }, 'c1_river')
     },
     { id: 'c1_river', chapter: 'ch1', obj: 'obj.c1_river', music: 'village', musicByLoc: { zajko_house: 'symptoms', outskirts: 'symptoms' }, env: { time: 'day', weather: 'overcast' },
@@ -44,7 +49,13 @@
         return C.say('c1_storm_a').then(function () { BTS.Env.strike(); return C.wait(0.4); }).then(function () { return C.say('c1_storm_b'); })
           .then(function () { BTS.Env.strike(); return C.wait(0.5); }).then(function () { return C.say('c1_storm_c'); })
           .then(function () { C.sfx('door_knock', {}); return C.wait(0.45); }).then(function () { C.sfx('door_knock', {}); C.spawn('gvozdin', U.spot('door_in', [3.5, 7.6]), { dir: 'up', noTalk: true }); return C.walk('gvozdin', U.nearPlayer(-1.2, 1.4)); })
-          .then(function () { C.face('gvozdin', 'player'); C.face('player', 'gvozdin'); return C.say('c1_storm_tata'); })
+          .then(function () { C.face('gvozdin', 'player'); C.face('player', 'gvozdin'); return C.say('c1_storm_tata', { at: {
+            5: function () {   // side by side at the window, a hand's width apart, counting
+              var w = U.spot('window', [13.6, 1.4]);
+              C.walk('player', [w[0] - 0.5, w[1] + 0.6], { dir: 'up' }).then(function () { C.anim('player', 'sit'); });
+              C.walk('gvozdin', [w[0] + 0.55, w[1] + 0.6], { dir: 'up' }).then(function () { C.anim('gvozdin', 'sit'); BTS.Env.strike(); });
+            }
+          } }); })
           .then(function () { BTS.Env.strike(); return C.fade(1, 0.5); });
       }, clue: 'obs_storm_gate', then: 'c2_bell' }],
       blockExit: { out: 'block_night' }
@@ -61,7 +72,13 @@
       extras: MOURN, stages: { pecko: 1 }, shadows: { pecko: { stage: 1 } },
       npcs: { zlatko: { loc: 'village', at: [32.6, 45.6], act: 'mourn', dir: 'up', noTalk: true }, jablan: { loc: 'village', at: [31.0, 45.4], act: 'mourn', dir: 'up', noTalk: true } },
       triggers: [{ loc: 'village', box: [24, 40, 40, 52], run: function (C) {
-        return C.cam({ target: [31.5, 1, 45], time: 1.5 }).then(function () { return C.say('c2_gate'); });
+        return C.cam({ target: [33, 1, 45.6], dist: 14, time: 1.5 }).then(function () { return C.say('c2_gate', { at: {
+          2: function () { C.face('zlatko', 'player'); C.anim('zlatko', null); },
+          6: function () { C.frame(['jablan'], { dist: 10, time: 1.0 }); C.anim('jablan', 'weak'); },
+          7: function () { C.face('pecko', 'player'); C.anim('pecko', null); C.frame(['pecko', 'player'], { dist: 11, time: 1.0 }); },
+          8: function () { var p = C.ent('player'); C.walk('pecko', U.freeNear(p.x + 0.85, p.z - 0.2), { dir: 'left' }); },   // close, not touching
+          10: function () { C.face('gvozdin', 'player'); C.anim('gvozdin', null); C.frame(['gvozdin', 'pecko', 'player'], { time: 1.0 }); }
+        } }); });
       }, clue: 'fact_zajko_death', set: 'church_open', then: 'c2_funeral' }],
       blockExit: { west: 'block_home', south: 'block_home' }
     },
@@ -78,14 +95,50 @@
       },
       shadows: { pecko: { stage: 1 } },
       scene: function (C) {
-        C.sfx('drone', { dur: 8, vol: 0.5 }); return C.cam({ target: [5, 0.5, 7], time: 0.1 }).then(function () { return C.say('c2_funeral'); });
+        C.sfx('drone', { dur: 8, vol: 0.5 });
+        return C.cam({ target: [5, 0.5, 7], time: 0.1 }).then(function () { return C.say('c2_funeral', { at: {
+          1: function () { C.frame(['zajko'], { dist: 9, time: 2.0 }); },                       // the coffin, the white shirt
+          2: function () { C.anim('sava', 'talk'); },
+          3: function () { C.anim('sava', null); C.frame(['sava', 'zajko'], { dist: 12, time: 1.6 }); },
+          4: function () { C.frame(['zajko'], { dist: 7.5, time: 1.6 }); },                     // candles, and no shadow beneath him
+          6: function () {   // Mama holds Zlatko up by the elbow
+            var z = C.ent('zlatko'); if (z) C.walk('pecko', U.freeNear(z.x + 0.6, z.z + 0.15), { dir: 'left' }).then(function () { C.anim('pecko', 'interact'); });
+            C.frame(['zlatko', 'pecko'], { dist: 9, time: 1.4 });
+          },
+          7: function () { C.anim('pecko', null); C.face('pecko', 'up'); }
+        } }); });
       },
-      observe: { pecko: { run: function (C) { return C.say('c2_observe_pecko').then(function () { C.face('zlatko', 'player'); return C.say('c2_rabbit'); }); }, clue: 'sk_pecko', set: 'saw_pecko_shadow' } },
+      observe: { pecko: { run: function (C) {
+        return C.say('c2_observe_pecko', { at: {
+          1: function () {   // she fixes her headscarf; the shadow fixes its own — afterwards
+            C.frame(['pecko'], { dist: 8, time: 1.0 }); C.shadow('pecko', { lag: 0.55 });
+            C.anim('pecko', 'interact'); C.wait(1.0).then(function () { C.anim('pecko', null); });
+          },
+          4: function () { C.shadowFear({ cower: false, turnAway: true }); },
+          5: function () { C.anim('player', 'sketch'); }
+        } }).then(function () {
+          C.anim('player', null); C.shadow('pecko', { stage: 1 });
+          var p = C.ent('player'); C.face('zlatko', 'player');
+          return C.walk('zlatko', U.freeNear(p.x - 0.9, p.z + 0.3)).then(function () { C.face('zlatko', 'player'); C.face('player', 'zlatko'); return C.say('c2_rabbit', { at: {
+            2: function () { C.anim('zlatko', 'interact'); }, 3: function () { C.anim('zlatko', null); }
+          } }); });
+        });
+      }, clue: 'sk_pecko', set: 'saw_pecko_shadow' } },
       triggers: [{ loc: 'village', id: 'herbs', box: [80, 26, 95, 36], cond: 'flag:saw_pecko_shadow', run: function (C) {
         C.spawn('pecko', [86.5, 31.5], { act: 'mourn', dir: 'down', noTalk: true, stage: 1 });
         C.spawn('jaglika', [79.5, 34.8], { dir: 'right', noTalk: true });
         return C.cam({ target: [85, 1, 32], time: 1.4 }).then(function () { return C.walk('jaglika', [85.4, 32.2]); })
-          .then(function () { C.face('pecko', 'jaglika'); C.anim('jaglika', 'interact'); return C.say('c2_herbs'); })
+          .then(function () { C.face('pecko', 'jaglika'); C.face('jaglika', 'pecko'); C.anim('jaglika', 'interact'); return C.say('c2_herbs', { at: {
+            4: function () { C.anim('pecko', 'interact'); C.anim('jaglika', 'interact'); C.frame(['jaglika', 'pecko'], { dist: 8, time: 1.2 }); },
+            5: function () {   // a glint in her sleeve
+              var j = C.ent('jaglika'); if (!j) return;
+              var g = C.keyLight(j.x + 0.2, j.z, { y: 1.0, dz: 0.3, radius: 1.4, intensity: 3, color: [0.9, 0.95, 1] });
+              C.sfx('metal', { vol: 0.2 }); C.wait(0.25).then(function () { C.unlight(g); });
+            },
+            6: function () { C.anim('pecko', null); var m = C.ent('pecko'); C.walk('player', U.freeNear(m.x - 0.9, m.z + 0.6), { run: true }); },
+            8: function () { C.anim('jaglika', null); C.face('jaglika', 'player'); C.frame(['jaglika'], { dist: 8, time: 1.0 }); },
+            11: function () { C.frame(['jaglika', 'pecko'], { dist: 8, time: 1.0 }); }
+          } }); })
           .then(function () { C.anim('jaglika', null); return C.walk('jaglika', [76, 40], { noWait: true }); }).then(function () { return C.wait(1.6); })
           .then(function () { C.despawn('jaglika'); return C.say('c2_herbs_after'); }).then(function () { C.despawn('pecko'); });
       }, clue: 'obs_jag_herbs_pecko', then: 'c2_smithy' }],
@@ -146,7 +199,8 @@
     { id: 'c2_house', chapter: 'ch2', loc: 'djordje_house', spawn: 'table', forceSpawn: true, obj: 'obj.c2_house', env: { time: 'night', weather: 'drizzle', horror: 0.25 }, envInstant: true, music: 'symptoms',
       hide: ['sava', 'stana'],
       props: [
-        { loc: 'djordje_house', sprite: 'cloth_dark', at: A('parents_mirror', [6.8, 0.3]), y: 1.2, scale: 2.4 },
+        { loc: 'djordje_house', sprite: 'cloth_dark', at: [-9.85, 7.9], y: 1.15, scale: 1.7 },                 // the mirror over the dresser, covered
+        { loc: 'djordje_house', sprite: 'candle', at: [-9.55, 7.35], y: 0.95, emissive: false }, { loc: 'djordje_house', sprite: 'flame', at: [-9.55, 7.37], y: 1.21, emissive: true, scale: 0.4 },
         { loc: 'zajko_house', sprite: 'cloth_dark', at: [7.0, 0.3], y: 1.2, scale: 3 },
         { loc: 'zajko_house', sprite: 'candle', at: [6.4, 3.4], y: 0.8, emissive: false }, { loc: 'zajko_house', sprite: 'flame', at: [6.4, 3.42], y: 1.06, emissive: true, scale: 0.4 },
         { loc: 'zajko_house', sprite: 'photo_frame', at: [7.6, 3.5], y: 0.8 }
@@ -154,8 +208,20 @@
       interact: [
         { loc: 'djordje_house', id: 'notebook', at: A('kitchen', [5.6, 6.6]), label: 'it.notebook', verb: 'verb.read', dlg: 'c2_notebook', item: 'pecko_note', clue: 'fact_jag_visited_pecko', hint: true, once: true },
         { loc: 'djordje_house', id: 'apron', at: A('hall', [2.0, 5.6]), label: 'it.apron', dlg: 'c2_apron', set: 'saw_apron', hint: true, once: true },
-        { loc: 'djordje_house', id: 'mirror', at: A('parents_room', [8.2, 2.0]), label: 'it.mirror', run: function (C) {
-          return C.say('c2_mirror').then(function () { C.anim('player', 'fear'); C.sfx('heartbeat', { vol: 0.6 }); return C.say('c2_mirror_shadow'); }).then(function () { C.anim('player', null); });
+        { loc: 'djordje_house', id: 'mirror', at: [-8.7, 6.9], label: 'it.mirror', run: function (C) {
+          C.walk('player', [-8.6, 5.8], { dir: 'left' });
+          return C.frame([[-9.6, 7.0], [-8.6, 4.0]], { dist: 10, time: 1.0 }).then(function () { return C.say('c2_mirror'); }).then(function () {
+            var cand = C.keyLight(-9.55, 7.3, { y: 1.15, dz: 0, radius: 4.5, intensity: 0.9, color: [1, 0.72, 0.42], flicker: 0.15 });
+            return C.say('c2_mirror_shadow', { at: {
+              1: function () {   // his shadow climbs the back wall to the ceiling
+                C.shadow('player', { wall: MIRROR_WALL, lenMul: 2.6 }); C.frame([[-8.6, 5.8], [MIRROR_WALL.x, 1.0]], { dist: 11, y: 1.6, time: 1.2 });
+              },
+              2: function () { C.shadowFear({ back: 0.5, hold: 0.5 }); },
+              3: function () {   // he moves so the candle is behind him: the shadow drops to the floor under his feet
+                C.walk('player', [-9.0, 6.6], { dir: 'up' }).then(function () { C.shadow('player', { wall: null, lenMul: 0.45 }); });
+              }
+            } }).then(function () { C.unlight(cand); C.shadow('player', { wall: null, lenMul: 1 }); C.anim('player', null); });
+          });
         } }
       ],
       tick: when('c2_house_done', 'flag:saw_apron&clue:fact_jag_visited_pecko', function (C) { return C.say('c2_house_end').then(function () { return C.fade(1, 0.6); }); }, 'c3_start')
@@ -262,6 +328,104 @@
   D('c2_mirror', [['>', '1'], ['>', '2']]);
   D('c2_mirror_shadow', [['*', '1'], ['>', '2'], ['>', '3']]);
   D('c2_house_end', [['>', '1'], ['>', '2'], ['>', '3'], ['>', '4']]);
+
+  /* ---------- staging cues for dialogues started from talk / interactables (fired by line) ---------- */
+  var Q = BTS.Cutscene.cue;
+  function throwStone(C, splash) { C.face('player', 'down'); C.anim('player', 'interact'); C.wait(0.45).then(function () { C.anim('player', null); if (splash) C.sfx('water_splash', { vol: splash }); }); }
+  Q('c1_mill_talk', {
+    1: function (C) { C.anim('zajko', 'sit'); C.frame(['zajko', [47.6, 40.2]], { dist: 11, time: 1.2 }); },
+    4: function (C) { C.anim('zajko', null); C.face('zajko', 'player'); },
+    5: function (C) { throwStone(C, 0.4); }, 7: function (C) { throwStone(C, 1); }, 9: function (C) { throwStone(C, 0); },
+    16: function (C) { C.face('player', 'zajko'); },
+    20: function (C) { C.face('zajko', 'right'); C.anim('zajko', 'interact'); C.wait(1.2).then(function () { C.face('zajko', 'player'); }); },   // half to Kum, half of his half to me
+    21: function (C) { C.anim('zajko', null); },
+    23: function (C) { C.anim('zajko', 'sit'); },
+    29: function (C) { C.anim('zajko', null); C.face('zajko', 'down'); },
+    32: function (C) {   // he throws a stone; his shadow throws — later
+      C.anim('player', null); C.face('zajko', 'down'); C.shadow('zajko', { lag: 0.45 }); C.frame(['zajko'], { dist: 8, time: 1.0 });
+      C.anim('zajko', 'interact'); C.wait(0.5).then(function () { C.anim('zajko', null); C.sfx('water_splash', { vol: 0.5 }); return C.wait(1.0); })
+        .then(function () { C.anim('zajko', 'interact'); return C.wait(0.5); }).then(function () { C.anim('zajko', null); return C.wait(1.0); })
+        .then(function () { C.shadow('zajko', { stage: 1 }); });
+    },
+    42: function (C) { C.face('zajko', 'player'); C.face('player', 'zajko'); C.anim('zajko', 'point'); C.wait(1.4).then(function () { C.anim('player', 'point'); }); },
+    44: function (C) { C.anim('zajko', null); C.anim('player', null); }
+  });
+  Q('c1_river_talk', {
+    1: function (C) { C.frame(['zajko'], { dist: 10, time: 1.0 }); C.anim('zajko', 'interact'); C.wait(0.6).then(function () { C.anim('zajko', null); C.sfx('water_splash', { vol: 0.2 }); }); },
+    2: function (C) { C.anim('zajko', 'fear'); C.face('zajko', 'player'); },
+    4: function (C) {   // he waves his arms; the shadow lies still — then catches up with a jerk
+      C.anim('zajko', 'fear'); C.shadowPose('zajko', 'idle', 1.6).then(function () { C.sfx('shadow_move', { vol: 0.6 }); C.shake(0.2); });
+    },
+    5: function (C) { C.anim('zajko', null); },
+    6: function (C) { C.anim('player', 'sketch'); }, 7: function (C) { C.anim('player', null); },
+    9: function (C) { var z = C.ent('zajko'); if (z) C.walk('player', U.freeNear(z.x - 0.7, z.z + 0.2), { dir: 'right' }); },
+    11: function (C) {   // the edge of the woods
+      C.anim('zajko', 'point'); C.face('zajko', 'up'); C.face('player', 'up');
+      var z = C.ent('zajko'); if (z) C.cam({ target: [z.x - 2, 1.2, z.z - 9], dist: 16, time: 1.4 });
+    },
+    12: function (C) { C.sfx('crow', {}); },
+    14: function (C) { C.anim('zajko', 'fear'); var z = C.ent('zajko'); if (z) C.frame(['zajko', 'player'], { dist: 10, time: 1.0 }); },
+    15: function (C) { C.anim('zajko', null); C.walk('zajko', [92, 21], { run: true, noWait: true }); C.wait(2.5).then(function () { C.despawn('zajko'); }); }
+  });
+  /* the smithy: the needle in the beam; Tata's shadow on the smithy wall strikes on its own */
+  var SMITHY_WALL = { x: 40.4, z: 36.2, y: 0 };
+  Q('c2_sm_choice', {
+    4: function (C) {   // up on a stump, reaching for the beam
+      C.walk('player', [41.7, 41.9], { dir: 'up' }).then(function () { var p = C.ent('player'); p.lift = 0.4; C.anim('player', 'point'); C.sfx('creak', { vol: 0.4 }); });
+      C.frame([[41.7, 40.9]], { dist: 9, y: 1.6, time: 1.2 });
+    },
+    6: function (C) { var p = C.ent('player'); p.lift = 0; C.anim('player', null); C.walk('gvozdin', U.freeNear(p.x - 0.8, p.z + 0.3), { dir: 'right' }); },
+    7: function (C) {   // into the forge; the red thread flares
+      C.face('gvozdin', 'up'); C.anim('gvozdin', 'interact');
+      var f = C.keyLight(41.6, 39.4, { y: 0.9, dz: 0, radius: 4, intensity: 3, color: [1, 0.25, 0.1] });
+      C.wait(0.6).then(function () { C.unlight(f); C.anim('gvozdin', null); });
+    },
+    9: function (C) { C.face('gvozdin', 'player'); C.anim('gvozdin', 'fear'); C.wait(1.1).then(function () { C.anim('gvozdin', null); }); }
+  });
+  Q('c2_smithy_talk', {
+    3: function (C) { C.face('gvozdin', 'up'); C.anim('gvozdin', 'interact'); C.shadow('gvozdin', { wall: SMITHY_WALL }); C.frame(['gvozdin', [SMITHY_WALL.x, SMITHY_WALL.z + 1]], { dist: 12, y: 1.4, time: 1.2 }); },
+    5: function (C) { C.anim('gvozdin', null); C.wait(0.15).then(function () { C.anim('gvozdin', 'interact'); }); },
+    6: function (C) { C.anim('gvozdin', null); C.face('gvozdin', 'down'); },
+    7: function (C) {   // the body is still; the shadow on the wall raises the hammer on its own
+      C.shadowPose('gvozdin', 'point', 2.6, 'up'); C.sfx('shadow_move', { vol: 0.7 });
+      C.wait(0.8).then(function () { return C.shadowFear({ look: 0.3, hold: 0.4 }); });
+    },
+    8: function (C) { C.anim('gvozdin', 'fear'); C.shake(0.4); },
+    9: function (C) { C.anim('gvozdin', null); C.face('gvozdin', 'player'); },
+    11: function (C) { C.shadow('gvozdin', { wall: null }); }
+  });
+  /* Mama no longer knows him */
+  Q('c2_mama_a', {
+    1: function (C) { C.frame(['pecko'], { dist: 9, time: 1.0 }); },
+    4: function (C) { C.face('pecko', 'player'); C.anim('pecko', null); },
+    7: function (C) { C.anim('player', 'point'); },
+    8: function (C) { C.anim('player', null); C.face('pecko', 'player'); C.anim('pecko', 'interact'); },          // floury hands hanging in the air
+    9: function (C) { C.anim('pecko', null); },
+    10: function (C) { C.face('pecko', 'up'); },                                                                   // her eyes drift to the window
+    12: function (C) { C.face('pecko', 'player'); }
+  });
+  Q('c2_mama_b', {
+    2: function (C) { var m = C.ent('pecko'); if (m) C.walk('gvozdin', U.freeNear(m.x + 0.7, m.z + 0.3), { dir: 'left' }).then(function () { C.anim('gvozdin', 'interact'); C.anim('pecko', null); C.face('pecko', 'gvozdin'); }); },
+    3: function (C) { C.anim('gvozdin', null); C.face('gvozdin', 'player'); },
+    6: function (C) {   // his shadow on the wall lifts its head before he does
+      C.shadow('gvozdin', { wall: { x: 5.2, z: 0.3, y: 0 } }); C.anim('gvozdin', 'weak'); C.shadowPose('gvozdin', 'idle', 1.8, 'up');
+      C.frame(['gvozdin', [5.2, 1.0]], { dist: 9, y: 1.3, time: 1.0 });
+      C.wait(1.8).then(function () { C.anim('gvozdin', null); return C.shadowFear({ look: 0.35 }); });
+    },
+    7: function (C) { C.shadow('gvozdin', { wall: null }); }
+  });
+  Q('c2_tata_news', {
+    2: function (C) { C.anim('gvozdin', 'sit'); C.face('gvozdin', 'player'); },
+    5: function (C) { var g = C.ent('gvozdin'); if (g) C.walk('player', U.freeNear(g.x - 0.75, g.z), { dir: 'right' }).then(function () { C.anim('player', 'sit'); }); },
+    4: function (C) { C.face('player', 'down'); }
+  });
+  Q('c2_sava_news', {
+    5: function (C) { var p = C.ent('player'); C.walk('stana', U.freeNear(p.x - 0.9, p.z + 0.5)).then(function () { C.face('stana', 'player'); }); },
+    11: function (C) { C.face('player', 'up'); },
+    12: function (C) { C.face('stana', 'player'); }
+  });
+  /* the covered mirror and the candle on the chest of drawers in his parents' room */
+  var MIRROR_WALL = { x: -7.4, z: 0.55, y: 0 };
 
   /* ---------- talk ---------- */
   add('pecko', [

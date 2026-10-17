@@ -7,7 +7,9 @@ BTS.Locale.en_parts.push({
     p_crowd: 'Too loud! Get out of the crowd to Mama’s bread stall (the white awning by the entrance). Keep clear of people — the noise grows faster near them',
     p_fair: 'The fair: greet Baroness de Milka on her bench, then find Zajko by the bonfire', p_game: 'Watch Zajko’s shadow (press F near him)', p_night: 'Go home, up the hill'
   },
+  cap: { dance: 'The kolo goes round the pole — and the shadows on the grass start a dance of their own' },
   dlg: {
+    p_dance: { 1: 'The dancers go round the pole. Their shadows don’t. Their shadows dance a different kolo — their own.', 2: 'Arms up on the long beat. Seven counts: two, two, three. They never miss the three.', 3: 'Nobody else is looking. Only me. I count, so it stays real.' },
     p_intro: {
       1: 'A room on the hill. Evening. Đorđe is drawing house number seventeen.',
       2: 'House seventeen is Radoje’s. Eleven sheep, two chimneys, one smoking.',

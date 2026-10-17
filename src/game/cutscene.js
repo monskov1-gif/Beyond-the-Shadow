@@ -70,7 +70,8 @@ BTS.Cutscene = (function () {
           wait(timeout).then(function () {
             if (done) return;
             var d = Math.hypot(q[0] - e.x, q[1] - e.z);
-            if (d < 0.6 || tries >= 2) { e.x = q[0]; e.z = q[1]; e.path = null; e.onArrive = null; finish(); return; }
+            // close enough (or truly out of options): end the walk where the actor stands — never a visible jump
+            if (d < 0.6 || tries >= 3) { e.path = null; e.onArrive = null; finish(); return; }
             // never jump: walk the rest in a straight line, through whatever is in the way
             e.path = [q.slice()]; e.noClip = true; e._autoNoClip = true; e._ncPath = e.path;
             timeout = d / (e.speed * (o.speed || 1)) + 1.5;
@@ -101,7 +102,8 @@ BTS.Cutscene = (function () {
     /* a temporary key light on an actor so a staged moment reads (removed with unlight / at the end) */
     keyLight: function (x, z, o) {
       o = o || {};
-      var l = { id: 'cs_key' + (keyN++), x: x, y: (o.y || 2.4) + BTS.World.heightAt(x, z), z: z + (o.dz === undefined ? 1.2 : o.dz), color: o.color || [1, 0.78, 0.55], radius: o.radius || 5, intensity: o.intensity || 1.1, kind: 'lamp', flicker: o.flicker || 0, important: true, cs: true };
+      // kind 'fill' lights the actor without throwing a second shadow
+      var l = { id: 'cs_key' + (keyN++), x: x, y: (o.y || 2.4) + BTS.World.heightAt(x, z), z: z + (o.dz === undefined ? 1.2 : o.dz), color: o.color || [1, 0.78, 0.55], radius: o.radius || 5, intensity: o.intensity || 1.1, kind: o.kind || 'lamp', flicker: o.flicker || 0, important: true, cs: true };
       l.cur = [0, 0, 0]; l.seed = Math.random() * 9; BTS.Env.lights.push(l); return l;
     },
     unlight: function (l) { var i = BTS.Env.lights.indexOf(l); if (i >= 0) BTS.Env.lights.splice(i, 1); },
@@ -128,6 +130,27 @@ BTS.Cutscene = (function () {
         if (o.turnAway !== false) p.faceTo(p.x - dx, p.z - dz); else p.dir = dir0;
         return wait(o.cower ? 0.9 : 0.2);
       }).then(function () { if (o.cower && p.anim && !o.keepCower) p.anim.lock = null; });
+    },
+    /* clear a stage: every other villager inside the circle walks out to its edge (and keeps still there) */
+    clearArea: function (c, r, keep) {
+      var q = pos(c); if (!q) return;
+      keep = (keep || []).map(function (k) { return ent(k); });
+      BTS.World.entities.forEach(function (e) {
+        if (e.isPlayer || e.kind !== 'npc' || e.hidden || keep.indexOf(e) >= 0 || !e.brain) return;
+        var dx = e.x - q[0], dz = e.z - q[1], d = Math.hypot(dx, dz); if (d >= r) return;
+        if (d < 0.05) { dx = 1; dz = 0.4; d = Math.hypot(dx, dz); }
+        var g = freeGoal([q[0] + dx / d * (r + 0.4), q[1] + dz / d * (r + 0.4)], e);
+        e.brain.paused = true; e.path = BTS.World.findPath(e.x, e.z, g[0], g[1]) || [g]; e.pathSpeed = 1;
+        var turn = function () { if (e.path && e.path.length) return; e.faceTo(q[0], q[1]); return false; };
+        CS.tickers.push(function () { return turn(); });
+      });
+    },
+    /* the shadow strikes a pose of its own for a while (the body does not) */
+    shadowPose: function (id, pose, dur, dir) {
+      var e = ent(id); if (!e || !e.shadow) return Promise.resolve();
+      e.shadow.pose = pose; e.shadow.poseDir = dir || null;
+      if (!dur) return Promise.resolve();
+      return wait(dur).then(function () { if (e.shadow.pose === pose) { e.shadow.pose = null; e.shadow.poseDir = null; } });
     },
     /* per-frame function on the cutscene clock until it returns false */
     ticker: function (fn) { CS.tickers.push(fn); },
