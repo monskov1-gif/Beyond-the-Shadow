@@ -90,13 +90,13 @@ BTS.Portraits = (function () {
 
   /* ---------------- face presets (units: half the cheekbone width = 1; eye line Y = 0, Y down, Z toward viewer) ---------------- */
   var FACES = {
-    man:    { S: 47, crown: -1.5, skullW: 0.99, cheekW: 1.0, cheekY: 0.14, jawY: 0.92, jawW: 0.86, chinY: 1.34, chinW: 0.36, chinR: 0.15, faceZ: 0.9, eyeX: 0.41, eyeW: 0.215, eyeH: 0.088, eyeTilt: 0.0, browY: -0.27, browW: 1, browT: 0.075, noseY: 0.5, noseZ: 0.34, noseW: 0.2, noseTip: 0.085, mouthY: 0.86, mouthW: 0.29, ulip: 0.04, llip: 0.06, neckW: 0.64, earY: -0.12, earH: 0.6, oy: 100, jawP: 2.9 },
-    woman:  { S: 47, crown: -1.48, skullW: 0.97, cheekW: 1.0, cheekY: 0.12, jawY: 0.86, jawW: 0.74, chinY: 1.26, chinW: 0.27, chinR: 0.15, faceZ: 0.9, eyeX: 0.4, eyeW: 0.225, eyeH: 0.108, eyeTilt: 0.02, browY: -0.3, browW: 1, browT: 0.06, noseY: 0.46, noseZ: 0.28, noseW: 0.165, noseTip: 0.07, mouthY: 0.8, mouthW: 0.27, ulip: 0.05, llip: 0.075, neckW: 0.52, earY: -0.1, earH: 0.55, oy: 100, jawP: 2.1 },
-    boy:    { S: 47, crown: -1.56, skullW: 0.98, cheekW: 1.0, cheekY: 0.14, jawY: 0.82, jawW: 0.76, chinY: 1.18, chinW: 0.28, chinR: 0.16, faceZ: 0.88, eyeX: 0.4, eyeW: 0.225, eyeH: 0.11, eyeTilt: 0.0, browY: -0.28, browW: 1, browT: 0.06, noseY: 0.42, noseZ: 0.24, noseW: 0.15, noseTip: 0.065, mouthY: 0.75, mouthW: 0.25, ulip: 0.042, llip: 0.065, neckW: 0.5, earY: -0.1, earH: 0.55, oy: 101, jawP: 2.2 },
-    girl:   { S: 45, crown: -1.64, skullW: 1.0, cheekW: 1.0, cheekY: 0.18, jawY: 0.76, jawW: 0.8, chinY: 1.06, chinW: 0.3, chinR: 0.18, faceZ: 0.86, eyeX: 0.39, eyeW: 0.225, eyeH: 0.125, eyeTilt: 0.0, browY: -0.3, browW: 0.9, browT: 0.05, noseY: 0.35, noseZ: 0.16, noseW: 0.13, noseTip: 0.06, mouthY: 0.66, mouthW: 0.21, ulip: 0.04, llip: 0.06, neckW: 0.44, earY: -0.08, earH: 0.5, oy: 104, jawP: 2.0 },
-    small:  { S: 44, crown: -1.78, skullW: 1.02, cheekW: 1.02, cheekY: 0.22, jawY: 0.7, jawW: 0.86, chinY: 0.98, chinW: 0.34, chinR: 0.2, faceZ: 0.86, eyeX: 0.39, eyeW: 0.22, eyeH: 0.13, eyeTilt: 0.0, browY: -0.3, browW: 0.85, browT: 0.045, noseY: 0.31, noseZ: 0.12, noseW: 0.12, noseTip: 0.06, mouthY: 0.6, mouthW: 0.19, ulip: 0.036, llip: 0.055, neckW: 0.42, earY: -0.06, earH: 0.5, oy: 106, jawP: 1.9 },
-    old:    { S: 47, crown: -1.48, skullW: 0.97, cheekW: 1.0, cheekY: 0.14, jawY: 0.9, jawW: 0.78, chinY: 1.28, chinW: 0.3, chinR: 0.16, faceZ: 0.9, eyeX: 0.4, eyeW: 0.21, eyeH: 0.095, eyeTilt: -0.01, browY: -0.29, browW: 1, browT: 0.05, noseY: 0.49, noseZ: 0.3, noseW: 0.18, noseTip: 0.08, mouthY: 0.84, mouthW: 0.27, ulip: 0.035, llip: 0.06, neckW: 0.52, earY: -0.1, earH: 0.62, oy: 100, age: 0.8, jawP: 2.3 },
-    oldman: { S: 47, crown: -1.5, skullW: 0.98, cheekW: 1.0, cheekY: 0.14, jawY: 0.92, jawW: 0.84, chinY: 1.34, chinW: 0.35, chinR: 0.15, faceZ: 0.9, eyeX: 0.41, eyeW: 0.205, eyeH: 0.085, eyeTilt: -0.01, browY: -0.27, browW: 1, browT: 0.07, noseY: 0.52, noseZ: 0.36, noseW: 0.2, noseTip: 0.09, mouthY: 0.88, mouthW: 0.28, ulip: 0.03, llip: 0.05, neckW: 0.62, earY: -0.12, earH: 0.68, oy: 100, age: 0.8, jawP: 2.8 }
+    man:    { S: 41, oy: 98, crown: -1.64, skullW: 1.04, temple: 0.05, cheekY: 0.2, cheekW: 1.0, jawY: 1.02, jawW: 0.84, chinY: 1.48, chinW: 0.34, chinB: 1.64, faceZ: 0.9, eyeX: 0.43, eyeW: 0.21, eyeH: 0.085, eyeTilt: 0.0, browY: -0.3, browT: 0.085, noseY: 0.72, noseZ: 0.36, noseW: 0.21, noseTip: 0.09, mouthY: 1.08, mouthW: 0.31, ulip: 0.045, llip: 0.065, neckW: 0.66, earY: -0.12, earH: 0.8, hollow: 0.3 },
+    woman:  { S: 42, oy: 98, crown: -1.6, skullW: 1.02, temple: 0.04, cheekY: 0.2, cheekW: 1.0, jawY: 0.98, jawW: 0.74, chinY: 1.38, chinW: 0.27, chinB: 1.53, faceZ: 0.9, eyeX: 0.42, eyeW: 0.22, eyeH: 0.105, eyeTilt: 0.02, browY: -0.32, browT: 0.06, noseY: 0.66, noseZ: 0.3, noseW: 0.17, noseTip: 0.075, mouthY: 1.0, mouthW: 0.29, ulip: 0.055, llip: 0.08, neckW: 0.52, earY: -0.1, earH: 0.72, hollow: 0.15 },
+    boy:    { S: 42, oy: 99, crown: -1.64, skullW: 1.04, temple: 0.03, cheekY: 0.2, cheekW: 1.0, jawY: 0.92, jawW: 0.76, chinY: 1.3, chinW: 0.28, chinB: 1.45, faceZ: 0.88, eyeX: 0.42, eyeW: 0.22, eyeH: 0.108, eyeTilt: 0.0, browY: -0.31, browT: 0.065, noseY: 0.6, noseZ: 0.27, noseW: 0.16, noseTip: 0.07, mouthY: 0.93, mouthW: 0.27, ulip: 0.045, llip: 0.068, neckW: 0.5, earY: -0.1, earH: 0.7, hollow: 0.05 },
+    girl:   { S: 41, oy: 102, crown: -1.72, skullW: 1.06, temple: 0.02, cheekY: 0.24, cheekW: 1.0, jawY: 0.82, jawW: 0.8, chinY: 1.15, chinW: 0.32, chinB: 1.31, faceZ: 0.86, eyeX: 0.41, eyeW: 0.22, eyeH: 0.122, eyeTilt: 0.0, browY: -0.32, browT: 0.05, noseY: 0.5, noseZ: 0.19, noseW: 0.14, noseTip: 0.065, mouthY: 0.8, mouthW: 0.23, ulip: 0.042, llip: 0.062, neckW: 0.44, earY: -0.08, earH: 0.62, hollow: 0 },
+    small:  { S: 40, oy: 106, crown: -1.84, skullW: 1.08, temple: 0.0, cheekY: 0.26, cheekW: 1.02, jawY: 0.72, jawW: 0.86, chinY: 1.02, chinW: 0.36, chinB: 1.19, faceZ: 0.86, eyeX: 0.4, eyeW: 0.215, eyeH: 0.128, eyeTilt: 0.0, browY: -0.32, browT: 0.045, noseY: 0.42, noseZ: 0.14, noseW: 0.13, noseTip: 0.065, mouthY: 0.7, mouthW: 0.2, ulip: 0.036, llip: 0.058, neckW: 0.42, earY: -0.06, earH: 0.58, hollow: 0 },
+    old:    { S: 42, oy: 98, crown: -1.6, skullW: 1.02, temple: 0.06, cheekY: 0.2, cheekW: 1.0, jawY: 1.0, jawW: 0.8, chinY: 1.4, chinW: 0.29, chinB: 1.55, faceZ: 0.9, eyeX: 0.42, eyeW: 0.21, eyeH: 0.092, eyeTilt: -0.01, browY: -0.31, browT: 0.05, noseY: 0.7, noseZ: 0.32, noseW: 0.19, noseTip: 0.085, mouthY: 1.04, mouthW: 0.28, ulip: 0.04, llip: 0.065, neckW: 0.52, earY: -0.1, earH: 0.8, age: 0.8, hollow: 0.2, jowl: 0.4 },
+    oldman: { S: 41, oy: 98, crown: -1.64, skullW: 1.04, temple: 0.06, cheekY: 0.2, cheekW: 1.0, jawY: 1.04, jawW: 0.84, chinY: 1.48, chinW: 0.34, chinB: 1.64, faceZ: 0.9, eyeX: 0.43, eyeW: 0.205, eyeH: 0.08, eyeTilt: -0.01, browY: -0.29, browT: 0.08, noseY: 0.74, noseZ: 0.38, noseW: 0.22, noseTip: 0.1, mouthY: 1.1, mouthW: 0.3, ulip: 0.032, llip: 0.055, neckW: 0.64, earY: -0.14, earH: 0.88, age: 0.8, hollow: 0.3, jowl: 0.4 }
   };
   P.FACES = FACES;
 
@@ -156,25 +156,33 @@ BTS.Portraits = (function () {
   }
   var R = Rig.prototype;
   /* cross-section of the head at height Y: half width W, front depth zf, back depth zb */
+  /* the head's width profile as control points, from the crown to the bottom of the chin */
+  function catmull(pts, x) {
+    for (var i = 0; i < pts.length - 1; i++) if (x <= pts[i + 1][0]) break;
+    i = Math.min(i, pts.length - 2);
+    var p0 = pts[Math.max(i - 1, 0)], p1 = pts[i], p2 = pts[i + 1], p3 = pts[Math.min(i + 2, pts.length - 1)];
+    var t = clamp((x - p1[0]) / (p2[0] - p1[0] || 1), 0, 1), t2 = t * t, t3 = t2 * t;
+    var m1 = (p2[1] - p0[1]) / ((p2[0] - p0[0]) || 1) * (p2[0] - p1[0]), m2 = (p3[1] - p1[1]) / ((p3[0] - p1[0]) || 1) * (p2[0] - p1[0]);
+    return (2 * t3 - 3 * t2 + 1) * p1[1] + (t3 - 2 * t2 + t) * m1 + (-2 * t3 + 3 * t2) * p2[1] + (t3 - t2) * m2;
+  }
+  R.profile = function () {
+    if (this._pf) return this._pf;
+    var c = this.fc, cr = c.crown, sw = c.skullW, mj = (c.cheekY + c.jawY) / 2, mc = (c.jawY + c.chinY) / 2;
+    var W = [[cr + 0.18, sw * 0.62], [cr + 0.45, sw * 0.88], [-0.85, sw], [-0.4, sw - c.temple], [c.cheekY, c.cheekW], [mj, lerp(c.cheekW, c.jawW, 0.42) - (c.hollow || 0) * 0.035 + (c.jowl || 0) * 0.01], [c.jawY, c.jawW + (c.jowl || 0) * 0.04], [mc, lerp(c.jawW, c.chinW, 0.55) + (c.jowl || 0) * 0.05], [c.chinY, c.chinW]];
+    var Zf = [[cr + 0.18, 0.5], [-0.9, 0.84], [-0.35, 0.9], [0, 0.84], [0.35, 0.88], [c.mouthY, 0.92], [c.chinY, 0.9]];
+    this._pf = { W: W, Zf: Zf };
+    return this._pf;
+  };
   R.sec = function (Y) {
-    var c = this.fc, W, zf, zb, sk = Y + 0.2, cr = c.crown + 0.2;
-    var dome = Math.sqrt(Math.max(0, 1 - (sk * sk) / (cr * cr)));
-    if (Y <= -0.2) { W = c.skullW * dome; zf = (c.faceZ + 0.02) * Math.max(dome, 0) ; zb = -1.12 * dome; return { W: W, zf: zf, zb: zb }; }
-    var bot = c.chinY + c.chinR;
-    if (Y <= c.cheekY) W = lerp(c.skullW, c.cheekW, ss((Y + 0.2) / (c.cheekY + 0.2)));
-    else {
-      // one smooth curve from the cheekbone to the bottom of the chin: a super-ellipse for the jaw plus a squarer one for the chin
-      var t = clamp((Y - c.cheekY) / (bot - c.cheekY), 0, 1), p = c.jawP || 2.2, q = c.chinP || 5, c0 = c.chinW;
-      W = (c.cheekW - c0) * Math.pow(1 - Math.pow(t, p), 1 / p) + c0 * Math.pow(1 - Math.pow(t, q), 1 / q);
-      W -= (c.hollow || 0) * Math.sin(Math.PI * clamp(t * 1.6, 0, 1)) * 0.06;
-      W += (c.jowl || 0) * Math.pow(Math.sin(Math.PI * clamp((t - 0.45) / 0.5, 0, 1)), 2) * 0.07;
-    }
-    zf = c.faceZ;
-    if (Y > c.jawY) { var w2 = clamp((Y - c.jawY) / (bot - c.jawY), 0, 1); zf = lerp(c.faceZ, c.faceZ - 0.06, w2); }
-    if (Y > c.chinY) zf -= Math.pow(clamp((Y - c.chinY) / c.chinR, 0, 1), 2) * 0.35;
-    var tb = clamp((Y - 0.3) / (c.jawY - 0.3), 0, 1);
-    zb = Y < 0.3 ? -1.12 : lerp(-1.12, -0.28, ss(tb));
-    if (Y > c.jawY) zb = lerp(-0.28, 0.4, clamp((Y - c.jawY) / (bot - c.jawY), 0, 1));
+    var c = this.fc, pf = this.profile(), cr = c.crown, W, zf, zb;
+    if (Y < cr + 0.18) { var u = clamp((Y - cr) / 0.18, 0, 1), k = Math.sqrt(Math.max(0, 1 - (1 - u) * (1 - u))); W = c.skullW * 0.62 * k; zf = 0.5 * k; zb = -0.75 * k; return { W: W, zf: zf, zb: zb }; }
+    if (Y > c.chinY) { var v = clamp((Y - c.chinY) / (c.chinB - c.chinY), 0, 1), e = Math.sqrt(Math.max(0, 1 - v * v)); W = c.chinW * e; zf = 0.9 - v * v * 0.32; zb = lerp(0.2, 0.55, v); return { W: Math.max(W, 0.001), zf: zf, zb: zb }; }
+    W = catmull(pf.W, Y); zf = catmull(pf.Zf, Y) * (c.faceZ / 0.9);
+    var dome = Math.sqrt(Math.max(0, 1 - Math.pow((Y + 0.25) / (cr + 0.25), 2)));
+    if (Y < -0.25) zb = -1.12 * Math.max(dome, 0.66) * (Y < cr + 0.45 ? 1 : 1);
+    else if (Y < 0.35) zb = -1.12;
+    else if (Y < c.jawY) zb = lerp(-1.12, -0.35, ss((Y - 0.35) / (c.jawY - 0.35)));
+    else zb = lerp(-0.35, 0.2, (Y - c.jawY) / (c.chinY - c.jawY));
     return { W: W, zf: zf, zb: zb };
   };
   /* project head-space point to screen */
@@ -205,7 +213,7 @@ BTS.Portraits = (function () {
   /* outline of the bare head (skull + face): right side top->bottom, then left bottom->top */
   R.outline = function () {
     if (this._ol) return this._ol;
-    var c = this.fc, top = c.crown + 0.005, bot = c.chinY + c.chinR - 0.004, L = [], Rr = [], N = 70;
+    var c = this.fc, top = c.crown + 0.005, bot = c.chinB - 0.003, L = [], Rr = [], N = 80;
     for (var i = 0; i <= N; i++) {
       var t = i / N, Y = top + (bot - top) * (1 - Math.cos(t * Math.PI)) / 2;
       var e = this.ext(Y); Rr.push(e.r); L.push(e.l);
@@ -284,7 +292,7 @@ BTS.Portraits = (function () {
     // form shadow on the far side plane: temple, outer socket, under the cheekbone, along the jaw
     var hol = fc.hollow || 0;
     var edge = [[0.48, -1.5], [0.54, -1.0], [0.6, -0.6], [0.66, -0.3], [0.74, -0.04], [0.8, 0.16], [0.7 - hol * 0.12, 0.36], [0.6 - hol * 0.12, 0.56], [0.54, 0.78], [0.46, 1.0], [0.32, 1.22], [0.16, 1.5]];
-    var ept = edge.map(function (p) { var s2 = a.sec(Math.min(p[1], fc.chinY + fc.chinR * 0.8)); return a.on(p[0] * Math.max(s2.W, 0.2), p[1]); });
+    var ept = edge.map(function (p) { var s2 = a.sec(Math.min(p[1], fc.chinB * 0.8)); return a.on(p[0] * Math.max(s2.W, 0.2), p[1]); });
     var far = ept.concat([[ept[ept.length - 1][0] + S * 2, ept[ept.length - 1][1] + S], [ept[0][0] + S * 2, ept[0][1] - S]]);
     var farD = smooth(far, true, 0.7);
     sh.push(a.el(farD, sk.shadow, { op: 0.55, blur: 2.2 }));
@@ -320,9 +328,9 @@ BTS.Portraits = (function () {
     lp.forEach(function (q) { var c3 = a.on(q[0], q[1]); sh.push('<ellipse cx="' + f(c3[0]) + '" cy="' + f(c3[1]) + '" rx="' + f(S * q[2]) + '" ry="' + f(S * q[3]) + '" fill="' + rgb(sk.hi) + '" opacity="' + fo(0.35 + (hol * 0.15)) + '" filter="url(#' + a.blur(3) + ')"/>'); });
     // under the chin: the jaw's underside turns away from the light
     var jl = [];
-    for (var Y = fc.jawY - 0.1; Y <= fc.chinY + fc.chinR; Y += 0.04) jl.push(a.ext(Y).l);
+    for (var Y = fc.jawY - 0.1; Y <= fc.chinB; Y += 0.04) jl.push(a.ext(Y).l);
     var jr = [];
-    for (Y = fc.chinY + fc.chinR; Y >= fc.jawY - 0.1; Y -= 0.04) jr.push(a.ext(Y).r);
+    for (Y = fc.chinB; Y >= fc.jawY - 0.1; Y -= 0.04) jr.push(a.ext(Y).r);
     var und = jl.concat(jr).map(function (p) { return [p[0], p[1] + S * 0.06]; });
     sh.push(a.el(smooth(und, true), sk.shadow, { op: 0.45, blur: 2.2 }));
     s += a.g(sh.join(''), { clip: cp });
@@ -340,7 +348,7 @@ BTS.Portraits = (function () {
   /* ---------------- neck ---------------- */
   function neck(a) {
     var fc = a.fc, S = a.S, sk = a.skin, nw = fc.neckW * (a.pd.neckK || 1);
-    var y0 = fc.jawY - 0.1, y1 = fc.chinY + fc.chinR + 0.62;
+    var y0 = fc.jawY - 0.1, y1 = fc.chinB + 0.62;
     var l0 = a.P(-nw, y0, -0.2), l1 = a.P(-nw * 1.08, y1, -0.15), r0 = a.P(nw * 0.92, y0, -0.15), r1 = a.P(nw * 1.04, y1, -0.1);
     var mid = a.P(0, y1 + 0.25, 0.3);
     var d = smooth([K(l0), [lerp(l0[0], l1[0], 0.5) + S * 0.02, lerp(l0[1], l1[1], 0.5)], K(l1), [mid[0], mid[1]], K(r1), [lerp(r0[0], r1[0], 0.5) - S * 0.01, lerp(r0[1], r1[1], 0.5)], K(r0)], true);
@@ -695,7 +703,7 @@ BTS.Portraits = (function () {
     }
     if (pd.mole) { var m = a.on(pd.mole[0], pd.mole[1], 0.02); s += '<circle cx="' + f(m[0]) + '" cy="' + f(m[1]) + '" r="1.3" fill="' + rgb(mix(sk.deep, [60, 30, 20], 0.5)) + '"/>'; }
     if (pd.doubleChin) {
-      var dc = pd.doubleChin, c = fc.chinY + fc.chinR;
+      var dc = pd.doubleChin, c = fc.chinB;
       var l = a.ext(c - 0.25).l, r = a.ext(c - 0.25).r, b = a.on(0.05, c + 0.18 * dc, -0.1);
       var dcd = [a.on(-0.72, c - 0.38, -0.25), [l[0] - S * 0.04, l[1] + S * 0.18], [b[0] - S * 0.2, b[1]], [b[0] + S * 0.1, b[1] - S * 0.01], [r[0] + S * 0.03, r[1] + S * 0.15], a.on(0.7, c - 0.42, -0.2)];
       a.add('chin2', a.el(smooth(dcd, false) + 'Z', sk.base) + a.el(smooth(dcd, false) + 'Z', sk.shadow, { op: 0.45 }) + a.ink(dcd.slice(1, 5), [0.4, 1.6, 0.6], { op: 0.85 }));
@@ -744,6 +752,7 @@ BTS.Portraits = (function () {
     mouth(a);
     skinMarks(a);
     if (Lib.dress) Lib.dress(a);
+    if (P.debug && P.debug.nohair) ['hair', 'hairTop', 'hairBack', 'hairShadow', 'hat'].forEach(function (k) { a.layers[k] = []; });
     return compose(a);
   }
   P.build = build;
