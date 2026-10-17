@@ -27,7 +27,7 @@ BTS.Test = (function () {
     BTS.Env.set({ time: 'evening', weather: 'clear', horror: 0 }, true);
     BTS.Env.sepiaGoal = 0.85; BTS.Env.sepia = 0.85;
     setTimeout(function () {
-      BTS.Cutscene.play(function () { return BTS.Theatre.play({ speed: +(q().get('speed') || 1), test: true }); }, 'theatre')
+      BTS.Cutscene.play(function () { return BTS.Theatre.play({ speed: +(q().get('speed') || 1), from: +(q().get('from') || 0), test: true }); }, 'theatre')
         .then(function () { T.theatreDone = true; BTS.UI.toast('TEST: theatre done'); });
     }, 600);
   };

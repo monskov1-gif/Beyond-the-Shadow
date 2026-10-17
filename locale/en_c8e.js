@@ -45,7 +45,7 @@ BTS.Locale.en_parts.push({
       4: 'Then — with the needle she left. Into the shadow’s head.', 5: 'That’s… a fairy tale, Đorđe. Your grandmother’s fairy tale.', 6: 'Shadows don’t poison people. Fairy tales don’t lie. Grandmother saw her.',
       7: '…All right. All right. Suppose so. Where do we get her needle?', 8: 'The needle she left. Under Tihomir’s pillow.', 9: 'Not Zajko’s or Gorazd’s. Not the one Tata threw into the fire. Their thread is already cut. Only the one she is still sewing with.' },
     c9_wake: { 1: 'Six fifty-nine. Seven o’clock.', 2: 'The bell doesn’t ring.', 3: 'Seven-oh-one. Seven-oh-two. Silence.', 4: 'Đorđe… The bell.', 6: 'For five days we knocked at Tihomir’s door. He sent us away from the threshold: “I’m sleeping well for the first time in years.”', 5: 'Tihomir. Not in a month. In six days. As it said on the wall.' },
-    c9_village: { 1: 'People at Tihomir’s house. Vesna and Radoje are loading a cart. Chests, bundles, a cage of hens.',
+    c9_village: { 1: 'People at Tihomir’s house. Vesna and Radoje stand by the gate. They don’t go in.',
       2: 'We’re leaving, Đorđe. To my sister’s in town. I can’t anymore.', 3: 'The bell is silent. So God has turned away from Pakleštica. That’s what my mother used to say.',
       4: 'Father Sava stands at Tihomir’s door and doesn’t go in.', 5: 'Tihomir. September 26.', 6: 'Mine is the twenty-ninth. In three days.' },
     c9_beast: { 1: 'By the church, in the dusk, stands Jaglika. Motionless. Her back to us.', 2: 'Her shadow crawls up the church wall. Huge. Arms — six, eight, I can’t count them. A long head, thorned.',

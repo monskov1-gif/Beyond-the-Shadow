@@ -213,7 +213,7 @@ BTS.Locale.en_parts.push({
       9: 'Tata was counting the seconds too. I didn’t know Tata counts.'
     },
     c2_sava_news: {
-      1: 'Evening. Rain. Father Sava and Stana sit at the kitchen table. Stana brought a pot of soup. Nobody eats.',
+      1: 'Evening. Rain. Father Sava and Stana are in the kitchen. Stana brought a pot of soup. Nobody eats.',
       2: 'Đorđe… This morning your father was found in the smithy. The forge was cold. He was sitting on the floor, against the anvil.',
       3: 'Tata. Three days after Mama.',
       4: 'Zajko. Mama. Tata. Thirty-two days. Twenty-nine days. Three days.',

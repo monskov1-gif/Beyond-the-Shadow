@@ -1297,7 +1297,7 @@ BTS.Theatre = (function () {
     raf = requestAnimationFrame(frame);
     var dt = Math.min(0.1, Math.max(0, (now - lastT) / 1000)); lastT = now;
     if (BTS.UI && BTS.UI.stack && BTS.UI.stack.length) dt = 0;   // the pause menu / journal stops the show
-    dt *= TH.speed;
+    dt *= TH.speed * (TH.from && (S.act || 0) < TH.from ? 25 : 1);
     try { step(dt); render(); frameErr = 0; } catch (e) { BTS.Log.error('theatre frame', e); if (++frameErr > 5) { TH.aborted = true; finishNow(); } }
   }
   function hook(fn) { S.hooks.push(fn); return function () { var i = S.hooks.indexOf(fn); if (i >= 0) S.hooks.splice(i, 1); }; }
@@ -1306,6 +1306,7 @@ BTS.Theatre = (function () {
   var ABORT = { abort: true };
   function say(id) {
     if (TH.aborted) return Promise.reject(ABORT);
+    if (TH.from && (S.act || 0) < TH.from) return wait(0.5);   // dev: ?test=theatre&from=N fast-forwards
     return BTS.Dialogue.start(id).then(function (r) { if (r === 'abort' || TH.aborted || (BTS.Game && BTS.Game.mode !== 'play' && !TH.test)) { TH.aborted = true; throw ABORT; } return r; });
   }
   function cam(x, y, z, dur, ease) { return tw(S.cam, { x: x, y: y, z: z }, dur, ease || 'io'); }
@@ -1400,9 +1401,9 @@ BTS.Theatre = (function () {
   /* ACT III */
   CUES.a3_needle = async function () {
     var w = A_.witch, v = A_.victim;
-    if (v.x > -38) { stopTweens(v); await tw(v, { x: -40 }, 0.8, 'out'); }
+    if (v.x > -8) { stopTweens(v); await tw(v, { x: -10 }, 0.8, 'out'); }
     v.flip = 1;
-    await walk(w, -132, 42);
+    await walk(w, -150, 42);
     w.flip = 1; w.hideP.needle = false;
     await tw(w.ang, { armF: -1.5, foreF: -0.5, handF: 0.2, needle: 2.9 }, 1.1);
     var tp = needleTip(w, 'needle'); glint(tp[0], tp[1]); sfxThread(1.6);
@@ -1645,7 +1646,7 @@ BTS.Theatre = (function () {
     A_.victim = add(make.man({ x: 580, y: FEET, flip: -1, held: 'R', z: 5, autoLean: 0.5 }));
     await handSweep(-1, function () { remove(w); }, 1.6);
     A_.victim.base.armF = 0.08;
-    walk(A_.victim, -40, 52).then(function () { A_.victim.flip = 1; return tw(A_.victim.ang, { armF: -2.9, armB: 2.9 }, 0.8); })
+    walk(A_.victim, -10, 52).then(function () { A_.victim.flip = 1; return tw(A_.victim.ang, { armF: -2.9, armB: 2.9 }, 0.8); })
       .then(function () { return wait(0.8); }).then(function () { return tw(A_.victim.ang, { armF: 0.08, armB: -0.05 }, 0.7); });
     await wait(1.0);
     await say('th_a3');
@@ -1745,7 +1746,7 @@ BTS.Theatre = (function () {
   /* ---------------- setup / teardown ---------------- */
   var prevMusic = null, savedScripts = null, resolveFn = null;
   function setup(opts) {
-    TH.active = true; TH.aborted = false; TH.test = !!opts.test;
+    TH.active = true; TH.aborted = false; TH.test = !!opts.test; TH.from = opts.from || 0;
     TH.speed = opts.speed || 1;
     if (TH.speed !== 1) {   // faster dialogue pauses for automated tests
       savedScripts = {};
