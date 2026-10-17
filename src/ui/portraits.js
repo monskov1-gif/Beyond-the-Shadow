@@ -90,13 +90,13 @@ BTS.Portraits = (function () {
 
   /* ---------------- face presets (units: half the cheekbone width = 1; eye line Y = 0, Y down, Z toward viewer) ---------------- */
   var FACES = {
-    man:    { S: 41, oy: 98, crown: -1.64, skullW: 1.10, temple: 0.05, cheekY: 0.2, cheekW: 1.0, jawY: 0.98, jawW: 0.86, chinY: 1.4, chinW: 0.4, chinB: 1.56, faceZ: 0.9, eyeX: 0.43, eyeW: 0.22, eyeH: 0.085, eyeTilt: 0.0, browY: -0.3, browT: 0.085, noseY: 0.72, noseZ: 0.36, noseW: 0.21, noseTip: 0.09, mouthY: 1.08, mouthW: 0.31, ulip: 0.045, llip: 0.065, neckW: 0.66, earY: -0.12, earH: 0.8, hollow: 0.3 },
-    woman:  { S: 42, oy: 98, crown: -1.6, skullW: 1.08, temple: 0.04, cheekY: 0.2, cheekW: 1.0, jawY: 0.94, jawW: 0.82, chinY: 1.3, chinW: 0.36, chinB: 1.45, faceZ: 0.9, eyeX: 0.42, eyeW: 0.235, eyeH: 0.115, eyeTilt: 0.02, browY: -0.32, browT: 0.06, noseY: 0.6, noseZ: 0.26, noseW: 0.17, noseTip: 0.075, mouthY: 0.92, mouthW: 0.29, ulip: 0.055, llip: 0.08, neckW: 0.52, earY: -0.1, earH: 0.72, hollow: 0.05 },
-    boy:    { S: 42, oy: 99, crown: -1.64, skullW: 1.10, temple: 0.03, cheekY: 0.2, cheekW: 1.0, jawY: 0.88, jawW: 0.82, chinY: 1.24, chinW: 0.36, chinB: 1.39, faceZ: 0.88, eyeX: 0.42, eyeW: 0.235, eyeH: 0.118, eyeTilt: 0.0, browY: -0.31, browT: 0.065, noseY: 0.6, noseZ: 0.24, noseW: 0.16, noseTip: 0.07, mouthY: 0.93, mouthW: 0.27, ulip: 0.045, llip: 0.068, neckW: 0.5, earY: -0.1, earH: 0.7, hollow: 0.05 },
-    girl:   { S: 41, oy: 102, crown: -1.72, skullW: 1.12, temple: 0.02, cheekY: 0.24, cheekW: 1.0, jawY: 0.82, jawW: 0.8, chinY: 1.15, chinW: 0.38, chinB: 1.31, faceZ: 0.86, eyeX: 0.41, eyeW: 0.22, eyeH: 0.122, eyeTilt: 0.0, browY: -0.32, browT: 0.05, noseY: 0.5, noseZ: 0.17, noseW: 0.14, noseTip: 0.065, mouthY: 0.8, mouthW: 0.23, ulip: 0.042, llip: 0.062, neckW: 0.44, earY: -0.08, earH: 0.62, hollow: 0 },
-    small:  { S: 40, oy: 106, crown: -1.84, skullW: 1.14, temple: 0.0, cheekY: 0.26, cheekW: 1.02, jawY: 0.72, jawW: 0.86, chinY: 1.02, chinW: 0.42, chinB: 1.19, faceZ: 0.86, eyeX: 0.4, eyeW: 0.215, eyeH: 0.128, eyeTilt: 0.0, browY: -0.32, browT: 0.045, noseY: 0.42, noseZ: 0.14, noseW: 0.13, noseTip: 0.065, mouthY: 0.7, mouthW: 0.2, ulip: 0.036, llip: 0.058, neckW: 0.42, earY: -0.06, earH: 0.58, hollow: 0 },
-    old:    { S: 42, oy: 98, crown: -1.6, skullW: 1.08, temple: 0.06, cheekY: 0.2, cheekW: 1.0, jawY: 0.96, jawW: 0.82, chinY: 1.34, chinW: 0.36, chinB: 1.49, faceZ: 0.9, eyeX: 0.42, eyeW: 0.225, eyeH: 0.1, eyeTilt: -0.01, browY: -0.31, browT: 0.05, noseY: 0.7, noseZ: 0.32, noseW: 0.19, noseTip: 0.085, mouthY: 1.04, mouthW: 0.28, ulip: 0.04, llip: 0.065, neckW: 0.52, earY: -0.1, earH: 0.8, age: 0.8, hollow: 0.2, jowl: 0.4 },
-    oldman: { S: 41, oy: 98, crown: -1.64, skullW: 1.10, temple: 0.06, cheekY: 0.2, cheekW: 1.0, jawY: 1.04, jawW: 0.86, chinY: 1.48, chinW: 0.4, chinB: 1.64, faceZ: 0.9, eyeX: 0.43, eyeW: 0.205, eyeH: 0.08, eyeTilt: -0.01, browY: -0.29, browT: 0.08, noseY: 0.74, noseZ: 0.38, noseW: 0.22, noseTip: 0.1, mouthY: 1.1, mouthW: 0.3, ulip: 0.032, llip: 0.055, neckW: 0.64, earY: -0.14, earH: 0.88, age: 0.8, hollow: 0.3, jowl: 0.4 }
+    man:    { S: 41, oy: 98, crown: -1.64, skullW: 1.10, temple: 0.05, cheekY: 0.2, cheekW: 1.0, jawY: 0.98, jawW: 0.86, chinY: 1.4, chinW: 0.4, chinB: 1.56, faceZ: 0.9, eyeX: 0.43, eyeW: 0.22, eyeH: 0.085, eyeTilt: 0.0, browY: -0.3, browT: 0.085, noseY: 0.72, noseZ: 0.36, noseW: 0.21, noseTip: 0.09, mouthY: 1.08, mouthW: 0.31, ulip: 0.045, llip: 0.065, neckW: 0.66, earY: -0.12, earH: 0.8, hollow: 0.1 },
+    woman:  { S: 42, oy: 98, crown: -1.6, skullW: 1.08, temple: 0.04, cheekY: 0.2, cheekW: 1.0, jawY: 0.94, jawW: 0.82, chinY: 1.3, chinW: 0.36, chinB: 1.45, faceZ: 0.9, eyeX: 0.42, eyeW: 0.235, eyeH: 0.115, eyeTilt: 0.02, browY: -0.32, browT: 0.06, noseY: 0.6, noseZ: 0.26, noseW: 0.17, noseTip: 0.075, mouthY: 0.92, mouthW: 0.29, ulip: 0.055, llip: 0.08, neckW: 0.52, earY: -0.1, earH: 0.72, hollow: 0 },
+    boy:    { S: 42, oy: 99, crown: -1.64, skullW: 1.10, temple: 0.03, cheekY: 0.2, cheekW: 1.0, jawY: 0.88, jawW: 0.82, chinY: 1.24, chinW: 0.42, chinB: 1.39, faceZ: 0.88, eyeX: 0.42, eyeW: 0.25, eyeH: 0.125, eyeTilt: 0.0, browY: -0.31, browT: 0.065, noseY: 0.56, noseZ: 0.2, noseW: 0.16, noseTip: 0.07, mouthY: 0.93, mouthW: 0.27, ulip: 0.045, llip: 0.068, neckW: 0.5, earY: -0.1, earH: 0.7, hollow: 0 },
+    girl:   { S: 41, oy: 102, crown: -1.72, skullW: 1.12, temple: 0.02, cheekY: 0.24, cheekW: 1.0, jawY: 0.82, jawW: 0.8, chinY: 1.15, chinW: 0.44, chinB: 1.31, faceZ: 0.86, eyeX: 0.41, eyeW: 0.26, eyeH: 0.14, eyeTilt: 0.0, browY: -0.32, browT: 0.05, noseY: 0.5, noseZ: 0.17, noseW: 0.14, noseTip: 0.065, mouthY: 0.8, mouthW: 0.23, ulip: 0.042, llip: 0.062, neckW: 0.44, earY: -0.08, earH: 0.62, hollow: 0 },
+    small:  { S: 40, oy: 106, crown: -1.84, skullW: 1.14, temple: 0.0, cheekY: 0.26, cheekW: 1.02, jawY: 0.72, jawW: 0.86, chinY: 1.02, chinW: 0.5, chinB: 1.19, faceZ: 0.86, eyeX: 0.4, eyeW: 0.27, eyeH: 0.155, eyeTilt: 0.0, browY: -0.32, browT: 0.045, noseY: 0.42, noseZ: 0.14, noseW: 0.13, noseTip: 0.065, mouthY: 0.7, mouthW: 0.2, ulip: 0.036, llip: 0.058, neckW: 0.42, earY: -0.06, earH: 0.58, hollow: 0 },
+    old:    { S: 42, oy: 98, crown: -1.6, skullW: 1.08, temple: 0.06, cheekY: 0.2, cheekW: 1.0, jawY: 0.96, jawW: 0.82, chinY: 1.34, chinW: 0.36, chinB: 1.49, faceZ: 0.9, eyeX: 0.42, eyeW: 0.225, eyeH: 0.1, eyeTilt: -0.01, browY: -0.31, browT: 0.05, noseY: 0.7, noseZ: 0.32, noseW: 0.19, noseTip: 0.085, mouthY: 1.04, mouthW: 0.28, ulip: 0.04, llip: 0.065, neckW: 0.52, earY: -0.1, earH: 0.8, age: 0.8, hollow: 0.08, jowl: 0.4 },
+    oldman: { S: 41, oy: 98, crown: -1.64, skullW: 1.10, temple: 0.06, cheekY: 0.2, cheekW: 1.0, jawY: 1.04, jawW: 0.86, chinY: 1.48, chinW: 0.4, chinB: 1.64, faceZ: 0.9, eyeX: 0.43, eyeW: 0.205, eyeH: 0.08, eyeTilt: -0.01, browY: -0.29, browT: 0.08, noseY: 0.74, noseZ: 0.38, noseW: 0.22, noseTip: 0.1, mouthY: 1.1, mouthW: 0.3, ulip: 0.032, llip: 0.055, neckW: 0.64, earY: -0.14, earH: 0.88, age: 0.8, hollow: 0.18, jowl: 0.4 }
   };
   P.FACES = FACES;
 
@@ -129,9 +129,12 @@ BTS.Portraits = (function () {
     var fc = Object.assign({}, FACES[pd.face] || FACES.woman, pd.f || {});
     a.fc = fc;
     a.age = pd.age !== undefined ? pd.age : (fc.age || 0);
+    a.full = pd.full !== undefined ? pd.full : ({ boy: 0.8, girl: 0.9, small: 1, woman: 0.55, man: 0.25, old: 0.35, oldman: 0.1 }[pd.face] || 0.4);
+    fc.full = a.full;
+    if (!/old/.test(pd.face)) { fc.chinY -= a.full * 0.05; fc.chinB -= a.full * 0.06; fc.jawY -= a.full * 0.03; }
     a.S = fc.S * 1.16 * (pd.scale || 1);
     a.ox = 116 + (pd.ox || 0); a.oy = fc.oy - 6 + (pd.oy || 0);
-    a.yaw = (pd.yaw === undefined ? 0.44 : pd.yaw) + (ex.yaw || 0);
+    a.yaw = (pd.yaw === undefined ? 0.44 - (pd.full || 0) * 0.08 : pd.yaw) + (ex.yaw || 0);
     if (P.debug && P.debug.yaw !== undefined) a.yaw = P.debug.yaw;
     a.pitch = (pd.pitch || 0) + ex.pitch;
     a.roll = (pd.roll || 0) + ex.roll;
@@ -169,7 +172,8 @@ BTS.Portraits = (function () {
   R.profile = function () {
     if (this._pf) return this._pf;
     var c = this.fc, cr = c.crown, sw = c.skullW, mj = (c.cheekY + c.jawY) / 2, mc = (c.jawY + c.chinY) / 2;
-    var W = [[cr + 0.18, sw * 0.62], [cr + 0.45, sw * 0.88], [-0.85, sw], [-0.4, sw - c.temple], [c.cheekY, c.cheekW], [mj, lerp(c.cheekW, c.jawW, 0.42) - (c.hollow || 0) * 0.035 + (c.jowl || 0) * 0.01], [c.jawY, c.jawW + (c.jowl || 0) * 0.04], [mc, lerp(c.jawW, c.chinW, 0.55) + (c.jowl || 0) * 0.05], [c.chinY, c.chinW]];
+    var fu = c.full || 0;
+    var W = [[cr + 0.18, sw * 0.62], [cr + 0.45, sw * 0.88], [-0.85, sw], [-0.4, sw - c.temple], [c.cheekY, c.cheekW], [mj, lerp(c.cheekW, c.jawW, 0.42) - (c.hollow || 0) * 0.05 + (c.jowl || 0) * 0.01 + fu * 0.09], [c.jawY, c.jawW + (c.jowl || 0) * 0.04 + fu * 0.06], [mc, lerp(c.jawW, c.chinW, 0.55) + (c.jowl || 0) * 0.05 + fu * 0.11], [c.chinY, c.chinW + fu * 0.06]];
     var Zf = [[cr + 0.18, 0.5], [-0.9, 0.84], [-0.35, 0.9], [0, 0.84], [0.35, 0.88], [c.mouthY, 0.92], [c.chinY, 0.9]];
     this._pf = { W: W, Zf: Zf };
     return this._pf;
@@ -234,7 +238,8 @@ BTS.Portraits = (function () {
   R.farBump = function (Y) {
     var c = this.fc, k = Math.min(1, this.yaw / 0.35), hol = (c.hollow || 0) + (this.pd.gaunt || 0) * 0.6;
     function g(m, w) { return Math.exp(-Math.pow((Y - m) / w, 2)); }
-    return k * (0.035 * g(c.browY + 0.02, 0.1) - 0.03 * g(c.browY - 0.3, 0.14) - 0.035 * g(0.0, 0.08) + (0.045 + hol * 0.03) * g(c.cheekY, 0.13) - (0.02 + hol * 0.06) * g(c.cheekY + 0.42, 0.16));
+    var fu = this.full || 0;
+    return k * (0.035 * g(c.browY + 0.02, 0.1) - 0.03 * g(c.browY - 0.3, 0.14) - 0.035 * g(0.0, 0.08) + (0.045 - fu * 0.02 + hol * 0.03) * g(c.cheekY, 0.13) - hol * 0.07 * g(c.cheekY + 0.42, 0.16) + fu * 0.035 * g(c.cheekY + 0.4, 0.25));
   };
   /* point on the head silhouette in direction ang (degrees, 0 = screen right, 90 = down) from the skull centre, pushed out by pad units */
   R.rim = function (ang, pad) {
@@ -314,17 +319,18 @@ BTS.Portraits = (function () {
     sh.push(a.el(skinD, a.lin(g0[0], g0[1], g1[0], g1[1], [[0, sk.shadow, 0.35], [0.45, sk.base, 0], [1, sk.light, 0.35]])));
     // 1. the side plane of the head on the ear side: temple, outer socket, under the cheekbone, along the jaw
     var jy = fc.jawY, cy2 = fc.chinY;
-    var term = [[-0.66, fc.crown + 0.1], [-0.7, -1.0], [-0.76, -0.55], [-0.8, -0.3], [-0.68, -0.08], [-0.7, 0.08], [-0.8, 0.24], [-0.7 + hol * 0.1, 0.44], [-0.62 + hol * 0.08, 0.64], [-0.62, 0.84], [-0.64, jy], [-0.5, (jy + cy2) / 2], [-0.36, cy2 - 0.02], [-0.16, fc.chinB - 0.01]];
+    var term = [[-0.66, fc.crown + 0.1], [-0.7, -1.0], [-0.76, -0.55], [-0.8, -0.3], [-0.68, -0.08], [-0.7, 0.08], [-0.8, 0.24], [-0.7 + hol * 0.1 - a.full * 0.08, 0.44], [-0.62 + hol * 0.08 - a.full * 0.1, 0.64], [-0.62 - a.full * 0.08, 0.84], [-0.64 - a.full * 0.06, jy], [-0.5, (jy + cy2) / 2], [-0.36, cy2 - 0.02], [-0.16, fc.chinB - 0.01]];
+    term = term.map(function (q) { return [q[0] - a.full * 0.1 * Math.max(0, Math.min(1, (q[1] + 0.3) / 0.6)), q[1]]; });
     var tp = FL(term), far = tp.concat([[tp[tp.length - 1][0] - S * 0.2, tp[tp.length - 1][1] + S * 0.5], [tp[0][0] - S * 3, tp[tp.length - 1][1] + S], [tp[0][0] - S * 3, tp[0][1] - S * 2]]);
-    sh.push(a.el(smooth(far, true, 0.75), shCol, { op: 0.58, blur: 0.6 }));
+    sh.push(a.el(smooth(far, true, 0.75), shCol, { op: 0.55 - a.full * 0.12, blur: 0.6 + a.full * 0.8 }));
     // darker core along the terminator under the cheekbone and the jaw
     var core = FL([[-0.9, 0.32], [-0.74, 0.46], [-0.68, 0.7], [-0.7, jy - 0.05], [-0.56, (jy + cy2) / 2], [-0.46, cy2], [-0.76, cy2], [-0.95, jy], [-0.98, 0.6]]);
-    sh.push(a.el(smooth(core, true), dpCol, { op: 0.18 + hol * 0.3, blur: 1.4 }));
+    sh.push(a.el(smooth(core, true), dpCol, { op: (0.14 + hol * 0.35) * (1 - a.full * 0.7), blur: 1.8 }));
     // warm transition (light scattering in skin) along the terminator
     sh.push(a.el(smooth(tp.slice(3, 11), false), 'none', { stroke: sk.blush, sw: S * 0.05, op: 0.28, blur: 1.4 }));
     // 2. far side: the cheek turns away under the cheekbone, and the far jaw
     var fh = FL([[0.94, 0.3], [0.72, 0.42], [0.66 - hol * 0.05, 0.66], [0.7, jy - 0.05], [0.62, (jy + cy2) / 2], [1.2, (jy + cy2) / 2], [1.2, 0.3]]);
-    sh.push(a.el(smooth(fh, true), shCol, { op: 0.32 + hol * 0.4, blur: 1.2 }));
+    if (hol > 0.05) sh.push(a.el(smooth(fh, true), shCol, { op: hol * 0.6, blur: 1.4 }));
     // gaunt temples
     if (hol > 0.2) [-1, 1].forEach(function (sd) {
       sh.push(a.el(smooth(FL([[sd * 0.92, -0.85], [sd * 0.74, -0.7], [sd * 0.72, -0.32], [sd * 0.95, -0.24]]), true), shCol, { op: 0.4 * hol, blur: 1.4 }));
@@ -366,8 +372,9 @@ BTS.Portraits = (function () {
     var Rl = Rr.filter(function (p, i) { return i > Rr.length * 0.36; });
     var Ll = L.filter(function (p, i) { return i > L.length * 0.36; });
     var chinPt = Rr[Rr.length - 1];
+    lw *= 1 - a.full * 0.3;
     a.add('lines', a.ink(Rl.concat([chinPt]), function (t) { return (1.1 + t * 0.9) * lw; }, { per: 1 }));
-    a.add('lines', a.ink(Ll.concat([chinPt]), function (t) { return (1.8 + t * 0.7) * lw; }, { per: 1 }));
+    a.add('lines', a.ink(Ll.concat([chinPt]), function (t) { return (1.6 + t * 0.6) * lw; }, { per: 1 }));
     // a hint of the chin's form
     var cz = [a.on(-0.14, fc.chinY + 0.02, 0.02), a.on(0.0, fc.chinY + 0.04, 0.02), a.on(0.12, fc.chinY + 0.01, 0.02)];
     a.add('lines', a.ink(cz, [0.1, 0.8, 0.1], { op: 0.35 }));
