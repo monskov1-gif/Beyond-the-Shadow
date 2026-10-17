@@ -123,12 +123,30 @@
       props: [STRAY_DOG],
       tick: crowdTick,
       triggers: [{ loc: 'village', id: 'conflict', box: [80, 72, 100, 88], cond: 'flag:talked_milka&flag:talked_pecko', run: function (C) {
-        C.spawn('jaglika', [94.2, 70.6], { dir: 'left', noTalk: true });
-        return C.cam({ target: [91.5, 1, 71], time: 1.4 }).then(function () { return C.walk('jaglika', [92.6, 70.1], {}); })
-          .then(function () { C.face('gorazd', 'jaglika'); return C.say('p_conflict'); })
-          .then(function () { C.anim('jaglika', null); return C.walk('jaglika', [104, 80], { noWait: true }); })
-          .then(function () { return C.wait(1.0); })
-          .then(function () { C.clue('obs_gorazd_conflict'); C.flag('saw_conflict'); C.despawn('jaglika'); });
+        /* staged in the open in front of Gorazd's red stall (not behind the table/awning), under a lantern */
+        var G = [90.6, 72.5], J = [92.7, 72.9];
+        var lamp = C.keyLight(91.6, 72.8, { radius: 6, intensity: 1.25, dz: 1.6 });
+        C.spawn('jaglika', [99.8, 76.6], { dir: 'left', noTalk: true });
+        C.walk('gorazd', G, { noWait: true });
+        return C.frame([[91.6, 72.7]], { dist: 13, time: 1.4 }).then(function () { return C.walk('jaglika', J); })
+          .then(function () { C.face('jaglika', 'up'); return C.wait(0.6); })    // she looks over his goods
+          .then(function () { C.face('gorazd', 'jaglika'); C.face('jaglika', 'gorazd'); return C.say('p_conflict', { at: {
+            1: function () { C.anim('gorazd', 'point'); C.face('gorazd', 'jaglika'); },
+            2: function () { C.anim('gorazd', null); },
+            3: function () { C.anim('gorazd', 'point'); },
+            4: function () {   // the shove: he lunges, she is pushed back one step and keeps her feet
+              C.anim('gorazd', 'interact'); C.step('gorazd', 0.6, 0.1, { speed: 2.4 }); C.sfx('cloth', {}); C.shake(0.35);
+              var j = C.ent('jaglika'); if (j) { var sx = j.x, sz = j.z; C.tween(0.35, function (k) { j.x = sx + 0.75 * k; j.z = sz + 0.15 * k; }); }
+            },
+            5: function () {   // a long look at him, then over the crowd at Đorđe: the camera goes in on her face
+              C.anim('gorazd', null); C.face('jaglika', 'gorazd');
+              C.wait(1.4).then(function () { C.face('jaglika', 'player'); C.face('player', 'jaglika'); C.frame(['jaglika'], { dist: 9, time: 1.6 }); });
+            },
+            7: function () { var j = C.ent('jaglika'); if (j) C.frame([[j.x, j.z], [j.x - 1.2, j.z + 2.4]], { dist: 11, time: 1.2 }); }
+          } }); })
+          .then(function () { C.anim('jaglika', null); C.anim('gorazd', null); C.unlight(lamp); return C.walk('jaglika', [104, 80], { noWait: true }); })
+          .then(function () { return C.wait(1.6); })
+          .then(function () { C.clue('obs_gorazd_conflict'); C.flag('saw_conflict'); C.despawn('jaglika'); C.walk('gorazd', [91.5, 69.2], { noWait: true, dir: 'down' }); });
       } }],
       blockExit: { west: 'block_fair', south: 'block_fair' }
     },

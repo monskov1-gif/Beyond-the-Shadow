@@ -92,7 +92,7 @@ BTS.Portraits = (function () {
   var FACES = {
     man:    { S: 41, oy: 98, crown: -1.64, skullW: 1.04, temple: 0.05, cheekY: 0.2, cheekW: 1.0, jawY: 1.02, jawW: 0.84, chinY: 1.48, chinW: 0.34, chinB: 1.64, faceZ: 0.9, eyeX: 0.43, eyeW: 0.21, eyeH: 0.085, eyeTilt: 0.0, browY: -0.3, browT: 0.085, noseY: 0.72, noseZ: 0.36, noseW: 0.21, noseTip: 0.09, mouthY: 1.08, mouthW: 0.31, ulip: 0.045, llip: 0.065, neckW: 0.66, earY: -0.12, earH: 0.8, hollow: 0.3 },
     woman:  { S: 42, oy: 98, crown: -1.6, skullW: 1.02, temple: 0.04, cheekY: 0.2, cheekW: 1.0, jawY: 0.98, jawW: 0.74, chinY: 1.38, chinW: 0.27, chinB: 1.53, faceZ: 0.9, eyeX: 0.42, eyeW: 0.22, eyeH: 0.105, eyeTilt: 0.02, browY: -0.32, browT: 0.06, noseY: 0.66, noseZ: 0.3, noseW: 0.17, noseTip: 0.075, mouthY: 1.0, mouthW: 0.29, ulip: 0.055, llip: 0.08, neckW: 0.52, earY: -0.1, earH: 0.72, hollow: 0.15 },
-    boy:    { S: 42, oy: 99, crown: -1.64, skullW: 1.04, temple: 0.03, cheekY: 0.2, cheekW: 1.0, jawY: 0.92, jawW: 0.76, chinY: 1.3, chinW: 0.28, chinB: 1.45, faceZ: 0.88, eyeX: 0.42, eyeW: 0.22, eyeH: 0.108, eyeTilt: 0.0, browY: -0.31, browT: 0.065, noseY: 0.6, noseZ: 0.27, noseW: 0.16, noseTip: 0.07, mouthY: 0.93, mouthW: 0.27, ulip: 0.045, llip: 0.068, neckW: 0.5, earY: -0.1, earH: 0.7, hollow: 0.05 },
+    boy:    { S: 42, oy: 99, crown: -1.64, skullW: 1.04, temple: 0.03, cheekY: 0.2, cheekW: 1.0, jawY: 0.92, jawW: 0.8, chinY: 1.3, chinW: 0.31, chinB: 1.45, faceZ: 0.88, eyeX: 0.42, eyeW: 0.22, eyeH: 0.108, eyeTilt: 0.0, browY: -0.31, browT: 0.065, noseY: 0.6, noseZ: 0.27, noseW: 0.16, noseTip: 0.07, mouthY: 0.93, mouthW: 0.27, ulip: 0.045, llip: 0.068, neckW: 0.5, earY: -0.1, earH: 0.7, hollow: 0.05 },
     girl:   { S: 41, oy: 102, crown: -1.72, skullW: 1.06, temple: 0.02, cheekY: 0.24, cheekW: 1.0, jawY: 0.82, jawW: 0.8, chinY: 1.15, chinW: 0.32, chinB: 1.31, faceZ: 0.86, eyeX: 0.41, eyeW: 0.22, eyeH: 0.122, eyeTilt: 0.0, browY: -0.32, browT: 0.05, noseY: 0.5, noseZ: 0.19, noseW: 0.14, noseTip: 0.065, mouthY: 0.8, mouthW: 0.23, ulip: 0.042, llip: 0.062, neckW: 0.44, earY: -0.08, earH: 0.62, hollow: 0 },
     small:  { S: 40, oy: 106, crown: -1.84, skullW: 1.08, temple: 0.0, cheekY: 0.26, cheekW: 1.02, jawY: 0.72, jawW: 0.86, chinY: 1.02, chinW: 0.36, chinB: 1.19, faceZ: 0.86, eyeX: 0.4, eyeW: 0.215, eyeH: 0.128, eyeTilt: 0.0, browY: -0.32, browT: 0.045, noseY: 0.42, noseZ: 0.14, noseW: 0.13, noseTip: 0.065, mouthY: 0.7, mouthW: 0.2, ulip: 0.036, llip: 0.058, neckW: 0.42, earY: -0.06, earH: 0.58, hollow: 0 },
     old:    { S: 42, oy: 98, crown: -1.6, skullW: 1.02, temple: 0.06, cheekY: 0.2, cheekW: 1.0, jawY: 1.0, jawW: 0.8, chinY: 1.4, chinW: 0.29, chinB: 1.55, faceZ: 0.9, eyeX: 0.42, eyeW: 0.21, eyeH: 0.092, eyeTilt: -0.01, browY: -0.31, browT: 0.05, noseY: 0.7, noseZ: 0.32, noseW: 0.19, noseTip: 0.085, mouthY: 1.04, mouthW: 0.28, ulip: 0.04, llip: 0.065, neckW: 0.52, earY: -0.1, earH: 0.8, age: 0.8, hollow: 0.2, jowl: 0.4 },
@@ -271,10 +271,13 @@ BTS.Portraits = (function () {
     if (o.op !== undefined) s += ' opacity="' + fo(o.op) + '"';
     if (o.blur) s += ' filter="url(#' + this.blur(o.blur) + ')"';
     if (o.tr) s += ' transform="' + o.tr + '"';
+    if (o.mode) s += ' style="mix-blend-mode:' + o.mode + '"';
     return s + '>' + inner + '</g>';
   };
   /* a tapered ink line */
   R.ink = function (pts, w, o) { o = o || {}; return this.el(taper(pts, w, o.per), o.col || this.line, o); };
+  /* the colour that, multiplied over the skin, turns it into the given shadow tone */
+  R.mulTint = function (target, base) { base = base || this.skin.base; target = hx(target); return [0, 1, 2].map(function (i) { return clamp(255 * target[i] / Math.max(1, base[i]), 0, 255); }); };
   R.c = { hx: hx, rgb: rgb, mix: mix, mul: mul, lum: lum, desat: desat, tones: tones };
 
   /* ---------------- head ---------------- */
@@ -484,7 +487,7 @@ BTS.Portraits = (function () {
         }
       }
       top += a.ink(C1, [0.1, 0.9 + heavy * 0.4, 0.3], { op: 0.75 });
-      if (heavy > 0.3 || a.age > 0.5) top += a.ink(C1.map(function (p) { return [p[0], p[1] - S * 0.035]; }).slice(Math.floor(N * 0.4)), [0.1, 0.6, 0.1], { op: 0.35 + a.age * 0.2 });
+      if (a.age > 0.5) top += a.ink(C1.map(function (p) { return [p[0], p[1] - S * 0.035]; }).slice(Math.floor(N * 0.4)), [0.1, 0.6, 0.1], { op: 0.35 + a.age * 0.2 });
       // lower lid line, softer
       top += a.ink(Lo, function (t) { return t < 0.1 ? 0.3 : t > 0.85 ? 1.1 : lerp(0.5, 1.1, t); }, { per: 2, op: 0.55 });
       // tear line / lower lid rim
@@ -574,19 +577,21 @@ BTS.Portraits = (function () {
     var hl = []; for (i = 2; i <= 6; i++) hl.push(rp(i / 8, -0.035, 0.0));
     s += a.ink(hl, [0.3, 1.6, 0.4], { col: rgb(sk.hi), op: 0.45 });
     // nostrils
+    var nCol = rgb(mix(sk.deep, [60, 24, 26], 0.45));
     [-1, 1].forEach(function (sd) {
-      var c = a.on(sd * nw * 0.48, ny + 0.035, 0.08 + (sd < 0 ? 0.02 : 0));
-      var rx = S * nw * 0.32 * (sd > 0 ? a.cy * 0.85 : 1) * (1 + ex.flare * 0.15), ry = S * 0.026;
-      s += '<ellipse cx="' + f(c[0]) + '" cy="' + f(c[1]) + '" rx="' + f(rx) + '" ry="' + f(ry) + '" transform="rotate(' + (sd * 12) + ' ' + f(c[0]) + ' ' + f(c[1]) + ')" fill="' + rgb(mix(sk.deep, [40, 16, 20], 0.5)) + '"/>';
+      var c = a.on(sd * nw * 0.5, ny + 0.035, 0.08 + (sd < 0 ? 0.02 : 0));
+      var rx = S * nw * 0.3 * (sd > 0 ? a.cy * 0.8 : 1) * (1 + ex.flare * 0.15), ry = S * 0.022;
+      s += '<ellipse cx="' + f(c[0]) + '" cy="' + f(c[1]) + '" rx="' + f(rx) + '" ry="' + f(ry) + '" transform="rotate(' + (sd * 14) + ' ' + f(c[0]) + ' ' + f(c[1]) + ')" fill="' + nCol + '" opacity="0.85"/>';
     });
     // line work: the tip's underside, the near wing, a hint of the far ridge
-    s += a.ink(under.slice(1, 4), [0.4, 1.3, 0.4], { op: 0.85 });
-    var wl = [a.on(-nw * 0.85, ny - 0.13, 0.03), a.on(-nw * 1.1, ny - 0.04, 0.04), a.on(-nw * 1.02, ny + 0.035, 0.05), a.on(-nw * 0.62, ny + 0.06, 0.07)];
-    s += a.ink(wl, [0.3, 1.4, 0.6], { op: 0.9 });
-    var wr = [a.on(nw * 0.82, ny - 0.1, 0.03), a.on(nw * 1.0, ny - 0.01, 0.05), a.on(nw * 0.7, ny + 0.06, 0.07)];
-    s += a.ink(wr, [0.3, 1.2, 0.5], { op: 0.8 });
+    var nl = rgb(mix(sk.line, sk.deep, 0.35));
+    s += a.ink(under.slice(1, 4), [0.2, 1.0, 0.3], { col: nl, op: 0.7 });
+    var wl = [a.on(-nw * 0.8, ny - 0.14, 0.03), a.on(-nw * 1.08, ny - 0.04, 0.04), a.on(-nw * 1.0, ny + 0.035, 0.05), a.on(-nw * 0.62, ny + 0.06, 0.07)];
+    s += a.ink(wl, [0.2, 1.1, 0.4], { col: nl, op: 0.75 });
+    var wr = [a.on(nw * 0.8, ny - 0.1, 0.03), a.on(nw * 0.98, ny - 0.01, 0.05), a.on(nw * 0.7, ny + 0.06, 0.07)];
+    s += a.ink(wr, [0.2, 1.0, 0.4], { col: nl, op: 0.6 });
     var rl = []; for (i = 3; i <= 8; i++) rl.push(rp(i / 8, 0.05, -0.01));
-    s += a.ink(rl, [0.1, 0.9, 0.5], { op: 0.45 + bump * 0.2 });
+    s += a.ink(rl, [0.1, 0.8, 0.4], { col: nl, op: 0.35 + bump * 0.25 });
     a.add('nose', s);
     a.noseInfo = { tip: tip, ny: ny, nw: nw };
   }

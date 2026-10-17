@@ -60,9 +60,57 @@ BTS.Shadows = (function () {
     return list;
   }
 
-  function castOne(R, e, sc, src, L, primary, fade, t, heightAt) {
+  /* ---------- Jaglika: her shadow grows with every death and every time she is seen ----------
+     One level per beat (monotonic through the story), floored by the number of victims already dead.
+     level 0 at the fair (a little long), 1 after Zajko, 2 Mama, 3 Tata, 4 Gorazd, 5 Jessica, 6 Tihomir,
+     ~7.5 at the rite (enormous, no longer human). */
+  var JAG_STEPS = [['p_go_fair', 0], ['p_night', 0.25], ['c1_start', 0.5], ['c1_storm', 0.7], ['c2_bell', 1], ['c2_funeral', 1.2],
+    ['c2_parents', 2], ['c2_alone', 3], ['c3_start', 3.1], ['c4_walk', 3.4], ['c4_gorazd_dead', 4], ['c4_jessica_dead', 5],
+    ['c6_plan', 5.2], ['c6_follow', 5.35], ['c6_window', 5.5], ['c7_wait', 5.6], ['c7_hide', 5.75], ['c9_silence', 6], ['c9_dusk', 6.4],
+    ['c10_meadow', 6.8], ['c10_rite', 7.5]];
+  var VICTIMS = ['zajko', 'pecko', 'gvozdin', 'gorazd', 'jessica', 'tihomir'];
+  S.jaglikaLevel = function () {
+    var St = BTS.State, Sy = BTS.Story; if (!St || !St.d || !Sy || !Sy.indexOf) return 0;
+    var ci = Sy.indexOf(St.d.beat), lv = 0;
+    for (var i = 0; i < JAG_STEPS.length; i++) { var bi = Sy.indexOf(JAG_STEPS[i][0]); if (bi >= 0 && bi <= ci) lv = Math.max(lv, JAG_STEPS[i][1]); }
+    var dead = 0; VICTIMS.forEach(function (v) { if (St.isDead(v)) dead++; });
+    return Math.max(lv, dead);
+  };
+  /* the single source of her shadow's size: len (length multiplier), width, beast (0 human .. 1 inhuman), lag */
+  S.jaglikaGrowth = function (level) {
+    var l = level === undefined ? S.jaglikaLevel() : level;
+    return { level: l, len: 1.15 + l * 0.2, width: 1 + l * 0.06, beast: BTS.M.clamp((l - 1.6) / 5, 0, 1), lag: Math.min(0.35, l * 0.04), alpha: 1 + Math.min(0.5, l * 0.07) };
+  };
+
+  /* one silhouette layer: on the ground from the feet, or — with a wall — along the ground to the wall's foot and up it */
+  function layer(R, sc, bx, bz, dx, dz, len, sreg, scale, wscale, alpha, primary, t, heightAt) {
+    var h = sreg.h / 16 * scale, w = sreg.w / 16 * scale * wscale;
+    var q = 0.9999, by = heightAt(bx, bz) + 0.03;
+    var Wl = sc.wall && primary ? sc.wall : null;
+    if (Wl && Wl.z < bz - 0.15) {
+      // a projection: the shadow leaves the feet along the ground toward the wall, then climbs it from where it meets it
+      var gx = Wl.x - bx, gz = Wl.z - bz, gd = Math.hypot(gx, gz) || 1;
+      dx = gx / gd; dz = gz / gd;
+      var wallH = h * (1.05 + (sc.beast || 0) * 0.5) * Math.max(1, len * 0.75);
+      var total = gd + wallH, f = gd / total, vs = q * (1 - f);
+      var px = -dz * w / 2, pz = dx * w / 2;
+      var fx = bx + dx * gd, fz = Wl.z + 0.05, fy = Wl.y !== undefined ? Wl.y : heightAt(fx, fz - 0.3);
+      var gy = heightAt(fx, fz + 0.2) + 0.03;
+      R.pushFx(0, [[bx - px, by, bz - pz], [bx + px, by, bz + pz], [fx + px, gy, fz + pz], [fx - px, gy, fz - pz]], sreg, [COL[0], COL[1], COL[2], BTS.M.clamp(alpha, 0, 0.85)], [[0, q], [q, q], [q, vs], [0, vs]]);
+      var ww = Math.abs(px) * 2 || w, lean = Math.sin(t * 1.3 + sc.phase) * 0.18 * (sc.beast ? 1.5 : 1);
+      var x0 = fx - ww / 2, x1 = fx + ww / 2;
+      R.pushFx(3, [[x0, fy, fz], [x1, fy, fz], [x1 + lean, fy + wallH, fz], [x0 + lean, fy + wallH, fz]], sreg, [COL[0], COL[1], COL[2], BTS.M.clamp(alpha * 1.15, 0, 0.82)], [[0, vs], [q, vs], [q, 0], [0, 0]]);
+      return;
+    }
+    var px2 = -dz * w / 2, pz2 = dx * w / 2;
+    var tx = bx + dx * h * len, tz = bz + dz * h * len, ty = heightAt(tx, tz) + 0.03;
+    R.pushFx(0, [[bx - px2, by, bz - pz2], [bx + px2, by, bz + pz2], [tx + px2, ty, tz + pz2], [tx - px2, ty, tz - pz2]], sreg, [COL[0], COL[1], COL[2], BTS.M.clamp(alpha, 0, 0.85)]);
+  }
+
+  /* the shadow always starts at the caster's feet: lag, stretch and turning change its shape and direction, never its anchor */
+  function castOne(R, e, sc, src, L, primary, fade, t, heightAt, grow) {
       var dx = L.dx, dz = L.dz, len = L.k, alpha = L.a * sc.alpha * fade;
-      var bx = src.x, bz = src.z;
+      var bx = e.x, bz = e.z;
       if (sc.stage === 1) { len *= 1 + 0.22 * Math.sin(t * 0.8 + sc.phase); if (Math.sin(t * 0.37 + sc.phase) > 0.93) { var a1 = 0.35; var c1 = Math.cos(a1), s1 = Math.sin(a1); var ndx = dx * c1 - dz * s1; dz = dx * s1 + dz * c1; dx = ndx; } }
       if (sc.stage === 2) {
         var ang = Math.sin(t * 0.5 + sc.phase) * 0.6 + (Math.sin(t * 0.13 + sc.phase) > 0.6 ? 1.2 : 0);
@@ -70,30 +118,22 @@ BTS.Shadows = (function () {
         len *= 1.3 + 0.35 * Math.sin(t * 0.9 + sc.phase);
       }
       if (sc.stage === 3) {
-        sc.wander[0] = Math.sin(t * 0.31 + sc.phase) * 0.9; sc.wander[1] = Math.cos(t * 0.23 + sc.phase * 2) * 0.7;
-        bx += sc.wander[0]; bz += sc.wander[1];
-        len *= 1.6; alpha *= 0.75 + 0.25 * Math.sin(t * 3 + sc.phase);
+        // late stage: pulling away — it strains and turns on its own and thins out, but stays fastened at the feet
+        var ang3 = Math.sin(t * 0.31 + sc.phase) * 0.9 + Math.sin(t * 0.83 + sc.phase * 2) * 0.35;
+        var c3 = Math.cos(ang3), s3 = Math.sin(ang3), n3 = dx * c3 - dz * s3; dz = dx * s3 + dz * c3; dx = n3;
+        len *= 1.6 + 0.3 * Math.sin(t * 0.7 + sc.phase); alpha *= 0.7 + 0.25 * Math.sin(t * 3 + sc.phase);
       }
       if (sc.angle) { var c2 = Math.cos(sc.angle), s2 = Math.sin(sc.angle), n2 = dx * c2 - dz * s2; dz = dx * s2 + dz * c2; dx = n2; }
       len *= sc.lenMul;
-      var sreg = src.reg, scale = 1;
-      if (sc.beast > 0) {
-        sc.beastFrame = Math.floor(t * 3) % 4;
-        sreg = BTS.Atlas.get('shadow_beast_' + sc.beastFrame);
-        scale = 0.55 + sc.beast * 1.25;
-        alpha = Math.max(alpha, 0.35 + sc.beast * 0.4) * fade;
-      }
-      var h = sreg.h / 16 * scale, w = sreg.w / 16 * scale;
-      var px = -dz * w / 2, pz = dx * w / 2;
-      var tx = bx + dx * h * len, tz = bz + dz * h * len;
-      var by = heightAt(bx, bz) + 0.03, ty = heightAt(tx, tz) + 0.03;
-      R.pushFx(0, [[bx - px, by, bz - pz], [bx + px, by, bz + pz], [tx + px, ty, tz + pz], [tx - px, ty, tz - pz]], sreg, [COL[0], COL[1], COL[2], BTS.M.clamp(alpha, 0, 0.85)]);
-      // silhouette climbing a wall (supernatural states)
-      if (sc.wall && primary) {
-        var W = sc.wall, wh = h * (1.2 + sc.beast), ww = w * 1.1;
-        var wx = W.x, wz = W.z + 0.04, wy = W.y || heightAt(W.x, W.z);
-        var sway = Math.sin(t * 1.3 + sc.phase) * 0.3;
-        R.pushFx(3, [[wx - ww / 2, wy, wz], [wx + ww / 2, wy, wz], [wx + ww / 2 + sway, wy + wh, wz], [wx - ww / 2 + sway, wy + wh, wz]], sreg, [COL[0], COL[1], COL[2], BTS.M.clamp(alpha * 1.2, 0, 0.8)]);
+      var beast = sc.beast || 0, wscale = 1;
+      if (grow) { len *= grow.len; wscale = grow.width; beast = Math.max(beast, grow.beast); alpha *= grow.alpha; }
+      sc.beastFrame = Math.floor(t * 3) % 4;
+      var human = 1 - BTS.M.clamp((beast - 0.15) / 0.7, 0, 1);   // cross-fade: a human silhouette slowly becomes the beast
+      if (human > 0.02) layer(R, sc, bx, bz, dx, dz, len, src.reg, 1, wscale, alpha * human, primary && human >= 0.5, t, heightAt);
+      if (beast > 0.15) {
+        var breg = BTS.Atlas.get('shadow_beast_' + sc.beastFrame);
+        var ba = Math.max(alpha, 0.35 + beast * 0.4) * (1 - human * 0.6);
+        layer(R, sc, bx, bz, dx, dz, len / Math.max(1, grow ? grow.len * 0.6 : 1), breg, 0.55 + beast * 1.25, 1, ba, primary && human < 0.5, t, heightAt);
       }
   }
 
@@ -117,14 +157,16 @@ BTS.Shadows = (function () {
       var bw = 0.42 * (reg.w / 24) + 0.12, bd = 0.2;
       R.pushFx(3, [[e.x - bw, gy, e.z + bd], [e.x + bw, gy, e.z + bd], [e.x + bw, gy, e.z - bd], [e.x - bw, gy, e.z - bd]], blob, [COL[0], COL[1], COL[2], 0.55 * fade * sc.alpha]);
       var slots = smoothSlots(sc, candidates(e, env), S.dt || 0.016);
-      if (!slots.length && sc.beast) slots = [{ dx: 0.3, dz: -0.95, k: 1.2, a: 0.4 }];
+      if (!slots.length && (sc.beast || sc.wall)) slots = [{ dx: 0.3, dz: -0.95, k: 1.2, a: 0.4 }];
+      var grow = e.id === 'jaglika' && !sc.noGrow ? S.jaglikaGrowth() : null;
       var src = { x: e.x, z: e.z, reg: reg };
-      if (sc.lag > 0) {
-        var want = t - sc.lag;
+      var lag = Math.max(sc.lag, grow ? grow.lag : 0);
+      if (lag > 0) {   // a late shadow repeats an earlier pose of the body — always at the current feet
+        var want = t - lag;
         for (var k = sc.history.length - 1; k >= 0; k--) if (sc.history[k].t <= want) { src = sc.history[k]; break; }
         if (k < 0 && sc.history.length) src = sc.history[0];
       }
-      for (var si = 0; si < slots.length; si++) castOne(R, e, sc, src, slots[si], si === 0, fade, t, heightAt);
+      for (var si = 0; si < slots.length; si++) castOne(R, e, sc, src, slots[si], si === 0, fade, t, heightAt, grow);
     }
   };
   return S;

@@ -30,17 +30,49 @@ BTS.Entity = function (o) {
     if (Math.abs(dx) > Math.abs(dz) * 0.8) this.dir = dx > 0 ? 'right' : 'left'; else this.dir = dz > 0 ? 'down' : 'up';
   };
   E.dist = function (o) { return Math.hypot(this.x - o.x, this.z - o.z); };
-  /* follow a path of [x,z] points; returns true when finished */
+  /* follow a path of [x,z] points; returns true when finished.
+     Stuck guard (all scripted and AI walks): the net progress of the previous frame (after colliders pushed the
+     entity back) is compared with the step that was taken. Blocked for more than a second -> re-plan around the
+     obstacle through the navigation grid; still blocked -> pass through it (noClip) until the path ends.
+     A goal that is itself inside a collider ends the walk where the entity stands. Nothing ever teleports. */
   E.followPath = function (dt, speedMul) {
-    if (!this.path || !this.path.length) { this.moving = false; return true; }
+    if (!this.path || !this.path.length) { this.moving = false; this._endPath(); return true; }
+    if (this._autoNoClip && this._ncPath !== this.path) { this._autoNoClip = false; this.noClip = false; this._unstuck = 0; }
+    if (this._fpStep > 0.002) {
+      var got = Math.hypot(this.x - this._fpX, this.z - this._fpZ);
+      if (got < this._fpStep * 0.35) this._stuckT = (this._stuckT || 0) + (this._fpDt || dt);
+      else this._stuckT = Math.max(0, (this._stuckT || 0) - dt * 2);
+      if (this._stuckT > 1) { this._stuckT = 0; if (this._unstick()) { this.moving = false; this._endPath(); return true; } }
+    }
     var t = this.path[0], dx = t[0] - this.x, dz = t[1] - this.z, d = Math.hypot(dx, dz);
     var sp = this.speed * (speedMul || 1);
-    if (d < 0.08) { this.path.shift(); if (!this.path.length) { this.moving = false; return true; } return false; }
+    this._fpX = this.x; this._fpZ = this.z; this._fpStep = 0; this._fpDt = dt;
+    if (d < 0.08) { this.path.shift(); if (!this.path.length) { this.moving = false; this._endPath(); return true; } return false; }
     var step = Math.min(d, sp * dt);
     this.vx = dx / d * sp; this.vz = dz / d * sp;
     this.x += dx / d * step; this.z += dz / d * step;
+    this._fpStep = step;
     this.moving = true;
     this.faceTo(t[0], t[1]);
+    return false;
+  };
+  E._endPath = function () {
+    this._fpStep = 0; this._stuckT = 0; this._unstuck = 0;
+    if (this._autoNoClip) { this._autoNoClip = false; this.noClip = false; }
+  };
+  /* returns true when the walk should simply end here */
+  E._unstick = function () {
+    var W = BTS.World, goal = this.path[this.path.length - 1];
+    this._unstuck = (this._unstuck || 0) + 1;
+    if (W && W.blocked && W.blocked(goal[0], goal[1], Math.max(0.15, (this.radius || 0.28) - 0.05))) {
+      if (Math.hypot(goal[0] - this.x, goal[1] - this.z) < 2.5) { this.path = null; return true; }
+    }
+    if (this._unstuck === 1 && W && W.findPath) {
+      var np = W.findPath(this.x, this.z, goal[0], goal[1]);
+      if (np && np.length) { this.path = np; return false; }
+    }
+    // the grid offers nothing better (or that failed too): slip through the obstacle
+    if (!this.noClip) { this.noClip = true; this._autoNoClip = true; this._ncPath = this.path; }
     return false;
   };
 })();

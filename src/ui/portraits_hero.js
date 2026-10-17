@@ -68,7 +68,7 @@ BTS.PortraitLib = (function () {
   /* cast shadow of the front hair on the skin */
   function hairShadow(a, pts, dx, dy, op) {
     var S = a.S;
-    a.add('hairShadow', a.g(a.el(smooth(offset(pts, S * (dx || 0.05), S * (dy || 0.12)), true), a.skin.deep, { op: op || 0.5 }), { clip: a.skinClip, blur: 2.2 }));
+    a.add('hairShadow', a.g(a.g(a.el(smooth(offset(pts, S * (dx || 0.05), S * (dy || 0.12)), true), a.mulTint(a.skin.deep), { op: op || 0.5 }), { clip: a.skinClip, blur: 2.2 }), { mode: 'multiply' }));
   }
   /* fringe edge across the forehead: alternating tips and notches on the head surface */
   function fringe(a, tips, dz) {
@@ -109,16 +109,18 @@ BTS.PortraitLib = (function () {
     // darker toward the root (where locks bury into the mass) and the tip
     var r0 = g.cen[0], r1 = g.cen[g.cen.length - 1];
     inner += a.el(d, a.lin(r0[0], r0[1], r1[0], r1[1], [[0, T.deep, o.rootDark === undefined ? 0.55 : o.rootDark], [0.3, T.base, 0], [0.85, T.base, 0], [1, T.shadow, 0.5]]));
-    // highlight streak on the lit half
-    var h0 = o.hi0 === undefined ? 0.22 : o.hi0, h1 = o.hi1 === undefined ? 0.6 : o.hi1;
-    if (o.hi !== false) {
-      var hs = [];
-      for (var i = Math.round(h0 * 14); i <= Math.round(h1 * 14); i++) hs.push(mid(g.cen[i], g.litSide[i], 0.45));
-      if (hs.length > 2) inner += a.el(taper(hs, [0, w * (o.hiW || 0.22), 0], 3), T.hi, { op: o.hiOp || 0.75 });
-      if (hs.length > 3 && w > S * 0.18) { var hs2 = hs.map(function (p, j) { return mid(p, g.cen[Math.round(h0 * 14) + j], 0.9); }); inner += a.el(taper(hs2.slice(1), [0, w * 0.1, 0], 3), T.hi, { op: (o.hiOp || 0.75) * 0.5 }); }
+    // highlight: two thin streaks along the lit half, plus fine strand lines
+    var h0 = o.hi0 === undefined ? 0.18 : o.hi0, h1 = o.hi1 === undefined ? 0.62 : o.hi1, n0 = Math.round(h0 * 14), n1 = Math.round(h1 * 14);
+    if (o.hi !== false && n1 - n0 > 2) {
+      var hs = [], hs2 = [];
+      for (var i = n0; i <= n1; i++) { hs.push(mid(g.cen[i], g.litSide[i], 0.5)); hs2.push(mid(g.cen[i], g.litSide[i], 0.05)); }
+      inner += a.el(taper(hs, [0, Math.min(w * (o.hiW || 0.13), 2.6), 0], 3), T.hi, { op: o.hiOp || 0.7 });
+      inner += a.el(taper(hs2.slice(2), [0, Math.min(w * 0.07, 1.3), 0], 3), T.hi, { op: (o.hiOp || 0.7) * 0.6 });
     }
-    // a strand line down the middle
-    if (w > S * 0.14 && o.mid !== false) inner += a.ink(g.cen.slice(3, 13).map(function (p, j) { return mid(p, g.darkSide[j + 3], 0.25); }), [0, 0.9, 0], { col: rgb(T.deep), op: 0.55 });
+    if (w > S * 0.14 && o.mid !== false) {
+      inner += a.ink(g.cen.slice(2, 13).map(function (p, j) { return mid(p, g.darkSide[j + 2], 0.3); }), [0, 0.9, 0], { col: rgb(T.deep), op: 0.6 });
+      inner += a.ink(g.cen.slice(4, 12).map(function (p, j) { return mid(p, g.litSide[j + 4], 0.75); }), [0, 0.6, 0], { col: rgb(T.shadow), op: 0.5 });
+    }
     s += a.g(inner, { clip: a.clip(d) });
     // ink: firm on the shadow side and the tip, light on the lit side
     s += a.ink(g.darkSide.slice(2).concat([g.tip]), [0.2, (o.lw || 1.3), 0.7], { col: rgb(T.line), op: 0.9 });
@@ -197,11 +199,307 @@ BTS.PortraitLib = (function () {
     });
     // fringe cast shadow on the face
     var shp = [a.on(-1.0, -1.0, 0.1)].concat(fr.slice().sort(function (p, q) { return p[0] - q[0]; }).map(function (q) { return a.on(q[0], q[1] + 0.1, 0.1); })).concat([a.on(1.0, -1.0, 0.1)]);
-    a.add('hairShadow', a.g(a.el(smooth(shp, true), a.skin.deep, { op: 0.65 }), { clip: a.skinClip, blur: 2.6 }));
+    a.add('hairShadow', a.g(a.g(a.el(smooth(shp, true), a.mulTint(a.skin.deep), { op: 0.75 }), { clip: a.skinClip, blur: 2.6 }), { mode: 'multiply' }));
     // stray strands
     var wis = [[[0.14, -0.6], [0.2, -0.25], [0.15, 0.08]], [[-0.3, -0.6], [-0.36, -0.25], [-0.31, 0.06]], [[0.6, -0.5], [0.66, -0.2], [0.72, 0.06]], [[-0.92, -0.3], [-1.08, 0.2], [-1.14, 0.75]], [[0.95, -0.3], [1.05, 0.2], [1.06, 0.6]]];
     if (young) wis = wis.slice(0, 2);
     wis.forEach(function (w) { a.add('hairTop', a.ink(a.onL(w, 0.15), [1.2, 0.9, 0.05], { col: rgb(T.line) })); });
+  };
+
+  /* generic cap: clumpy outline over the skull plus a hairline across the face */
+  function capMass(a, T, o) {
+    var S = a.S, r = rnd(o.seed || 3);
+    var cap = clumps(a, o.a0 || 150, o.a1 || 390, o.step || 10, o.p0 === undefined ? 0.14 : o.p0, o.p1 === undefined ? 0.2 : o.p1, o.seed || 5);
+    var line = a.onL(o.hairline, o.lift === undefined ? 0.06 : o.lift);
+    var crown = o.crown || a.P(0.2, -1.5, -0.3);
+    var inner = '';
+    inner += strandLines(a, crown, (o.a0 || 150) + 6, (o.a1 || 390) - 6, o.nLines || 22, 0.42, o.p1 || 0.2, T, { op: o.lineOp || 0.6, bend: o.bend });
+    inner += sheenRing(a, crown, o.sh0 || 196, o.sh1 || 315, o.nSheen || 24, o.r0 || 0.42, o.r1 || 0.66, (o.p1 || 0.2), T, { w: o.shW || 2.0, op: o.shOp || 0.65, bend: o.bend });
+    // flow lines from the hairline back toward the crown
+    if (o.sweep) for (var k = 0; k < o.sweep; k++) {
+      var t = (k + 0.5) / o.sweep, i = Math.min(line.length - 1, Math.floor(t * (line.length - 1))), p = mid(line[i], line[Math.min(i + 1, line.length - 1)], t * (line.length - 1) - i);
+      inner += a.ink(strand(p, crown, a.S * 0.15 * (t < 0.5 ? 1 : -1), 10).slice(0, 7), [0.2, 1.0, 0], { col: rgb(T.deep), op: 0.55 });
+      inner += a.el(taper(strand(p, crown, a.S * 0.15 * (t < 0.5 ? 1 : -1), 10).slice(1, 5).map(function (q) { return [q[0] - 1.2, q[1] - 0.6]; }), [0, 1.4, 0], 3), T.hi, { op: 0.45 });
+    }
+    if (o.inner) inner += o.inner;
+    return paintMass(a, cap.concat(line), T, { inner: inner, center: crown, lw: o.lw || 1.5, layer: o.layer || 'hair', ten: 1 });
+  }
+  function hairBackMass(a, T, pts, o) {
+    o = o || {};
+    var d = smooth(pts, true), b = bbox(pts);
+    var s = a.el(d, T.shadow) + a.g(a.el(d, a.lin(b.x0, b.y0, b.x1, b.y1, [[0, T.base], [0.6, T.shadow], [1, T.deep]])) + (o.inner || ''), { clip: a.clip(d) }) + a.el(d, 'none', { stroke: rgb(T.line), sw: 1.4 });
+    a.add(o.layer || 'hairBack', s);
+  }
+  function wisp(a, pts, T, layer, w) { a.add(layer || 'hairTop', a.ink(pts, [w || 1.1, (w || 1.1) * 0.8, 0.05], { col: rgb(T.line), op: 0.9 }) + a.ink(offset(pts, -0.5, -0.4), [0.3, 0.5, 0], { col: rgb(T.light), op: 0.6 })); }
+
+  /* Jaglika: copper bob with straight bangs */
+  HAIR.bob = function (a, c, o) {
+    var S = a.S, T = hairTones(c), r = rnd(12);
+    hairBackMass(a, T, [a.rim(150, 0.3), a.P(-1.28, 1.1, -0.2), a.P(-1.05, 1.26, -0.6), a.P(0.9, 1.22, -0.6), a.P(1.2, 1.05, -0.1), a.rim(30, 0.3), a.rim(270, 0.3)]);
+    capMass(a, T, { p0: 0.22, p1: 0.28, a0: 150, a1: 390, hairline: [[1.05, 0.3], [0.95, -0.5], [0.4, -1.0], [-0.4, -1.0], [-0.95, -0.5], [-1.08, 0.3]], seed: 4, nSheen: 28, shW: 2.4 });
+    // side curtains ending at the jaw, curving under
+    var sides = [[-0.98, -0.75, -1.22, 1.12, -0.06, 0.5], [-0.92, -0.7, -1.08, 1.2, -0.08, 0.46], [-0.86, -0.6, -0.95, 1.1, -0.1, 0.38], [0.86, -0.65, 0.94, 1.08, 0.1, 0.36], [0.94, -0.7, 1.08, 1.15, 0.08, 0.42]];
+    sides.forEach(function (q) { drawLock(a, 'hair', a.on(q[0], q[1], 0.3), a.on(q[2], q[3], q[2] < 0 ? -0.05 : 0.0), S * q[5], q[4], T, { hi0: 0.1, hi1: 0.45, tipPow: 0.55, wTip: S * 0.08, hiOp: 0.7 }); });
+    // straight bangs just above the brows
+    var by = (o.bangY || -0.44);
+    [[-0.82, by + 0.04], [0.82, by], [-0.55, by + 0.02], [0.55, by - 0.01], [-0.27, by + 0.03], [0.27, by + 0.01], [0.0, by + 0.04]].forEach(function (q) {
+      drawLock(a, 'hair', a.on(q[0] * 0.55, -1.25, 0.4), a.on(q[0], q[1] + (r() - 0.5) * 0.03, 0.14), S * 0.42, (q[0] < 0 ? 0.04 : -0.04), T, { tipPow: 0.5, wTip: S * 0.12, hi0: 0.08, hi1: 0.45, hiOp: 0.75 });
+    });
+    var shp = [a.on(-1.1, -1.1, 0.1), a.on(-0.85, by + 0.12, 0.1), a.on(0, by + 0.14, 0.1), a.on(0.85, by + 0.1, 0.1), a.on(1.1, -1.1, 0.1)];
+    a.add('hairShadow', a.g(a.g(a.el(smooth(shp, true), a.mulTint(a.skin.deep), { op: 0.65 }), { clip: a.skinClip, blur: 2.4 }), { mode: 'multiply' }));
+    var shs = [a.on(-1.2, -0.5, 0), a.on(-0.84, 0.0, 0), a.on(-0.86, 1.0, 0), a.on(-1.3, 1.2, 0)];
+    a.add('hairShadow', a.g(a.g(a.el(smooth(shs, true), a.mulTint(a.skin.deep), { op: 0.5 }), { clip: a.skinClip, blur: 2.4 }), { mode: 'multiply' }));
+  };
+
+  /* short boyish hair: tousled for kids, neat for men; o.volume, o.fringeY, o.recede */
+  HAIR.short = function (a, c, o) {
+    var S = a.S, T = hairTones(c), r = rnd(31), kid = /boy|girl|small/.test(a.pd.face), messy = o.messy || (kid ? 1 : 0);
+    var vol = o.volume || 0, fy = o.fringeY || (kid ? -0.58 : -0.8);
+    var hl = [[1.02, 0.1], [0.98, -0.45], [0.82, -0.82], [0.45, fy - 0.2], [0, fy - 0.24], [-0.45, fy - 0.2], [-0.84, -0.8], [-1.0, -0.4], [-1.04, 0.12]];
+    if (o.cap) hl = [[1.02, -0.2], [0.9, -0.62], [0.6, -0.78], [-0.6, -0.78], [-0.9, -0.62], [-1.02, -0.2]];
+    capMass(a, T, { p0: 0.1 + vol + messy * 0.04, p1: 0.15 + vol + messy * 0.08, a0: 150, a1: 392, hairline: hl, seed: 8, nSheen: 22, shW: 1.8, step: messy ? 9 : 12 });
+    hairBackMass(a, T, [a.rim(150, 0.12), a.P(-1.05, 0.45, -0.5), a.P(-0.6, 0.62, -0.9), a.P(0.5, 0.6, -0.9), a.P(1.0, 0.4, -0.5), a.rim(30, 0.1), a.rim(270, 0.15)]);
+    if (o.cap) return;
+    // sideburns in front of the ear
+    [-1, 1].forEach(function (sd) {
+      var sb = [a.on(sd * 0.98, -0.35, 0.04), a.on(sd * 0.86, -0.3, 0.04), a.on(sd * (kid ? 0.9 : 0.88), kid ? 0.05 : 0.22, 0.03), a.on(sd * 0.97, kid ? 0.1 : 0.26, 0.02)];
+      a.add('hair', a.el(smooth(sb, true), T.shadow) + a.ink(sb.slice(1, 3), [0.3, 1.0, 0.2], { col: rgb(T.line), op: 0.7 }));
+    });
+    // fringe locks
+    var n = messy ? 7 : 5, part = o.part === undefined ? -0.25 : o.part;
+    for (var i = 0; i < n; i++) {
+      var X = -0.85 + 1.7 * (i + 0.5) / n, side = X < part ? -1 : 1;
+      var tipY = fy + (messy ? (r() - 0.3) * 0.18 : 0.06 * Math.abs(X));
+      var root = a.on(X * 0.5 + part * 0.2, -1.35, 0.42), tip = a.on(X + side * (messy ? 0.12 : 0.22), tipY, 0.12);
+      drawLock(a, 'hair', root, tip, S * (messy ? 0.4 : 0.46), side * (messy ? (r() - 0.5) * 0.3 : -0.08), T, { tipPow: messy ? 0.9 : 1.1, hi0: 0.1, hi1: 0.5, hiOp: 0.7, lw: 1.2 });
+    }
+    if (messy) [[178, 0.3, 0.12], [214, 0.28, -0.1], [330, 0.26, 0.12], [356, 0.24, -0.08]].forEach(function (q, i) {
+      drawLock(a, 'hair', a.rim(q[0] + (i % 2 ? 14 : -14), 0.02), a.rim(q[0], q[1]), S * 0.26, q[2], T, { hiOp: 0.4, drop: false, rootDark: 0, tipPow: 1.2, mid: false });
+    });
+    var shp = [a.on(-1.05, -1.2, 0.1), a.on(-0.85, fy + 0.0, 0.1), a.on(0, fy + 0.1, 0.1), a.on(0.85, fy + 0.05, 0.1), a.on(1.05, -1.2, 0.1)];
+    a.add('hairShadow', a.g(a.g(a.el(smooth(shp, true), a.mulTint(a.skin.deep), { op: 0.55 }), { clip: a.skinClip, blur: 2.4 }), { mode: 'multiply' }));
+  };
+  /* receding crop (Gorazd without his cap) */
+  HAIR.crop = function (a, c, o) {
+    var T = hairTones(c), r = rnd(5), S = a.S;
+    capMass(a, T, { p0: 0.07, p1: 0.09, a0: 150, a1: 390, step: 14, hairline: [[1.02, 0.15], [0.98, -0.5], [0.78, -0.72], [0.5, -1.12], [0.15, -1.02], [-0.15, -1.04], [-0.5, -1.14], [-0.8, -0.74], [-1.0, -0.5], [-1.04, 0.15]], seed: 6, nSheen: 10, shOp: 0.35, nLines: 30, lineOp: 0.5 });
+    hairBackMass(a, T, [a.rim(150, 0.08), a.P(-1.02, 0.4, -0.5), a.P(-0.6, 0.55, -0.9), a.P(0.5, 0.55, -0.9), a.P(1.0, 0.35, -0.5), a.rim(30, 0.08), a.rim(270, 0.1)]);
+    // scalp showing through on top
+    var top = a.on(0.0, -1.2, 0.02);
+    a.add('hairTop', '<ellipse cx="' + f(top[0]) + '" cy="' + f(top[1]) + '" rx="' + f(S * 0.32) + '" ry="' + f(S * 0.14) + '" fill="' + rgb(a.skin.base) + '" opacity="0.35" filter="url(#' + a.blur(2) + ')"/>');
+    [-1, 1].forEach(function (sd) {
+      var sb = [a.on(sd * 0.98, -0.4, 0.03), a.on(sd * 0.88, -0.35, 0.03), a.on(sd * 0.88, 0.2, 0.02), a.on(sd * 0.97, 0.24, 0.02)];
+      a.add('hair', a.el(smooth(sb, true), T.shadow, { op: 0.9 }));
+    });
+  };
+  /* bald crown with a fringe of hair around the back and sides (Dragan) */
+  HAIR.bald = function (a, c, o) {
+    var T = hairTones(c), S = a.S;
+    var band = a.rims([[148, 0.08], [165, 0.12], [182, 0.13], [196, 0.1]]).concat(a.onL([[-1.0, -0.5], [-0.95, -0.3], [-0.92, 0.0], [-0.95, 0.2]], 0.03));
+    paintMass(a, band, T, { lw: 1.2, ten: 0.9, inner: strandLines(a, a.P(-0.5, -0.5, -0.8), 140, 200, 10, 0.3, 0.12, T, { op: 0.5 }) });
+    var fb = a.rims([[18, 0.06], [8, 0.1], [355, 0.1], [345, 0.07]]).concat(a.onL([[0.98, -0.42], [0.92, -0.2], [0.92, 0.1]], 0.03));
+    paintMass(a, fb, T, { lw: 1.2, ten: 0.9 });
+    hairBackMass(a, T, [a.rim(148, 0.08), a.P(-1.02, 0.4, -0.5), a.P(-0.6, 0.55, -0.9), a.P(0.5, 0.55, -0.9), a.P(1.0, 0.35, -0.5), a.rim(25, 0.05), a.rim(200, 0.1)]);
+    // shine on the scalp
+    var hp = a.on(-0.3, -1.15, 0.02);
+    a.add('hairTop', '<ellipse cx="' + f(hp[0]) + '" cy="' + f(hp[1]) + '" rx="' + f(S * 0.4) + '" ry="' + f(S * 0.2) + '" transform="rotate(-20 ' + f(hp[0]) + ' ' + f(hp[1]) + ')" fill="' + rgb(a.skin.hi) + '" opacity="0.55" filter="url(#' + a.blur(3) + ')"/>');
+    var o2 = a.outline();
+    a.add('hairTop', a.ink(o2.L.slice(2, Math.floor(o2.L.length * 0.3)).concat(o2.R.slice(0, Math.floor(o2.R.length * 0.3)).reverse()).reverse(), [0.8, 1.6, 0.8]));
+  };
+  /* Jessica: blonde pixie with a side-swept fringe */
+  HAIR.pixie = function (a, c, o) {
+    var S = a.S, T = hairTones(c), r = rnd(17);
+    capMass(a, T, { p0: 0.16, p1: 0.22, a0: 152, a1: 388, step: 9, hairline: [[1.02, 0.05], [0.96, -0.5], [0.6, -0.9], [-0.2, -1.0], [-0.85, -0.78], [-1.02, -0.3], [-1.04, 0.1]], seed: 22, nSheen: 26, shW: 2.2 });
+    hairBackMass(a, T, [a.rim(150, 0.16), a.P(-1.05, 0.55, -0.5), a.P(-0.6, 0.7, -0.9), a.P(0.5, 0.65, -0.9), a.P(1.0, 0.4, -0.5), a.rim(30, 0.12), a.rim(270, 0.2)]);
+    // layered side pieces over the ears
+    [[-0.98, -0.6, -1.08, 0.18, 0.06, 0.32], [-0.9, -0.6, -0.96, 0.08, -0.04, 0.28], [0.9, -0.6, 0.98, 0.06, -0.06, 0.3]].forEach(function (q) { drawLock(a, 'hair', a.on(q[0], q[1], 0.2), a.on(q[2], q[3], 0.06), S * q[5], q[4], T, { hiOp: 0.6 }); });
+    // the swept fringe
+    [[-0.4, -1.25, 0.86, -0.32, 0.5], [-0.5, -1.2, 0.58, -0.38, 0.46], [-0.6, -1.15, 0.3, -0.48, 0.42], [-0.62, -1.05, 0.02, -0.56, 0.36], [-0.7, -1.0, -0.3, -0.62, 0.32]].forEach(function (q, i) {
+      drawLock(a, 'hair', a.on(q[0], q[1], 0.4), a.on(q[2], q[3], 0.14), S * q[4], -0.12, T, { tipPow: 1.0, hi0: 0.15, hi1: 0.55, hiOp: 0.75 });
+    });
+    var shp = [a.on(-1.0, -1.2, 0.1), a.on(-0.5, -0.55, 0.1), a.on(0.3, -0.38, 0.1), a.on(0.9, -0.22, 0.1), a.on(1.05, -1.2, 0.1)];
+    a.add('hairShadow', a.g(a.g(a.el(smooth(shp, true), a.mulTint(a.skin.deep), { op: 0.5 }), { clip: a.skinClip, blur: 2.4 }), { mode: 'multiply' }));
+  };
+  /* hair pulled back: ponytail (Lisa) or bun (Stana, Zlatko) */
+  function pulledBack(a, T, o) {
+    var S = a.S, part = o.part === undefined ? -0.3 : o.part;
+    var hl = [[1.02, 0.1], [0.97, -0.45], [0.8, -0.8], [0.4, -0.98], [part, -1.04], [-0.45, -0.97], [-0.84, -0.78], [-1.0, -0.4], [-1.04, 0.12]];
+    capMass(a, T, { p0: 0.1, p1: 0.13, a0: 150, a1: 390, step: 14, hairline: hl, seed: 13, sweep: 9, crown: a.P(-0.2, -1.2, -0.95), nSheen: 22, nLines: 14, shW: 1.8 });
+    // the part
+    a.add('hairTop', a.ink([a.on(part, -1.04, 0.07), a.on(part * 0.8, -1.3, 0.1), a.on(part * 0.6, -1.5, 0.05)], [0.8, 1.1, 0.2], { col: rgb(T.deep), op: 0.8 }));
+    // loose strands at the temples
+    wisp(a, a.onL([[-0.9, -0.75], [-1.0, -0.3], [-0.98, 0.1]], 0.08), T, 'hairTop', 0.9);
+    wisp(a, a.onL([[0.85, -0.75], [0.95, -0.35], [0.92, -0.05]], 0.08), T, 'hairTop', 0.8);
+    hairBackMass(a, T, [a.rim(150, 0.1), a.P(-1.02, 0.42, -0.5), a.P(-0.6, 0.55, -0.9), a.P(0.5, 0.55, -0.9), a.P(1.0, 0.35, -0.5), a.rim(30, 0.08), a.rim(270, 0.12)]);
+  }
+  HAIR.ponytail = function (a, c, o) {
+    var S = a.S, T = hairTones(c);
+    pulledBack(a, T, o);
+    // the tail falls behind the near shoulder
+    var root = a.rim(206, 0.1), tip = a.P(-1.75, 2.6, -0.9);
+    drawLock(a, 'hairBack', root, tip, S * 0.62, 0.18, T, { tipPow: 0.9, swell: 0.6, hi0: 0.1, hi1: 0.55, hiOp: 0.6 });
+    drawLock(a, 'hairBack', mid(root, tip, 0.15), [tip[0] - S * 0.1, tip[1] - S * 0.3], S * 0.3, 0.3, T, { tipPow: 1, hiOp: 0.5, drop: false });
+    var tie = mid(root, tip, 0.1);
+    a.add('hairBack', '<ellipse cx="' + f(tie[0]) + '" cy="' + f(tie[1]) + '" rx="' + f(S * 0.16) + '" ry="' + f(S * 0.09) + '" transform="rotate(60 ' + f(tie[0]) + ' ' + f(tie[1]) + ')" fill="#2a2228" stroke="#120c0e" stroke-width="1"/>');
+  };
+  HAIR.bun = function (a, c, o) {
+    var S = a.S, T = hairTones(c);
+    // the bun sits high at the back
+    var bc = a.rim(o.bunAng || 218, 0.32), R = S * 0.42, pts = [];
+    for (var k = 0; k < 14; k++) { var t = k / 14 * Math.PI * 2; pts.push([bc[0] + Math.cos(t) * R * (1 + 0.06 * Math.sin(t * 3)), bc[1] + Math.sin(t) * R * 0.88]); }
+    var inner = '';
+    for (k = 0; k < 7; k++) { var ang = k / 7 * Math.PI * 2; inner += a.ink([[bc[0] + Math.cos(ang) * R * 0.15, bc[1] + Math.sin(ang) * R * 0.15], [bc[0] + Math.cos(ang + 0.9) * R * 0.6, bc[1] + Math.sin(ang + 0.9) * R * 0.55], [bc[0] + Math.cos(ang + 1.6) * R * 0.95, bc[1] + Math.sin(ang + 1.6) * R * 0.85]], [0, 1.2, 0.2], { col: rgb(T.deep), op: 0.7 }); }
+    inner += a.el(taper([[bc[0] - R * 0.7, bc[1] - R * 0.1], [bc[0] - R * 0.4, bc[1] - R * 0.6], [bc[0] + R * 0.2, bc[1] - R * 0.75]], [0, 2.4, 0], 4), T.hi, { op: 0.6 });
+    paintMass(a, pts, T, { layer: 'hairBack', inner: inner, lw: 1.5 });
+    pulledBack(a, T, o);
+  };
+  /* braid over the near shoulder (Vesna, Mila) */
+  HAIR.braid = function (a, c, o) {
+    var S = a.S, T = hairTones(c);
+    pulledBack(a, T, { part: 0.05 });
+    var p0 = a.P(-0.95, 0.5, -0.35), p1 = a.bp ? a.bp(-1.25, 0.6) : [p0[0] - S * 0.3, p0[1] + S * 1.2], p2 = a.bp ? a.bp(-1.0, 1.6) : [p0[0], p0[1] + S * 2.4];
+    var path = spline([a.P(-0.98, 0.1, -0.4), p0, p1, p2], 4), s = '';
+    var n = path.length;
+    for (var i = 0; i < n - 1; i++) {
+      var q = path[i], q2 = path[i + 1], w = S * 0.3 * (1 - i / n * 0.45), sd = i % 2 ? 1 : -1;
+      var dx = q2[0] - q[0], dy = q2[1] - q[1], l = Math.hypot(dx, dy) || 1, nx = -dy / l, ny = dx / l;
+      var c1 = [q[0] + nx * w * 0.55 * sd, q[1] + ny * w * 0.55 * sd], tipP = [q2[0] - nx * w * 0.35 * sd + dx * 0.6, q2[1] - ny * w * 0.35 * sd + dy * 0.6];
+      var lobe = [[q[0] - nx * w * 0.5 * sd, q[1] - ny * w * 0.5 * sd], c1, [q2[0] + nx * w * 0.5 * sd + dx * 0.4, q2[1] + ny * w * 0.5 * sd + dy * 0.4], tipP];
+      var d = smooth(lobe, true);
+      s += a.el(d, T.base) + a.g(a.el(d, a.lin(c1[0], c1[1], tipP[0], tipP[1], [[0, T.light], [1, T.deep]])), { clip: a.clip(d) }) + a.el(d, 'none', { stroke: rgb(T.line), sw: 1 });
+    }
+    var end = path[n - 1];
+    // ribbon and tassel
+    var rc = o.ribbon || a.def.ribbon || [176, 48, 48];
+    s += a.ink([end, [end[0] - S * 0.05, end[1] + S * 0.3], [end[0] + S * 0.02, end[1] + S * 0.5]], [S * 0.18, S * 0.12, 0], { col: rgb(T.base) });
+    s += '<ellipse cx="' + f(end[0]) + '" cy="' + f(end[1]) + '" rx="' + f(S * 0.15) + '" ry="' + f(S * 0.07) + '" fill="' + rgb(rc) + '" stroke="#2a0e0e" stroke-width="1"/>';
+    s += a.ink([end, [end[0] + S * 0.2, end[1] + S * 0.18], [end[0] + S * 0.22, end[1] + S * 0.4]], [2.4, 2.0, 0.6], { col: rgb(rc) });
+    a.add('bodyTop', s);
+  };
+  /* Milka: dark wavy shoulder-length hair going grey, side part */
+  HAIR.wavy = function (a, c, o) {
+    var S = a.S, T = hairTones(c), r = rnd(41), grey = a.pd.grey || 0;
+    var Tg = hairTones(mix(c, [190, 186, 180], 0.55));
+    hairBackMass(a, T, [a.rim(150, 0.38), a.P(-1.5, 1.4, -0.3), a.P(-1.35, 2.0, -0.5), a.P(-0.6, 2.05, -0.9), a.P(0.8, 1.95, -0.8), a.P(1.4, 1.6, -0.2), a.rim(30, 0.36), a.rim(270, 0.35)]);
+    var part = -0.35;
+    capMass(a, T, { p0: 0.26, p1: 0.32, a0: 148, a1: 392, step: 13, hairline: [[1.04, 0.2], [0.96, -0.4], [0.75, -0.82], [0.2, -1.0], [part, -1.05], [-0.7, -0.9], [-0.98, -0.5], [-1.06, 0.2]], seed: 19, sweep: 6, crown: a.P(part, -1.6, 0.2), nSheen: 18, shW: 2.2, inner: grey ? strandLines(a, a.P(part, -1.5, 0.3), 160, 380, 14, 0.25, 0.3, Tg, { col: Tg.light, op: 0.6 * grey * 2, w: 1.3 }) : '' });
+    // waves down both sides
+    var L = [[-0.98, -0.6, -1.42, 1.85, 0.14, 0.5], [-0.92, -0.5, -1.25, 1.95, -0.12, 0.44], [-0.85, -0.4, -1.05, 1.75, 0.1, 0.38], [0.88, -0.5, 1.2, 1.72, -0.12, 0.4], [0.95, -0.55, 1.36, 1.6, 0.12, 0.44]];
+    L.forEach(function (q, i) {
+      var root = a.on(q[0], q[1], 0.3), tip = a.on(q[2], q[3], -0.25), m = mid(root, tip, 0.5);
+      var ctrl = [m[0] + (i % 2 ? -1 : 1) * S * 0.25 * (q[0] < 0 ? 1 : -1), m[1]];
+      drawLock(a, 'hair', root, tip, S * q[5], q[4], i % 3 === 1 && grey ? Tg : T, { hi0: 0.12, hi1: 0.5, tipPow: 0.8, hiOp: 0.6, ctrl: ctrl });
+    });
+    // the swept wave across the forehead from the part
+    drawLock(a, 'hair', a.on(part, -1.15, 0.4), a.on(0.95, -0.55, 0.12), S * 0.55, -0.16, T, { tipPow: 1.1, hi0: 0.15, hi1: 0.6, hiOp: 0.7 });
+    drawLock(a, 'hair', a.on(part - 0.1, -1.1, 0.35), a.on(-1.0, -0.4, 0.12), S * 0.44, 0.14, grey ? Tg : T, { tipPow: 1.1, hiOp: 0.6 });
+    var shp = [a.on(-1.1, -1.2, 0.1), a.on(-0.9, -0.45, 0.1), a.on(0.0, -0.72, 0.1), a.on(0.95, -0.45, 0.1), a.on(1.1, -1.2, 0.1)];
+    a.add('hairShadow', a.g(a.g(a.el(smooth(shp, true), a.mulTint(a.skin.deep), { op: 0.5 }), { clip: a.skinClip, blur: 2.4 }), { mode: 'multiply' }));
+    var shs = [a.on(-1.2, -0.5, 0), a.on(-0.84, 0.0, 0), a.on(-0.86, 1.2, 0), a.on(-1.3, 1.4, 0)];
+    a.add('hairShadow', a.g(a.g(a.el(smooth(shs, true), a.mulTint(a.skin.deep), { op: 0.45 }), { clip: a.skinClip, blur: 2.4 }), { mode: 'multiply' }));
+  };
+  /* Father Sava: long grey hair gathered back under the kamilavka */
+  HAIR.priest = function (a, c, o) {
+    var S = a.S, T = hairTones(c);
+    hairBackMass(a, T, [a.rim(160, 0.15), a.P(-1.3, 1.2, -0.4), a.P(-1.1, 2.4, -0.8), a.P(0.6, 2.3, -0.9), a.P(1.2, 1.1, -0.4), a.rim(20, 0.12), a.rim(270, 0.2)]);
+    capMass(a, T, { p0: 0.12, p1: 0.16, a0: 150, a1: 390, step: 14, hairline: [[1.03, 0.2], [0.98, -0.45], [0.75, -0.85], [0, -1.0], [-0.75, -0.85], [-1.0, -0.45], [-1.05, 0.2]], seed: 3, sweep: 7, crown: a.P(0, -1.3, -0.9), nSheen: 14 });
+    drawLock(a, 'hair', a.on(-0.96, -0.7, 0.2), a.on(-1.22, 1.25, -0.2), S * 0.45, 0.06, T, { hiOp: 0.55, tipPow: 0.8 });
+    drawLock(a, 'hair', a.on(0.92, -0.7, 0.2), a.on(1.05, 1.0, -0.2), S * 0.32, -0.06, T, { hiOp: 0.5, tipPow: 0.8 });
+  };
+
+  /* head-wrap (Jaglika late): navy cloth wound around the head with folds and a knot */
+  HAIR.wrap = function (a, c, o) {
+    var S = a.S, T = clothTones(c), Tl = clothTones(mix(c, [120, 140, 190], 0.18));
+    var out = a.rims([[148, 0.12], [160, 0.24], [178, 0.32], [198, 0.38], [222, 0.42], [248, 0.44], [272, 0.44], [296, 0.42], [320, 0.38], [342, 0.3], [0, 0.22], [16, 0.12], [26, 0.04]]);
+    var edge = a.onL([[0.98, 0.12], [0.95, -0.35], [0.75, -0.66], [0.3, -0.76], [-0.3, -0.76], [-0.8, -0.64], [-1.0, -0.3], [-1.04, 0.16]], 0.1);
+    var pts = out.concat(edge), d = smooth(pts, true, 0.9), b = bbox(pts), inner = '';
+    inner += a.el(d, a.lin(b.x0, b.y0, b.x1, b.y1, [[0, Tl.light, 0.7], [0.5, T.base, 0], [1, T.deep, 0.8]]));
+    // wound bands: each fold is a curve from the lower left up across the head to the knot
+    var knot = a.on(0.18, -1.32, 0.55);
+    var bands = [[-1.0, 0.0, 0.0], [-0.98, -0.42, 0.04], [-0.75, -0.72, 0.1], [0.98, -0.1, 0.0], [0.85, -0.55, 0.08], [0.4, -0.8, 0.12]];
+    bands.forEach(function (q, i) {
+      var st = a.on(q[0], q[1], 0.12), m = a.on(q[0] * 0.55, (q[1] - 1.3) / 2, 0.4 + q[2]);
+      var cv = quad(st, m, knot, 10);
+      inner += a.el(taper(cv.slice(0, 9), [S * 0.05, S * 0.11, S * 0.02], 3), T.deep, { op: 0.6, blur: 0.8 });
+      inner += a.el(taper(offset(cv.slice(1, 8), -S * 0.05, -S * 0.04), [0, S * 0.06, 0], 3), Tl.hi, { op: 0.35 });
+      inner += a.ink(cv.slice(0, 9), [0.4, 1.2, 0.3], { col: rgb(T.line), op: 0.7 });
+    });
+    // the fold along the lower edge, rolled over the forehead
+    inner += a.el(taper(offset(edge.slice(2, 6), 0, -S * 0.1), [S * 0.04, S * 0.1, S * 0.04], 3), Tl.light, { op: 0.4 });
+    a.add('hair', a.el(d, T.base) + a.g(inner, { clip: a.clip(d) }) + a.el(d, 'none', { stroke: rgb(T.line), sw: 1.6 }));
+    // knot: two twisted lobes and a tucked end
+    var k = '';
+    [[-0.32, -0.1, 0.34, 0.2, -20], [0.18, -0.05, 0.32, 0.22, 25], [-0.02, 0.06, 0.2, 0.16, 0]].forEach(function (q) {
+      var cx = knot[0] + S * q[0], cy = knot[1] + S * q[1], rx = S * q[2], ry = S * q[3];
+      var e = '<ellipse cx="' + f(cx) + '" cy="' + f(cy) + '" rx="' + f(rx) + '" ry="' + f(ry) + '" transform="rotate(' + q[4] + ' ' + f(cx) + ' ' + f(cy) + ')"';
+      k += e + ' fill="' + rgb(T.base) + '"/>' + e + ' fill="' + a.rad(cx - rx * 0.4, cy - ry * 0.5, rx * 1.3, [[0, Tl.light], [0.6, T.base], [1, T.deep]]) + '"/>' + e + ' fill="none" stroke="' + rgb(T.line) + '" stroke-width="1.3"/>';
+    });
+    k += a.ink([[knot[0] - S * 0.08, knot[1] - S * 0.12], [knot[0] + S * 0.02, knot[1] + S * 0.02], [knot[0] + S * 0.12, knot[1] + S * 0.12]], [0.3, 1.2, 0.3], { col: rgb(T.line), op: 0.8 });
+    a.add('hairTop', k);
+    var shp = edge.map(function (p) { return [p[0] + S * 0.04, p[1] + S * 0.1]; }).concat([a.on(-1.2, -1.4, 0), a.on(1.2, -1.4, 0)]);
+    a.add('hairShadow', a.g(a.g(a.el(smooth(shp, true), a.mulTint(a.skin.deep), { op: 0.55 }), { clip: a.skinClip, blur: 2.2 }), { mode: 'multiply' }));
+    hairBackMass(a, T, [a.rim(148, 0.12), a.P(-1.05, 0.45, -0.5), a.P(-0.5, 0.6, -0.9), a.P(0.5, 0.55, -0.9), a.P(1.0, 0.3, -0.5), a.rim(26, 0.06), a.rim(270, 0.3)]);
+  };
+  /* headscarf: tied at the nape (Pečko) or under the chin (Baka) */
+  HAIR.scarf = function (a, c, o) {
+    var S = a.S, def = a.def, T = clothTones(def.scarf || [200, 180, 140]), pat = def.scarfPattern ? hx(def.scarfPattern) : null, chin = o.tie === 'chin';
+    var hairT = hairTones(c);
+    // a little hair shows at the front
+    if (!chin) {
+      var hp = a.onL([[0.9, -0.45], [0.6, -0.86], [0.0, -0.96], [-0.6, -0.86], [-0.94, -0.42], [-0.96, -0.3], [-0.6, -0.72], [0.0, -0.82], [0.6, -0.72], [0.88, -0.32]], 0.04);
+      paintMass(a, hp, hairT, { lw: 1.0, inner: a.ink(a.onL([[0, -0.96], [0, -0.82]], 0.05), [0.6, 0.9, 0.3], { col: rgb(hairT.deep) }) });
+    }
+    var fy = chin ? -0.82 : -0.84;
+    var out = chin ? a.rims([[124, 0.24], [140, 0.3], [160, 0.34], [182, 0.36], [210, 0.34], [240, 0.3], [270, 0.28], [300, 0.28], [330, 0.3], [356, 0.32], [20, 0.3], [40, 0.24], [56, 0.18]])
+      : a.rims([[150, 0.14], [168, 0.22], [190, 0.26], [215, 0.28], [245, 0.28], [272, 0.27], [300, 0.27], [328, 0.25], [352, 0.2], [14, 0.12], [26, 0.05]]);
+    var edge = chin ? a.onL([[0.64, 1.0], [0.9, 0.5], [0.98, -0.2], [0.75, -0.72], [0.2, fy - 0.04], [-0.4, fy - 0.02], [-0.85, -0.6], [-1.02, -0.1], [-0.98, 0.6], [-0.8, 1.05]], 0.12)
+      : a.onL([[0.92, 0.0], [0.94, -0.42], [0.72, -0.78], [0.2, fy - 0.04], [-0.4, fy - 0.02], [-0.85, -0.7], [-1.0, -0.38], [-1.02, 0.02]], 0.1);
+    var pts = out.concat(edge), d = smooth(pts, true, 0.9), b = bbox(pts), inner = '';
+    inner += a.el(d, a.lin(b.x0, b.y0, b.x1, b.y1, [[0, T.light, 0.8], [0.5, T.base, 0], [1, T.shadow, 0.9]]));
+    if (pat) {
+      var r = rnd(55);
+      for (var k = 0; k < 90; k++) {
+        var px = b.x0 + r() * (b.x1 - b.x0), py = b.y0 + r() * (b.y1 - b.y0), rr = S * (0.035 + r() * 0.03);
+        if (chin) { inner += '<g transform="translate(' + f(px) + ' ' + f(py) + ')" fill="' + rgb(pat) + '" opacity="0.85">' + [0, 72, 144, 216, 288].map(function (an) { return '<ellipse cx="0" cy="' + f(-rr) + '" rx="' + f(rr * 0.55) + '" ry="' + f(rr) + '" transform="rotate(' + an + ')"/>'; }).join('') + '<circle r="' + f(rr * 0.45) + '" fill="#e8d890"/></g>'; }
+        else inner += '<circle cx="' + f(px) + '" cy="' + f(py) + '" r="' + f(rr * 0.8) + '" fill="' + rgb(pat) + '" opacity="0.8"/>';
+      }
+      // a printed border along the front edge
+      inner += a.el(taper(offset(edge.slice(chin ? 2 : 1, chin ? 8 : 7), 0, -S * 0.06), S * 0.07, 3), pat, { op: 0.75 });
+    }
+    // folds radiating from the tie
+    var tieP = chin ? a.P(0.1, a.fc.chinB + 0.2, 0.7) : a.P(-0.9, 0.55, -0.85);
+    for (k = 0; k < 6; k++) {
+      var ang = (chin ? 200 : 180) + k * (chin ? 26 : 22), q = a.rim(ang, 0.15);
+      inner += a.ink(strand(q, tieP, S * 0.2, 10).slice(0, 7), [0.3, 1.3, 0.1], { col: rgb(T.deep), op: 0.45 });
+      inner += a.el(taper(offset(strand(q, tieP, S * 0.2, 10).slice(1, 6), -2, -1.5), [0, 2.2, 0], 3), T.hi, { op: 0.35 });
+    }
+    a.add('hair', a.el(d, T.base) + a.g(inner, { clip: a.clip(d) }) + a.el(d, 'none', { stroke: rgb(T.line), sw: 1.5 }));
+    // the knot and its ends
+    var kn = '';
+    if (chin) {
+      var kc = a.P(0.12, a.fc.chinB + 0.12, 0.6);
+      var e1 = [[kc[0] - S * 0.1, kc[1]], [kc[0] - S * 0.45, kc[1] + S * 0.35], [kc[0] - S * 0.3, kc[1] + S * 0.75], [kc[0] - S * 0.05, kc[1] + S * 0.2]];
+      var e2 = [[kc[0] + S * 0.1, kc[1]], [kc[0] + S * 0.5, kc[1] + S * 0.3], [kc[0] + S * 0.45, kc[1] + S * 0.7], [kc[0] + S * 0.05, kc[1] + S * 0.2]];
+      [e1, e2].forEach(function (e) { var dd = smooth(e, true); kn += a.el(dd, T.base) + a.g(a.el(dd, a.lin(e[0][0], e[0][1], e[2][0], e[2][1], [[0, T.light], [1, T.shadow]])), { clip: a.clip(dd) }) + a.el(dd, 'none', { stroke: rgb(T.line), sw: 1.3 }); });
+      kn += '<ellipse cx="' + f(kc[0]) + '" cy="' + f(kc[1]) + '" rx="' + f(S * 0.16) + '" ry="' + f(S * 0.12) + '" fill="' + rgb(T.base) + '" stroke="' + rgb(T.line) + '" stroke-width="1.3"/>';
+      a.add('front', '<g transform="rotate(' + f(a.roll * 57.3) + ' ' + f(a.ox) + ' ' + f(a.oy + a.S * (a.fc.chinY + 0.4)) + ')">' + kn + '</g>');
+      // cloth going down behind the neck
+      hairBackMass(a, T, [a.rim(120, 0.25), a.P(-1.3, 1.6, -0.3), a.P(-0.8, 2.3, -0.5), a.P(0.8, 2.3, -0.5), a.P(1.25, 1.5, -0.2), a.rim(60, 0.2), a.rim(270, 0.3)]);
+    } else {
+      var kc2 = a.P(-0.95, 0.55, -0.9);
+      var t1 = [[kc2[0], kc2[1]], [kc2[0] - S * 0.3, kc2[1] + S * 0.5], [kc2[0] - S * 0.15, kc2[1] + S * 1.0], [kc2[0] + S * 0.08, kc2[1] + S * 0.3]];
+      var dd2 = smooth(t1, true);
+      kn += a.el(dd2, T.shadow) + a.el(dd2, 'none', { stroke: rgb(T.line), sw: 1.3 });
+      kn += '<ellipse cx="' + f(kc2[0]) + '" cy="' + f(kc2[1]) + '" rx="' + f(S * 0.18) + '" ry="' + f(S * 0.14) + '" fill="' + rgb(T.base) + '" stroke="' + rgb(T.line) + '" stroke-width="1.3"/>';
+      a.add('hairBack', kn);
+      hairBackMass(a, T, [a.rim(150, 0.14), a.P(-1.05, 0.55, -0.5), a.P(-0.6, 0.65, -0.9), a.P(0.5, 0.6, -0.9), a.P(1.0, 0.35, -0.5), a.rim(26, 0.05), a.rim(270, 0.27)]);
+    }
+    var shp = edge.map(function (p) { return [p[0] + S * 0.05, p[1] + S * 0.1]; }).concat(chin ? [a.on(-1.5, 1.6, 0), a.on(1.5, 1.6, 0)] : [a.on(-1.2, -1.4, 0), a.on(1.2, -1.4, 0)]);
+    if (!chin) a.add('hairShadow', a.g(a.g(a.el(smooth(shp, true), a.mulTint(a.skin.deep), { op: 0.5 }), { clip: a.skinClip, blur: 2.2 }), { mode: 'multiply' }));
+    else {
+      var o2 = edge.slice(0, 4).concat(edge.slice(6));
+      a.add('hairShadow', a.g(a.g(a.el(smooth(edge.map(function (p) { return [p[0] + S * 0.04, p[1] + S * 0.06]; }).concat([a.on(-2, 2, 0), a.on(2, 2, 0)]), true), a.mulTint(a.skin.deep), { op: 0 }), { clip: a.skinClip }), { mode: 'multiply' }));
+    }
   };
 
   /* ================= OUTFITS ================= */

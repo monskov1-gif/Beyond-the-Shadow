@@ -6,6 +6,7 @@ BTS.Physics = (function () {
 
   /* collider: {box:[x0,z0,x1,z1]} or {circle:[x,z,r]} */
   P.resolve = function (ent, colliders, dynamic) {
+    if (ent.noClip) return;     // scripted actors that were routed through an obstacle (see Entity.followPath)
     var r = ent.radius || 0.3;
     for (var pass = 0; pass < 3; pass++) {
       var moved = false;
