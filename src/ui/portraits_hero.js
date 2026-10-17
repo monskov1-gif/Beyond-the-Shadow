@@ -132,7 +132,7 @@ BTS.PortraitLib = (function () {
     hairPart(a, { prims: [shell(a, 0.04, {})], k: 0.1, inf: 0.04, freq: 12, amp: 0.025, seed: 2, taperW: 0.1, flow: 'back', rough: 0.2,
       lim: function (X, Y, Z, s, ph) { return ph < 1.15 ? -9 : hairlineY(X, Z, { front: -9, temple: -9, side: 0.05, ear: -0.12, back: 0.85 }); } });
     var pt = a.parts[a.parts.length - 1], m = pt.mask;
-    pt.mask = function (X, Y, Z) { var v = m(X, Y, Z); var top = Y + 0.42 + Math.max(0, -Z) * 0.25; return Math.min(v, top); };
+    pt.mask = function (X, Y, Z) { var v = m(X, Y, Z); var top = Y + 0.3 + Math.max(0, -Z) * 0.35; return Math.min(v, top); };
   };
   /* copper bob with blunt bangs (Jaglika early) */
   HAIR.bob = function (a, o) {
@@ -215,9 +215,9 @@ BTS.PortraitLib = (function () {
   HAIR.scarf = function (a, o) {
     var E = a.E, chin = o.tie === 'chin', f = a.f;
     var prims = [shell(a, chin ? 0.1 : 0.14, { tall: 0.05, wide: 0.0 })];
-    if (chin) prims.push(E([-0.82, 0.55, -0.08], [0.28, 0.95, 0.66]), E([0.82, 0.55, -0.08], [0.28, 0.95, 0.66]), E([0, 0.5, -0.62], [1.0, 1.15, 0.62]), E([0, 1.45, -0.35], [0.95, 0.5, 0.6]));
+    if (chin) prims.push(E([-0.84, 0.6, -0.28], [0.26, 0.95, 0.6]), E([0.84, 0.6, -0.28], [0.26, 0.95, 0.6]), E([0, 0.5, -0.62], [1.0, 1.15, 0.62]), E([0, 1.45, -0.35], [0.95, 0.5, 0.6]));
     else prims.push(E([-0.15, 0.1, -0.78], [0.92, 0.85, 0.52]));
-    function open(X, Y, Z) { var ox = X, oy = Y - 0.34; return 1 - Math.sqrt((ox * ox) / (0.7 * 0.7) + (oy * oy) / (0.98 * 0.98)); }
+    function open(X, Y, Z) { var ox = X, oy = Y - 0.34; return 1 - Math.sqrt((ox * ox) / (0.8 * 0.8) + (oy * oy) / (1.0 * 1.0)); }
     function edge(X, Y, Z) {
       var ph = Math.abs(phiOf(X, Z));
       if (chin) { if (Z > -0.1 && ph < 1.5 && Y > -0.6) return -open(X, Y, Z); return (ph < 1.6 ? 1.3 : 1.7) - Y; }
@@ -298,7 +298,7 @@ BTS.PortraitLib = (function () {
     a.parts.push({ name: 'cap', F: a.F, mat: 'hat', prims: [shell(a, 0.13, { tall: 0.0, lift: 0.04 })], k: 0.1,
       mask: function (X, Y, Z) { return Y < -0.6 - Math.max(0, -Z) * 0.2; },
       disp: function (X, Y, Z) { return -0.02 * Math.pow(Math.abs(Math.sin(phiOf(X, Z) * 3)), 12); } });
-    a.parts.push({ name: 'peak', F: a.F, mat: 'hatD', prims: [E([0.0, -0.63, 0.98], [0.6, 0.05, 0.45], { rot: [0, 0.18, 0] })], k: 0.05, lineGap: 1.5, mask: function (X, Y, Z) { return Z > 0.7; } });
+    a.parts.push({ name: 'peak', F: a.F, mat: 'hatD', prims: [E([0.0, -0.62, 1.0], [0.62, 0.06, 0.5], { rot: [0, 0.2, 0] })], k: 0.05, lineGap: 1.5, mask: function (X, Y, Z) { return Z > 0.62; } });
     a.parts.push({ name: 'button', F: a.F, mat: 'hatD', prims: [E([0, -1.55, -0.05], [0.08, 0.05, 0.08])], k: 0.02 });
   };
   HAT.brim = function (a) {
@@ -361,8 +361,8 @@ BTS.PortraitLib = (function () {
   /* a collar hugging the neck: the neck volume inflated by r - neck, clipped to a band around y0 (dips in front) */
   function collarRing(a, name, matName, r, y0, h, o) {
     o = o || {}; var E = a.E, f = a.f, t = Math.max(0.05, r - f.neck), dip = o.dip || 0;
-    var band = function (X, Y, Z) { var c = y0 + dip * Math.max(0, Z / (f.neck + t)); return Y > c - h && Y < c + h; };
-    var prims = [E([0, 1.5, -0.3], [f.neck + f.stout * 0.15 + t, 0.95 + t, f.neck * 1.1 + f.stout * 0.1 + t], { rot: [0, -0.15, 0], clip: band })];
+    var band = function (X, Y, Z) { var c = y0 + (f.chinY - 1.3) * 0.9 + dip * Math.max(0, Z / (f.neck + t)); return Y > c - h && Y < c + h; };
+    var prims = [E([0, 1.5 + (f.chinY - 1.3) * 0.9, -0.3], [f.neck + f.stout * 0.15 + t, 0.95 + t, f.neck * 1.1 + f.stout * 0.1 + t], { rot: [0, -0.15, 0], clip: band })];
     var pt = { name: name, F: a.F, mat: matName, prims: prims, k: 0.05, mask: o.mask, disp: o.disp, lineGap: 1.5 };
     a.parts.push(pt); return pt;
   }
@@ -583,7 +583,7 @@ BTS.PortraitLib = (function () {
     (sp.acc || []).forEach(function (ac) { var nm = typeof ac === 'string' ? ac : ac.type; if (ACC[nm]) ACC[nm](a, typeof ac === 'string' ? {} : ac); });
     // grey temples
     if (sp.grey) {
-      var gm = hairMat(a, C.mix(sp.hairCol || [60, 40, 30], [200, 198, 196], 0.7));
+      var gm = hairMat(a, C.mix(sp.hairCol || [60, 40, 30], [176, 172, 170], 0.5));
       M.hairGrey = gm;
       a.parts.forEach(function (pt) {
         if (pt.mat !== 'hair' || !pt.strandAt) return;

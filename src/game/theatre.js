@@ -324,7 +324,7 @@ BTS.Theatre = (function () {
     gr.push([480, 2], [480, 80, 1]);
     L.ground = shape([gr], 0.8);
     // grandmother's own hands holding a rod (seen as dark shapes against the light, with a warm rim)
-    L.hand = shape([[[-21, 140, 1], [-18, 40], [-22, 12], [-27, -6], [-21, -15], [-10, -17], [-3, -28], [4, -33], [11, -29], [9, -21], [17, -24], [23, -19], [20, -10], [27, -8], [29, 0], [22, 7], [18, 34], [21, 140, 1]]], 1);
+    L.hand = shape([[[-17, 70, 1], [-15, 36], [-21, 16], [-25, 2], [-22, -6], [-14, -9], [-12, -17], [-5, -21], [2, -18], [8, -22], [14, -18], [19, -14], [24, -9], [25, -1], [20, 6], [16, 18], [14, 36], [17, 70, 1]], [[-23, -2], [-31, -12], [-28, -18], [-19, -10]]], 1);
     L.handOpen = shape([[[-30, 150, 1], [-26, 40], [-42, 12], [-62, -18], [-56, -26], [-34, -6], [-31, -50], [-29, -92], [-20, -94], [-16, -54], [-12, -104], [-3, -106], [0, -56], [8, -98], [17, -96], [12, -50], [25, -82], [33, -78], [22, -30], [25, 0], [27, 150, 1]]], 1.5);
     LIB = L;
     return L;
@@ -577,9 +577,12 @@ BTS.Theatre = (function () {
     cv.style.width = W + 'px'; cv.style.height = H + 'px';
     shC.width = Math.ceil(cv.width * SHK); shC.height = Math.ceil(cv.height * SHK);
     supC.width = Math.ceil(cv.width * 0.5); supC.height = Math.ceil(cv.height * 0.5);
-    var bottomUI = Math.min(210, H * 0.3);   // the dialogue box lives down there
-    s0 = Math.max(0.12, Math.min(W * 0.95 / 1000, (H - bottomUI) * 0.96 / 600));
-    AY = Math.max(H * 0.36, (H - bottomUI) / 2 + 6);
+    // keep the sheet, the lamp and the table above the dialogue box
+    var dlg = BTS.UI && BTS.UI.dlg, dh = dlg && dlg.offsetHeight ? dlg.offsetHeight : 160;
+    var bottomUI = clamp(dh + H * 0.07 + 18, 120, H * 0.45);
+    var avail = Math.max(H * 0.45, H - bottomUI - 12);
+    s0 = Math.max(0.12, Math.min(W * 0.96 / 1010, avail / 640));
+    AY = 6 + 342 * s0 + Math.max(0, (avail - 640 * s0) * 0.5);
   }
   function camS() { return s0 * (S.cam.z + S.cam.lz); }
   function camC() {
@@ -914,26 +917,26 @@ BTS.Theatre = (function () {
     S.puppets.forEach(function (p) {
       if (!p.held || p.hidden || !p.rods.length) return;
       var r = rodEnds(p, p.disp)[0], side = p.held === 'L' ? -1 : 1;
-      gg.save(); gg.translate(r[1][0], 330); gg.scale(1.1 * side, 1.1);
+      gg.save(); gg.translate(r[1][0], 322); gg.scale(1.05 * side, 1.05);
       rimFill(gg, HP, (r[1][0] > L.x ? 2.5 : -2.5) * side, 2, 'rgba(255,170,100,' + (0.35 + 0.4 * I) + ')');
       gg.restore();
     });
   }
   function drawPeople(gg, I) {
-    var L = S.lamp, rim = 'rgba(255,160,90,' + (0.25 + 0.45 * I) * Math.max(0.3, S.room) + ')';
+    var L = S.lamp, rim = 'rgba(255,160,90,' + (0.25 + 0.45 * Math.min(1, I)) * (0.25 + 0.75 * S.room) + ')';
     if (S.gma.show !== false) {
       gg.save(); gg.translate(800, 540);
-      rimFill(gg, people.gma, 6, 2, rim);
+      rimFill(gg, people.gma, 6, -2, rim);
       gg.save(); gg.translate(-20, -400); gg.rotate(S.gma.arm);
-      rimFill(gg, people.gmaArm, 6, 2, rim); gg.restore();
+      rimFill(gg, people.gmaArm, 6, -2, rim); gg.restore();
       gg.restore();
     }
     // Đorđe, and (in the last shot) his shadow on the wall
     var D = S.dj;
-    gg.save(); gg.translate(-720, 540);
-    rimFill(gg, people.dj, -6, 2, rim);
-    gg.save(); gg.translate(-10, -228); gg.scale(D.headFlip === undefined ? 1 : D.headFlip, 1); gg.rotate(D.head); rimFill(gg, people.djHead, -5, 2, rim); gg.restore();
-    gg.save(); gg.translate(-30, -205); gg.rotate(-D.arm); rimFill(gg, people.djArm, -5, 2, rim); gg.restore();
+    gg.save(); gg.translate(-700, 540); gg.scale(1.18, 1.18);
+    rimFill(gg, people.dj, -6, -2, rim);
+    gg.save(); gg.translate(-10, -228); gg.scale(D.headFlip === undefined ? 1 : D.headFlip, 1); gg.rotate(D.head); rimFill(gg, people.djHead, -5, -2, rim); gg.restore();
+    gg.save(); gg.translate(-30, -205); gg.rotate(-D.arm); rimFill(gg, people.djArm, -5, -2, rim); gg.restore();
     gg.restore();
   }
   function djShadowPose(lag) {
@@ -1370,7 +1373,7 @@ BTS.Theatre = (function () {
   CUES.a2_window = async function () {
     var w = A_.witch, tok = S.wtok = {};
     stopTweens(w);
-    await walk(w, -165, 30); if (S.wtok !== tok) return;
+    await walk(w, -150, 30); if (S.wtok !== tok) return;
     w.flip = -1; tw(w, { rot: -0.08 }, 0.6);
     await tw(w.ang, { armF: -2.05, foreF: 0.35, handF: 0.5 }, 1.4); if (S.wtok !== tok) return;
     play('cloth', { vol: 0.4 }); await wait(2.6); if (S.wtok !== tok) return;
@@ -1590,7 +1593,7 @@ BTS.Theatre = (function () {
   /* ---------------- the show ---------------- */
   async function show() {
     var L = S.lamp;
-    S.cam.x = 40; S.cam.y = -10; S.cam.z = 0.5;
+    S.cam.x = 0; S.cam.y = 20; S.cam.z = 0.6;
     tw(S, { black: 0 }, 1.8);
     await wait(1.2);
     play('match'); await wait(0.6);
@@ -1599,7 +1602,7 @@ BTS.Theatre = (function () {
     await say('th_in');
     // the room recedes; only the sheet and the lamp remain
     tw(S, { room: 0.1 }, 5, 'io');
-    await cam(0, -36, 1.0, 5);
+    await cam(0, 0, 1.0, 5);
 
     /* I — the folk who feared the dark */
     S.act = 1; title(1);
@@ -1623,7 +1626,7 @@ BTS.Theatre = (function () {
     /* II — the woman at the edge of the village */
     S.act = 2; title(2);
     tw(L, { dim: 0.84 }, 3); AU.unease = 0.2;
-    cam(-60, -30, 1.08, 4);
+    cam(-60, -20, 1.08, 4);
     await handSweep(1, function () {
       ['man', 'woman', 'child', 'dog', 'old', 'rabbit'].forEach(function (k) { remove(A_[k]); });
     }, 1.8);
@@ -1635,7 +1638,7 @@ BTS.Theatre = (function () {
     S.act = 3; title(3);
     var w = A_.witch;
     tw(w.sh, { alpha: 0 }, 1.6).then(function () { w.sh.frozen = null; w.sh.frozenM = null; });
-    cam(-40, -10, 1.18, 4);
+    cam(-40, 10, 1.15, 4);
     tw(L, { x: 160 }, 2.5, 'io');
     A_.witch = add(make.witch({ x: -262, y: FEET, z: -3.5, held: 'L', needle: true, autoLean: 0.2 }));
     A_.witch.hideP = { needle: true };
@@ -1652,7 +1655,7 @@ BTS.Theatre = (function () {
     AU.unease = 0.5;
     var oldW = A_.witch;
     tw(L, { x: -24 }, 2.5, 'io');
-    cam(0, -60, 0.94, 4);
+    cam(0, -20, 0.92, 4);
     await handSweep(1, function () {
       remove(A_.victim); remove(A_.pinned); remove(oldW);
       A_.witch = add(make.witch({ x: 0, y: FEET, z: 5, held: 'L' }));
@@ -1672,7 +1675,7 @@ BTS.Theatre = (function () {
     S.act = 5; title(5);
     AU.unease = 0.42;
     tw(S, { spill: 0 }, 2.5);
-    cam(20, -8, 1.0, 4);
+    cam(20, 0, 1.0, 4);
     await handSweep(-1, function () {
       remove(A_.scarf);
       A_.witch = add(make.witch({ x: -40, y: FEET, z: 5, held: 'L' }));
@@ -1697,7 +1700,7 @@ BTS.Theatre = (function () {
       S.puppets.slice().forEach(function (p) { if (p !== gr) remove(p); });
       A_.child6 = add(make.child({ x: -70, y: FEET, z: 5, held: 'L' }));
     }, 2.2);
-    cam(-10, -40, 1.04, 3).then(function () { return cam(-10, -60, 1.12, 18, 'lin'); });
+    cam(-10, -10, 1.04, 3).then(function () { return cam(-10, -30, 1.12, 18, 'lin'); });
     AU.unease = 0.9; auStart();
     await wait(1);
     await say('th_a6a');

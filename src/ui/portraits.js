@@ -328,7 +328,7 @@ BTS.Portraits = (function () {
     var ear = { name: 'ear', F: F, mat: 'skin', k: 0.05, prims: [
       E([-0.92, 0.12, -0.15], [0.11, 0.3, 0.22], { rot: [-0.25, 0, -0.12] }), E([0.92, 0.12, -0.15], [0.11, 0.3, 0.22], { rot: [0.25, 0, 0.12] })
     ], lineGap: 1.5 };
-    var neck = { name: 'neck', F: F, mat: 'skin', k: 0.1, prims: [E([0, 1.5, -0.3], [f.neck + f.stout * 0.15, 0.95, f.neck * 1.1 + f.stout * 0.1], { rot: [0, -0.15, 0] })], vmul: 0.85 };
+    var neck = { name: 'neck', F: F, mat: 'skin', k: 0.1, prims: [E([0, 1.5 + (f.chinY - 1.3) * 0.9, -0.3], [f.neck + f.stout * 0.15, 0.95, f.neck * 1.1 + f.stout * 0.1], { rot: [0, -0.15, 0] })], vmul: 0.85 };
     /* the same skull, jaw and chin inflated by `inf` units: a base for beards, scarves and caps that hug the head */
     function shell(inf, o) {
       o = o || {};
@@ -559,7 +559,7 @@ BTS.Portraits = (function () {
     var tiltR = (spec.roll || 0) + (expr === 'sad' ? 0.03 : expr === 'tired' ? 0.045 : expr === 'worried' ? -0.02 : 0);
     var pitch = (spec.pitch || 0) + (expr === 'sad' || expr === 'tired' ? 0.08 : expr === 'scared' ? -0.03 : 0);
     var Fh = Frame({ x: hx, y: hy, s: s, yaw: yaw, pitch: pitch, roll: tiltR });
-    var Fb = Frame({ x: hx + 1, y: hy, s: s, yaw: yaw * 0.6, pitch: 0, roll: 0 });
+    var Fb = Frame({ x: hx + 1, y: hy + (f.chinY - 1.3) * s * 0.9, s: s, yaw: yaw * 0.6, pitch: 0, roll: 0 });
 
     var skin = spec.skin;
     var mats = {
