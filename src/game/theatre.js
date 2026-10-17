@@ -40,7 +40,7 @@ BTS.Theatre = (function () {
     th_a3: [['baka', '1'], cue('a3_needle'), ['~', 2.2], ['baka', '2'], cue('a3_cut'), ['~', 3], ['baka', '3'], cue('a3_stagger'), ['dj', '4'], ['baka', '5'], ['baka', '6'], cue('a3_eat'), ['~', 3.2], cue('a3_pin'), ['~', 2], ['baka', '7']],
     th_a4: [cue('a4_one'), ['~', 3], ['baka', '1'], cue('a4_more'), ['~', 3], ['baka', '2'], cue('a4_grow'), ['~', 4], ['baka', '3'], ['dj', '4'], ['baka', '5'], cue('a4_swap'), ['~', 3], ['*', '6'], ['dj', '7'], ['baka', '8']],
     th_a5a: [cue('a5_needle'), ['baka', '1'], ['dj', '2'], ['baka', '3'], cue('a5_hide'), ['baka', '4'], ['baka', '5'], ['baka', '6']],
-    th_a5b: [['baka', '1'], cue('a5_strike'), ['~', 4.4], ['baka', '2'], cue('a5_fail'), ['~', 4], ['dj', '3'], ['baka', '4'], ['baka', '5'], ['dj', '6'], ['baka', '7']],
+    th_a5b: [['baka', '1'], cue('a5_strike'), ['~', 6], ['baka', '2'], cue('a5_fail'), ['~', 4], ['dj', '3'], ['baka', '4'], ['baka', '5'], ['dj', '6'], ['baka', '7']],
     th_a6a: [['baka', '1']],
     th_a6b: [['baka', '1']]
   };
@@ -914,6 +914,7 @@ BTS.Theatre = (function () {
   }
   function drawHands(gg, I) {
     var L = S.lamp, HP = lib().hand;
+    if (S.endShot) return;
     S.puppets.forEach(function (p) {
       if (!p.held || p.hidden || !p.rods.length) return;
       var r = rodEnds(p, p.disp)[0], side = p.held === 'L' ? -1 : 1;
@@ -1545,7 +1546,7 @@ BTS.Theatre = (function () {
     S.htok = {}; stopTweens(h);
     var hp = pt(ws.sh.frozenM, 5, -178);
     var side = hp[0] > A_.witch.x ? 1 : -1, standX = hp[0] + 30 * side;
-    await walk(h, standX, 95);
+    await walk(h, standX, 140);
     h.flip = -side; h.armHeld = true;
     await tw(h.ang, { armF: -2.5, foreF: -0.6, tool: 1.2 }, 0.6);
     await wait(0.35);
@@ -1678,7 +1679,7 @@ BTS.Theatre = (function () {
     tw(S, { spill: 0 }, 2.5);
     cam(20, 0, 1.0, 4);
     await handSweep(-1, function () {
-      remove(A_.scarf);
+      remove(A_.scarf); remove(A_.witch);
       A_.witch = add(make.witch({ x: -40, y: FEET, z: 5, held: 'L' }));
       A_.witch.sh.hide = true;
       var ws = A_.ws; ws.follow = true; ws.sh.grow = 1.15; ws.sh.ang = null; ws.sh.wob = 0.3; ws.sh.autoLean = 0.95; ws.sh.lie = 0.55;
@@ -1710,13 +1711,15 @@ BTS.Theatre = (function () {
     await place(w6, 0.2);
     play('shadow_stretch'); play('drone', { dur: 12, vol: 0.9 }); play('breath', { vol: 0.5 });
     // grandmother brings her slowly to the light: the shadow swallows the boy, the sheet, the room
-    await tw(w6, { x: 120, d: 380 }, 5, 'io');
-    tw(w6, { alpha: 0 }, 2.5, 'in', 1.5);
+    w6.sh.ang = { armF: 0, foreF: 0, armB: 0 };
+    tw(w6.sh.ang, { armF: -1.4, foreF: -0.5, armB: 0.7 }, 9);
+    await tw(w6, { x: 30, y: 226, d: 380 }, 5, 'io');
+    tw(w6, { alpha: 0 }, 2.5, 'in', 1.2);
     tw(S, { spill: 0.92 }, 4.5, 'in', 1);
     tw(w6.sh, { wob: 0.6 }, 5);
     setTimeout(function () { if (ready() && TH.active) A.setMuffle(0.85); }, 1800 / TH.speed);
     auStop(4);
-    await tw(w6, { x: -4, y: 300, d: 650, s: 1.25 }, 6.5, 'in');
+    await tw(w6, { x: -44, y: 330, d: 645 }, 6.5, 'in');
     await wait(1.4);
     // and takes it away, sharply
     remove(w6); sfxWhoosh(0.8); S.spill = 0;
@@ -1731,7 +1734,7 @@ BTS.Theatre = (function () {
     silenceAll(true);
     S.endShot = true;
     tw(S, { room: 0.6 }, 4, 'io');
-    await cam(-760, 150, 0.8, 4.6, 'io');
+    await cam(-800, 290, 1.0, 4.6, 'io');
     play('paper', { vol: 0.2 }); await wait(1.4);
     S.djShadow.lag = 0.32;
     play('cloth', { vol: 0.15 });
