@@ -289,17 +289,18 @@ BTS.Portraits = (function () {
       E([0, f.chinY - 0.2, f.chinZ + 0.05], [f.chinW + st * 0.06, 0.2, 0.26], { k: 0.14 }),          // chin
       E([0, -0.27, 0.66], [0.6, 0.1 + f.brow * 0.3, 0.2 + f.brow * 0.3], { k: 0.12 }),                // brow ridge
       E([0, f.noseY * 0.4, 0.84], [0.08 * f.noseW, 0.34 * f.nose, 0.13], { rot: [0, -0.3, 0], k: 0.08 }), // nose bridge
-      E([0, f.noseY - 0.08, 0.88 + 0.1 * f.nose], [0.11 * f.noseW, 0.1, 0.11], KF),                  // nose tip
+      E([0, f.noseY - 0.08, 0.88 + 0.1 * f.nose], [0.11 * f.noseW * (f.noseTip || 1), 0.1 * (f.noseTip || 1), 0.11 * (f.noseTip || 1)], KF), // nose tip
       E([-0.12 * f.noseW, f.noseY - 0.03, 0.83], [0.085 * f.noseW, 0.07, 0.08], KF),                 // nostril wings
       E([0.12 * f.noseW, f.noseY - 0.03, 0.83], [0.085 * f.noseW, 0.07, 0.08], KF),
       E([0, f.mouthY - 0.05, 0.56], [0.38, 0.3, 0.34], { k: 0.15 }),                                  // muzzle
       E([0, f.mouthY - 0.04, 0.85], [0.24 * f.lipW, 0.055 * f.lip, 0.07], KF),                       // upper lip
       E([0, f.mouthY + 0.065, 0.84], [0.2 * f.lipW, 0.065 * f.lip, 0.075], KF)                       // lower lip
     ];
+    if (f.noseBump) prims.push(E([0, f.noseY * 0.42, 0.93 + 0.05 * f.nose], [0.07 * f.noseW, 0.09, 0.07 * f.noseBump], KF));
     if (ga) prims.push(E([-0.5, 0.12, 0.42], [0.25, 0.16, 0.3]), E([0.5, 0.12, 0.42], [0.25, 0.16, 0.3])); // cheekbones
     if (st) { // full cheeks, jowls and a double chin
-      prims.push(E([-0.45, 0.6, 0.25], [0.3 + st * 0.1, 0.36, 0.42]), E([0.45, 0.6, 0.25], [0.3 + st * 0.1, 0.36, 0.42]));
-      prims.push(E([0, f.chinY + 0.04, 0.12], [0.5, 0.26, 0.44]));
+      prims.push(E([-0.48, 0.62, 0.0], [0.42 + st * 0.08, 0.45, 0.6], { k: 0.35 }), E([0.48, 0.62, 0.0], [0.42 + st * 0.08, 0.45, 0.6], { k: 0.35 }));
+      prims.push(E([0, f.chinY + 0.02, 0.1], [0.52, 0.26, 0.44], { k: 0.25 }));
     }
     var my = f.mouthY, ny = f.noseY;
     var head = {
@@ -314,10 +315,11 @@ BTS.Portraits = (function () {
         d -= 0.012 * g2(X / 0.035, (Y - (ny + my) / 2) / 0.07);                             // philtrum
         d -= 0.022 * g2(X / 0.16, (Y - my - 0.17) / 0.045);                                 // under-lip groove
         // nasolabial folds: from the nose wing down past the mouth corner
-        var fold = 0.008 + f.age * 0.022 + ex.cheek * 0.02 + ga * 0.01 + st * 0.008;
+        var fold = 0.006 + f.age * 0.016 + ex.cheek * 0.02 + ga * 0.01;
         var t = clamp((Y - ny) / (my + 0.1 - ny), 0, 1), fx = 0.2 + t * 0.12 + st * 0.04;
         if (Y > ny - 0.05 && Y < my + 0.18) d -= fold * g2((ax - fx) / 0.03, 0);
         d += ex.cheek * 0.045 * g2((ax - 0.42) / 0.15, (Y - 0.42) / 0.14);                  // smile lifts the cheeks
+        if (f.cheeks || st) d += (f.cheeks || 0) * 0.05 * g2((ax - 0.42) / 0.22, (Y - 0.45) / 0.22) + st * 0.04 * g2((ax - 0.45) / 0.25, (Y - 0.6) / 0.25); // round cheeks
         if (f.age) { d += f.age * 0.03 * g2((ax - 0.36) / 0.13, (Y - 0.17) / 0.05); d += f.age * 0.03 * g2((ax - 0.42) / 0.12, (Y - my - 0.12) / 0.12); } // bags, jowls
         if (ex.mouthOpen) d -= ex.mouthOpen * g2(X / 0.12, (Y - my) / 0.05);
         return d;
@@ -504,7 +506,7 @@ BTS.Portraits = (function () {
       L([[ox, -0.04], [ox + sd * 0.12, -0.09]], k); L([[ox, 0.02], [ox + sd * 0.13, 0.03]], k); if (age > 0.7) L([[ox - sd * 0.02, 0.07], [ox + sd * 0.11, 0.13]], k);
     });
     if (age > 0.35 || ex.bags) [-1, 1].forEach(function (sd) { L([[sd * 0.24, 0.14], [sd * 0.38, 0.18], [sd * 0.54, 0.13]], 0.1 * Math.max(age, ex.bags || 0)); });
-    if (age > 0.35 || ex.cheek || f.stout) [-1, 1].forEach(function (sd) { L([[sd * 0.17 * f.noseW, nyF - 0.04], [sd * 0.27, nyF + 0.12], [sd * (mwF + 0.06), myF + 0.06]], 0.16 * Math.max(age, ex.cheek, f.stout * 0.6), sd); });
+    if (age > 0.35 || ex.cheek) [-1, 1].forEach(function (sd) { L([[sd * 0.17 * f.noseW, nyF - 0.04], [sd * 0.27, nyF + 0.12], [sd * (mwF + 0.06), myF + 0.06]], 0.12 * Math.max(age * 0.8, ex.cheek), sd); });
     if (age > 0.65) [-1, 1].forEach(function (sd) { L([[sd * (mwF + 0.02), myF + 0.08], [sd * (mwF + 0.04), myF + 0.3]], 0.12 * age, sd); });
     if (lines.length) eachVisible(ctx, head, function (x, y, X, Y, Z) {
       if (Z < 0.1) return;
@@ -552,8 +554,8 @@ BTS.Portraits = (function () {
     ex.cheek = ex.cheek || 0;
 
     var yaw = spec.yaw === undefined ? 0.5 : spec.yaw;
-    var s = spec.scale || (f.child === 2 ? 22 : 23);
-    var hx = spec.hx || 57, hy = spec.hy || (f.child === 2 ? 50 : 46);
+    var s = spec.scale || (f.child === 2 ? 25 : 26);
+    var hx = spec.hx || 56, hy = spec.hy || (f.child === 2 ? 54 : 50);
     var tiltR = (spec.roll || 0) + (expr === 'sad' ? 0.03 : expr === 'tired' ? 0.045 : expr === 'worried' ? -0.02 : 0);
     var pitch = (spec.pitch || 0) + (expr === 'sad' || expr === 'tired' ? 0.08 : expr === 'scared' ? -0.03 : 0);
     var Fh = Frame({ x: hx, y: hy, s: s, yaw: yaw, pitch: pitch, roll: tiltR });

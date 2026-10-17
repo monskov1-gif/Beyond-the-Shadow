@@ -13,7 +13,8 @@ BTS.CharSprites = (function () {
     teen:  { leg: 8, torso: 9, tw: 7, arm: 8, head: 9 },
     child: { leg: 7, torso: 8, tw: 7, arm: 7, head: 9 },
     small: { leg: 5, torso: 7, tw: 6, arm: 6, head: 8 },
-    old:   { leg: 8, torso: 9, tw: 8, arm: 8, head: 9, hunch: 2 }
+    old:   { leg: 8, torso: 9, tw: 8, arm: 8, head: 9, hunch: 2 },
+    stout: { leg: 8, torso: 9, tw: 10, arm: 8, head: 9, hunch: 1 }
   };
 
   function lit(c) { return C.mul(c, 1.16); }
@@ -30,6 +31,8 @@ BTS.CharSprites = (function () {
   function draw(p, d, pose) {
     var B = BODY[d.body] || BODY.adult;
     var dir = pose.dir, anim = pose.anim, f = pose.f || 0;
+    var closed = anim === 'lie';
+    if (closed) { anim = 'idle'; f = 0; dir = 'down'; }
     var cx = 12, base = FH - 1;
     var walk = anim === 'walk' || anim === 'run';
     var bob = walk && (f % 2 === 1) ? -1 : 0;
@@ -229,7 +232,8 @@ BTS.CharSprites = (function () {
       if (dir === 'down') {
         var ec = d.eyes || [30, 24, 26];
         if (anim === 'blank') ec = [90, 84, 90];
-        p.px(cx - 2, eyeY, ec); p.px(cx + 2, eyeY, ec);
+        if (closed) { p.rect(cx - 3, eyeY, 2, 1, C.mul(skin, 0.62)); p.rect(cx + 2, eyeY, 2, 1, C.mul(skin, 0.62)); }
+        else { p.px(cx - 2, eyeY, ec); p.px(cx + 2, eyeY, ec); }
         if (d.brows) { p.px(cx - 2, eyeY - 1, dk(hc)); p.px(cx + 2, eyeY - 1, dk(hc)); }
         if (d.blush) { p.px(cx - 3, eyeY + 1, C.mix(skin, [200, 90, 90], 0.35)); p.px(cx + 3, eyeY + 1, C.mix(skin, [200, 90, 90], 0.35)); }
         if (anim === 'talk' && f === 0) p.px(cx, eyeY + 2, [110, 50, 50]);
@@ -350,7 +354,6 @@ BTS.CharSprites = (function () {
     }
 
     // painter order depends on direction (side: far arm hidden)
-    if (anim === 'lie') return; // handled separately
     if (isSkirt) skirt();
     else if (dir === 'side') legsSide();
     else legsFront();
@@ -358,24 +361,34 @@ BTS.CharSprites = (function () {
     else { torso(); head(); arms(); }
   }
 
+  var seen = {};
+  function frameKey(p) { var h1 = 2166136261, h2 = 5381, d = p.d; for (var i = 0; i < d.length; i++) { h1 = Math.imul(h1 ^ d[i], 16777619); h2 = (Math.imul(h2, 33) + d[i]) | 0; } return h1 + ':' + h2; }
   function paintFrame(name, d, pose) {
     var p = new BTS.Atlas.Painter(FW, FH);
     p.wrap = false;
     draw(p, d, pose);
     p.outline(d.outline || OUTLINE);
     if (pose.flip) p.flipX();
+    // identical frames (e.g. both idle frames, or poses that do not differ for a direction) share one atlas region
+    var k = frameKey(p);
+    if (seen[k]) { BTS.Atlas.regions[name] = seen[k]; return seen[k]; }
     var r = BTS.Atlas.commit(name, p);
-    r.px = p; // keep pixels for derived frames
+    seen[k] = r;
     return r;
   }
-  function paintLie(name, src) {
-    // rotate the front idle frame 90deg, lying with head to the left
-    var p = new BTS.Atlas.Painter(FH, 16);
-    p.wrap = false;
-    for (var y = 0; y < FH; y++) for (var x = 0; x < FW; x++) {
+  /* lying body: the front pose with closed eyes and arms along the body, turned 90 degrees (head to the left),
+     cropped to its bounding box so nothing is cut, resting on the bottom row of the frame */
+  function paintLie(name, d) {
+    var src = new BTS.Atlas.Painter(FW, FH); src.wrap = false;
+    draw(src, d, { dir: 'down', anim: 'lie', f: 0 });
+    src.outline(d.outline || OUTLINE);
+    var x0 = FW, x1 = -1, y0 = FH, y1 = -1, x, y;
+    for (y = 0; y < FH; y++) for (x = 0; x < FW; x++) if (src.alpha(x, y)) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+    var w = y1 - y0 + 1, h = x1 - x0 + 1;
+    var p = new BTS.Atlas.Painter(w + 2, h + 1); p.wrap = false;
+    for (y = y0; y <= y1; y++) for (x = x0; x <= x1; x++) {
       var c = src.get(x, y); if (!c || c[3] === 0) continue;
-      var ny = x - 4, nx = y;
-      if (ny >= 0 && ny < 16) p.px(nx, ny, c, c[3]);
+      p.px(1 + (y - y0), x - x0, c, c[3]);          // rotate: top of the body -> left, viewer's left -> top
     }
     return BTS.Atlas.commit(name, p);
   }
@@ -402,10 +415,8 @@ BTS.CharSprites = (function () {
         sheet.anims[an + '_' + dir] = { frames: frames, fps: ANIMS[an].fps, loop: true };
       });
     });
-    var lie = paintLie('ch_' + id + '_lie', sheet.anims.idle_down.frames[0].px);
+    var lie = paintLie('ch_' + id + '_lie', d);
     DIRS.forEach(function (dir) { sheet.anims['lie_' + dir] = { frames: [lie], fps: 1, loop: true }; });
-    // free pixel copies
-    Object.keys(sheet.anims).forEach(function (k) { sheet.anims[k].frames.forEach(function (fr) { fr.px = null; }); });
     return sheet;
   }
 

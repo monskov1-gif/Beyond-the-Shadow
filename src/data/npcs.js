@@ -25,7 +25,7 @@
   N.zajko = { sheet: 'zajko', speed: 2.2, schedule: [
     { beats: 'p_go_fair', loc: 'village', at: [72.5, 70.2], act: 'idle', dir: 'up' },
     { beats: 'p_crowd..p_fair', loc: 'village', at: [88.2, 79.2], act: 'wander', radius: 1.5 },
-    { beats: 'c1_mill', loc: 'outskirts', at: [46.4, 47.2], act: 'idle', dir: 'left' },
+    { beats: 'c1_mill', loc: 'outskirts', at: [45.4, 45.0], act: 'idle', dir: 'down' },
     { beats: 'c1_visit', loc: 'zajko_house', at: 'zajko_bed', act: 'look' },
     { beats: 'c1_river', loc: 'outskirts', at: 'river_bank', act: 'idle', dir: 'down' }
   ] };

@@ -8,7 +8,7 @@
     { loc: 'village', sheet: 'vil_old', at: [27.4, 47.6], act: 'mourn', dir: 'up', lines: ['extra_fear_a'] },
     { loc: 'village', sheet: 'vil_man1', at: [38.4, 47.8], act: 'idle', dir: 'up', lines: ['extra_fear_b'] }
   ];
-  var KUM = { loc: 'outskirts', sprite: 'dog_lie', at: [47.8, 48.0] };   // the stray follows Zajko to the mill
+  var KUM = { loc: 'outskirts', sprite: 'dog_lie', at: [46.6, 45.5] };   // the stray follows Zajko to the mill
 
   BTS.Story.define([
     /* ================= CHAPTER 1 ================= */
