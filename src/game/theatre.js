@@ -454,6 +454,7 @@ BTS.Theatre = (function () {
   function wait(sec) { return new Promise(function (res) { timers.push({ left: sec, res: res }); }); }
   /* tween numeric fields of obj; a newer tween on the same field takes it over */
   function tw(obj, to, dur, ease, delay) {
+    if (!obj) return Promise.resolve();
     tweens.forEach(function (o) { if (o.obj === obj) for (var k in to) delete o.to[k]; });
     return new Promise(function (res) { tweens.push({ obj: obj, to: Object.assign({}, to), from: null, dur: Math.max(0.0001, dur), t: 0, delay: delay || 0, ease: EASE[ease || 'io'], res: res }); });
   }
@@ -463,6 +464,7 @@ BTS.Theatre = (function () {
     for (var i = timers.length - 1; i >= 0; i--) { var tm = timers[i]; tm.left -= dt; if (tm.left <= 0) { timers.splice(i, 1); tm.res(); } }
     for (i = tweens.length - 1; i >= 0; i--) {
       var o = tweens[i]; o.t += dt;
+      if (!o.obj) { tweens.splice(i, 1); o.res(); continue; }
       if (o.t < o.delay) continue;
       if (!o.from) { o.from = {}; for (var k in o.to) o.from[k] = o.obj[k]; }
       var f = clamp((o.t - o.delay) / o.dur, 0, 1), e = o.ease(f), any = false;
@@ -581,7 +583,7 @@ BTS.Theatre = (function () {
     var dlg = BTS.UI && BTS.UI.dlg, dh = dlg && dlg.offsetHeight ? dlg.offsetHeight : 160;
     var bottomUI = clamp(dh + H * 0.07 + 18, 120, H * 0.45);
     var avail = Math.max(H * 0.45, H - bottomUI - 12);
-    s0 = Math.max(0.12, Math.min(W * 0.96 / 1010, avail / 640));
+    s0 = Math.max(0.12, Math.min(W * (H > W * 1.2 ? 1.12 : 0.96) / 1010, avail / 640));
     AY = 6 + 342 * s0 + Math.max(0, (avail - 640 * s0) * 0.5);
   }
   function camS() { return s0 * (S.cam.z + S.cam.lz); }
@@ -950,7 +952,7 @@ BTS.Theatre = (function () {
     var q = djShadowPose(S.djShadow.lag || 0);
     gg.save();
     gg.translate(-1080, 520); gg.transform(1, 0, -0.18, 1, 0, 0); gg.scale(1.45, 1.45);
-    gg.globalAlpha = 0.55 * Math.min(1, I) * S.djShadow.on;
+    gg.globalAlpha = 0.68 * Math.min(1, I) * S.djShadow.on;
     gg.fillStyle = '#0a0604';
     gg.fill(people.dj);
     gg.save(); gg.translate(-10, -228); gg.scale(q.headFlip, 1); gg.rotate(q.head); gg.fill(people.djHead); gg.restore();
@@ -1682,7 +1684,7 @@ BTS.Theatre = (function () {
       remove(A_.scarf); remove(A_.witch);
       A_.witch = add(make.witch({ x: -40, y: FEET, z: 5, held: 'L' }));
       A_.witch.sh.hide = true;
-      var ws = A_.ws; ws.follow = true; ws.sh.grow = 1.15; ws.sh.ang = null; ws.sh.wob = 0.3; ws.sh.autoLean = 0.95; ws.sh.lie = 0.55;
+      var ws = A_.ws; ws.follow = true; ws.sh.grow = 1.15; if (ws.sh.ang) stopTweens(ws.sh.ang); ws.sh.ang = null; ws.sh.wob = 0.3; ws.sh.autoLean = 0.95; ws.sh.lie = 0.55;
       A_.tree = add(make.tree({ x: 330, y: FEET, z: 3 })); A_.tree.pinnedStill = true;
       A_.hero = add(make.man({ x: 600, y: FEET, flip: -1, z: 2, held: 'R', needleTool: true }));
       A_.hero.hideP = { tool: true };
@@ -1734,7 +1736,7 @@ BTS.Theatre = (function () {
     silenceAll(true);
     S.endShot = true;
     tw(S, { room: 0.6 }, 4, 'io');
-    await cam(-800, 290, 1.0, 4.6, 'io');
+    await cam(-800, 215, 1.1, 4.6, 'io');
     play('paper', { vol: 0.2 }); await wait(1.4);
     S.djShadow.lag = 0.32;
     play('cloth', { vol: 0.15 });

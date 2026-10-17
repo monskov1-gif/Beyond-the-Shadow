@@ -142,7 +142,7 @@ BTS.Portraits = (function () {
   }
   function skinTones(base, pd) {
     base = desat(base, 0.12);
-    var sh = mix(mul(base, 0.74), [128, 62, 88], 0.26);
+    var sh = mix(mul(base, 0.76), [150, 64, 80], 0.32);
     return {
       base: base,
       light: mix(base, [255, 238, 222], 0.3),
@@ -290,13 +290,22 @@ BTS.Portraits = (function () {
     var c0 = a.on(-0.35, -0.2), c1 = a.on(0.9, 0.3);
     sh.push(a.el(skinD, a.lin(c0[0], c0[1], c1[0] + S * 0.3, c1[1], [[0, sk.light, 0.45], [0.55, sk.base, 0], [1, sk.shadow, 0.35]])));
     // form shadow on the far side plane: temple, outer socket, under the cheekbone, along the jaw
-    var hol = fc.hollow || 0;
-    var edge = [[0.48, -1.5], [0.54, -1.0], [0.6, -0.6], [0.66, -0.3], [0.74, -0.04], [0.8, 0.16], [0.7 - hol * 0.12, 0.36], [0.6 - hol * 0.12, 0.56], [0.54, 0.78], [0.46, 1.0], [0.32, 1.22], [0.16, 1.5]];
-    var ept = edge.map(function (p) { var s2 = a.sec(Math.min(p[1], fc.chinB * 0.8)); return a.on(p[0] * Math.max(s2.W, 0.2), p[1]); });
+    var hol = fc.hollow || 0, gaunt = a.pd.gaunt || 0;
+    var ed = a.pd.shadowEdge || 0;
+    var edge = [[0.16, -1.7], [0.22, -1.2], [0.3, -0.75], [0.42, -0.42], [0.62 + ed, -0.2], [0.72 + ed, 0.02], [0.5 + ed, 0.2], [0.36 + ed - hol * 0.1, 0.45], [0.3 + ed, 0.75], [0.24 + ed, fc.jawY], [0.14 + ed, fc.chinY - 0.05], [0.04, fc.chinB + 0.2]];
+    var ept = edge.map(function (p) { var s2 = a.sec(Math.min(p[1], fc.chinB - 0.02)); return a.on(p[0] * Math.max(s2.W, 0.25), p[1]); });
     var far = ept.concat([[ept[ept.length - 1][0] + S * 2, ept[ept.length - 1][1] + S], [ept[0][0] + S * 2, ept[0][1] - S]]);
     var farD = smooth(far, true, 0.7);
-    sh.push(a.el(farD, sk.shadow, { op: 0.55, blur: 2.2 }));
-    sh.push(a.el(farD, sk.shadow, { op: 0.5, blur: 0.7 }));
+    sh.push(a.el(farD, sk.shadow, { op: 0.6, blur: 3 }));
+    sh.push(a.el(farD, sk.shadow, { op: 0.6, blur: 0.8 }));
+    // warm transition along the terminator (light scattering in skin)
+    sh.push(a.el(smooth(ept, false), 'none', { stroke: mix(sk.blush, [200, 80, 70], 0.3), sw: S * 0.07, op: 0.3, blur: 2 }));
+    // the near cheek turns away below the cheekbone
+    var nc = a.onL([[-0.98, 0.22], [-0.72, 0.38], [-0.62, 0.7], [-0.6, fc.jawY], [-0.4, fc.chinY], [-1.2, fc.chinY]]);
+    sh.push(a.el(smooth(nc, true), sk.shadow, { op: 0.35 + hol * 0.3, blur: 3.5 }));
+    // temple on the near side
+    var tp = a.onL([[-1.05, -0.9], [-0.82, -0.75], [-0.78, -0.35], [-1.05, -0.2]]);
+    sh.push(a.el(smooth(tp, true), sk.shadow, { op: 0.3, blur: 3 }));
     // hollow cheeks (gaunt): shadow pockets under both cheekbones
     if (hol > 0) {
       [-1, 1].forEach(function (sd) {
@@ -411,7 +420,7 @@ BTS.Portraits = (function () {
     var heavy = pd.heavyLids || 0, lashes = pd.lashes === undefined ? (/woman|girl|old$/.test(pd.face) ? 1 : 0) : pd.lashes;
     var s = '', top = '';
     [-1, 1].forEach(function (sd) {
-      var cx = sd * fc.eyeX, cyy = 0, w = fc.eyeW * (pd.eyeK || 1), h = fc.eyeH * (pd.eyeHK || 1);
+      var cx = sd * fc.eyeX, cyy = 0, w = fc.eyeW * (pd.eyeK || 1) * 1.1, h = fc.eyeH * (pd.eyeHK || 1) * 1.1;
       var tilt = (fc.eyeTilt || 0);
       var open = h * clamp(ex.lid - heavy * 0.25 - a.age * 0.08, 0.12, 1.5);
       var lowH = h * (0.62 - ex.lowLid * 0.35 + a.age * 0.05) * (1 - ex.cheek * 0.15);
@@ -428,19 +437,19 @@ BTS.Portraits = (function () {
       var opening = U.concat(Lo.slice(1, N).reverse());
       var od = smooth(opening, true, 0.9);
       var ocp = a.clip(od);
-      var scl = mix([236, 228, 218], sk.base, 0.22);
+      var scl = mix([242, 236, 228], sk.base, 0.12);
       if (ex.pale) scl = mix(scl, [230, 230, 230], 0.3);
       var e = a.el(od, scl);
       // iris: a disc on the eyeball, foreshortened by the projection
       var gx = ex.gazeX * 0.55 + (pd.lookX || 0), gy = ex.gazeY * 0.5 + (pd.lookY || 0);
-      var ir = (pd.irisR || 0.47) * w * (ex.stare ? 1 : 1), icx = cx + sd * 0 + w * gx * 0.55 + (sd < 0 ? 0.01 : -0.015), icy = cyy - open * 0.1 + h * gy * 0.6 - tilt * 0.5;
+      var ir = (pd.irisR || 0.52) * w * (ex.stare ? 1 : 1), icx = cx + sd * 0 + w * gx * 0.55 + (sd < 0 ? 0.01 : -0.015), icy = cyy - open * 0.1 + h * gy * 0.6 - tilt * 0.5;
       var ipts = [];
       for (var k = 0; k < 24; k++) { var t = k / 24 * Math.PI * 2; ipts.push(a.on(icx + Math.cos(t) * ir, icy + Math.sin(t) * ir * 1.02, 0.07)); }
       var id = smooth(ipts, true);
       var ic = a.on(icx, icy, 0.07), irPx = ir * S * (sd > 0 ? a.cy * 0.9 + 0.1 : 1);
       var irisFill = a.rad(ic[0] - irPx * 0.15, ic[1] + irPx * 0.25, irPx * 1.15, [[0, mix(irisCol, [255, 245, 220], 0.28)], [0.55, irisCol], [0.9, mul(irisCol, 0.55)], [1, mul(irisCol, 0.4)]]);
       e += a.el(id, irisFill);
-      e += a.el(id, 'none', { stroke: mul(irisCol, 0.35), sw: 0.9 });
+      e += a.el(id, 'none', { stroke: mix(mul(irisCol, 0.3), [20, 16, 20], 0.5), sw: 1.3 });
       var pr = ir * 0.42 * ex.pupil * (pd.pupil || 1);
       var pp = []; for (k = 0; k < 16; k++) { t = k / 16 * Math.PI * 2; pp.push(a.on(icx + Math.cos(t) * pr, icy + Math.sin(t) * pr, 0.075)); }
       e += a.el(smooth(pp, true), mix(mul(irisCol, 0.2), [10, 8, 10], 0.7));
@@ -466,7 +475,7 @@ BTS.Portraits = (function () {
       top += a.el(smooth(fold, true), sk.shadow, { op: 0.35 + heavy * 0.25, blur: 0.9 });
       // upper lash line: heavy, thickest toward the outer corner
       var lw = (pd.lidW || 1) * (lashes ? 1.15 : 1);
-      top += a.ink(U, function (t) { return (t < 0.15 ? lerp(0.6, 1.6, t / 0.15) : t > 0.8 ? lerp(2.5, 1.4, (t - 0.8) / 0.2) : lerp(1.6, 2.5, (t - 0.15) / 0.65)) * lw; }, { per: 2, col: rgb(mix([20, 12, 12], sk.line, 0.3)) });
+      top += a.ink(U, function (t) { return (t < 0.15 ? lerp(0.9, 2.2, t / 0.15) : t > 0.82 ? lerp(3.3, 1.8, (t - 0.82) / 0.18) : lerp(2.2, 3.3, (t - 0.15) / 0.67)) * lw; }, { per: 2, col: rgb(mix([20, 12, 12], sk.line, 0.3)) });
       if (lashes) {
         for (var q = 0; q < 3; q++) {
           var uu = 0.55 + q * 0.2, base = a.on(cx + sd * uu * w, cyy - tilt * (uu + 1) * 0.5 + lidUp(uu, open), 0.05);
