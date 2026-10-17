@@ -65,7 +65,8 @@
     var t = BTS.App.time, hx = R.head[0], hz = R.head[1];
     var reg = BTS.Atlas.get('shadow_beast_' + (R.freeze > 0 ? 1 : Math.floor(t * 4) % 4));
     var dx = hx - j.x, dz = hz - j.z, len = Math.hypot(dx, dz) || 1, ux = dx / len, uz = dz / len;
-    var w = 2.6 + (R.freeze > 0 ? 0.6 : Math.sin(t * 3) * 0.4), px = -uz * w / 2, pz = ux * w / 2;
+    var gw = BTS.Shadows.jaglikaGrowth().width / 1.45;   // the same growth curve as her shadow everywhere else (1 at the rite)
+    var w = (2.6 + (R.freeze > 0 ? 0.6 : Math.sin(t * 3) * 0.4)) * gw, px = -uz * w / 2, pz = ux * w / 2;
     var y0 = W.heightAt(j.x, j.z) + 0.05, y1 = W.heightAt(hx, hz) + 0.05, hl = len + 1.2;
     var ex = j.x + ux * hl, ez = j.z + uz * hl;
     var a = R.freeze > 0 ? 0.92 : 0.7;
@@ -77,6 +78,49 @@
     // shadow climbing the maypole and stalls (walls)
     var sway = Math.sin(t * 1.4) * 0.5, wy = W.heightAt(84, 76.5);
     Rd.pushFx(3, [[83.2, wy, 76.9], [84.8, wy, 76.9], [85.2 + sway, wy + 6, 76.9], [82.8 + sway, wy + 6, 76.9]], BTS.Atlas.get('shadow_beast_2'), [0.01, 0, 0.02, 0.55]);
+  }
+
+  /* ---------- the lantern procession (e_final, ~20 s, Action skips): children with paper lanterns walk round the
+     bonfire; by its light their shadows wheel round the ring like the spokes of a cartwheel. Đorđe's shadow turns with them. ---------- */
+  function hop2(C, ids, dur) {
+    var t = 0, es = ids.map(function (id) { return BTS.World.get(id); }).filter(Boolean);
+    C.ticker(function (dt) { t += dt; es.forEach(function (e, i) { e.lift = t < dur ? Math.max(0, Math.sin(t * 6 + i * 1.9)) * 0.34 : 0; }); return t < dur; });
+  }
+  function lanternProcession(C) {
+    var W = BTS.World, F = [90.5, 82.2], N = 8, R0 = 3.6, walkers = [], lamps = [], t = 0, done = false;
+    var sheets = ['mila', 'luka', 'vil_boy', 'dancer1', 'dancer2', 'vil_woman1', 'vil_boy', 'dancer1'];
+    for (var i = 0; i < N; i++) {
+      var a = i / N * 6.283, e;
+      if (i < 2 && W.get(sheets[i])) { e = W.get(sheets[i]); if (e.brain) e.brain.paused = true; }
+      else { e = new BTS.Entity({ id: 'lantern_kid' + i, kind: 'npc', sheet: sheets[i], x: F[0] + Math.cos(a) * (R0 + 6), z: F[1] + Math.sin(a) * (R0 + 6) * 0.8 }); e.solid = false; W.addEntity(e); }
+      e.noClip = true; e.path = null; walkers.push(e);
+      var lan = new BTS.Entity({ id: 'lantern' + i, sprite: 'lantern_paper', x: e.x, z: e.z, shadow: false }); lan.solid = false; lan.emissive = true; lan.lift = 1.0; lan.scale = 1.2; W.addEntity(lan);
+      lamps.push({ e: lan, l: C.light({ x: e.x, y: 1.2, z: e.z, color: [1, 0.55, 0.3], radius: 2.4, intensity: 0.7, kind: 'fill', flicker: 0.1, cs: true }) });
+    }
+    C.frame([F], { dist: 18, pitch: 0.7, time: 2.0 });
+    C.music('fair', 1.5);
+    var p = W.player;
+    return new Promise(function (res) {
+      C.ticker(function (dt) {
+        t += dt;
+        var skip = t > 1.5 && BTS.Input && BTS.Input.pressed && BTS.Input.pressed.interact;
+        walkers.forEach(function (e, k) {
+          var a = k / N * 6.283 + t * 0.32, r = t < 4 ? R0 + 6 * (1 - t / 4) : R0;     // they gather, then circle
+          var nx = F[0] + Math.cos(a) * r, nz = F[1] + Math.sin(a) * r * 0.8;
+          e.faceTo(nx + (nx - e.x) * 5, nz + (nz - e.z) * 5); e.x = nx; e.z = nz; e.moving = true;
+          if (e.anim) e.anim.set('walk'), e.anim.speed = 0.6;
+          lamps[k].e.x = nx + 0.25; lamps[k].e.z = nz + 0.05; lamps[k].l.x = nx + 0.25; lamps[k].l.z = nz + 0.1; lamps[k].l.y = W.heightAt(nx, nz) + 1.2;
+        });
+        if (t > 9 && p && !p._joined) { p._joined = true; C.walk('player', [F[0] + R0 + 1.6, F[1] + 1.2], { dir: 'left' }); }   // he steps up to the ring and stays
+        if (t > 22 || skip) {
+          if (skip) BTS.Input.consume && BTS.Input.consume('interact');
+          walkers.forEach(function (e) { e.moving = false; if (e.anim) e.anim.speed = 1; if (/^lantern_kid/.test(e.id)) W.removeEntity(e.id); });
+          lamps.forEach(function (q) { W.removeEntity(q.e.id); C.unlight(q.l); });
+          if (p) p._joined = false;
+          res(); return false;
+        }
+      });
+    });
   }
 
   /* ---------- final titles: what became of Đorđe (and the others) ---------- */
@@ -219,10 +263,20 @@
         return C.say('c8_legend');
       }, clue: 'fact_legend', then: 'c8_back' }],
       onPopulate: function () { setSheet('djordje_young'); BTS.Env.sepiaGoal = 0.85; BTS.Env.sepia = 0.85; },
-      scene: function (C) { return C.say('c8_mem_in'); }
+      /* nine years ago: the embroidery on the wall above the stove, a candle beneath it */
+      props: [{ loc: 'djordje_house', sprite: 'rug_kilim', at: [1.5, 0.22], y: 1.35, scale: 0.34 },
+        { loc: 'djordje_house', sprite: 'candle', at: [1.5, 0.4], y: 0.95, emissive: false }, { loc: 'djordje_house', sprite: 'flame', at: [1.5, 0.42], y: 1.21, emissive: true, scale: 0.4 }],
+      scene: function (C) {
+        var cand = C.keyLight(1.5, 0.45, { y: 1.1, dz: 0, radius: 4.5, intensity: 0.8, color: [1, 0.7, 0.4], flicker: 0.15 });
+        return C.say('c8_mem_in', { at: {
+          1: function () { C.frame([[1.5, 0.6], 'baka'], { dist: 11, y: 1.2, time: 1.4 }); },
+          2: function () { C.face('baka', 'player'); var b = C.ent('baka'); if (b) C.walk('player', U.freeNear(b.x + 0.2, b.z + 1.1), { dir: 'up' }); },
+          4: function () { C.shadowFear({ look: 0.4, back: 0.2, hold: 0.3 }).then(function () { C.face('player', 'up'); C.anim('player', 'sit'); }); }
+        } }).then(function () { C.unlight(cand); });
+      }
     },
     { id: 'c8_back', chapter: 'ch8', loc: 'djordje_house', spawn: 'chest', forceSpawn: true, obj: null, env: { time: 'night', weather: 'overcast', horror: 0.35 }, envInstant: true, music: 'explore',
-      npcs: { lisa: { loc: 'djordje_house', at: A('lisa_table', [6.4, 5.4]), act: 'idle', dir: 'left' } },
+      npcs: { lisa: { loc: 'djordje_house', at: A('lisa_table', [6.4, 5.4]), act: 'sit', dir: 'left' } },
       onPopulate: function () { setSheet('djordje'); BTS.Env.sepiaGoal = 0; BTS.Env.sepia = 0; },
       scene: function (C) { return C.say('c8_back').then(function () { C.clue('hyp_needle_rule'); return C.fade(1, 0.6); }); }, after: 'c9_silence'
     },
@@ -234,7 +288,12 @@
       extras: [{ loc: 'village', sheet: 'vil_man1', at: [76, 44], act: 'mourn', dir: 'up', lines: ['extra_fear_c'] }],
       triggers: [{ loc: 'village', box: [68, 38, 84, 50], run: function (C) {
         C.spawn('vesna', [70.5, 49.8], { act: 'idle', dir: 'left', noTalk: true }); C.spawn('radoje', [62.5, 50.6], { act: 'idle', dir: 'right', noTalk: true });
-        return C.cam({ target: [72, 1, 45], time: 1.5 }).then(function () { return C.say('c9_village'); });
+        C.spawn('sava', [77.5, 43.2], { act: 'idle', dir: 'up', noTalk: true });   // at Tihomir's door, not going in
+        return C.cam({ target: [74, 1, 45], time: 1.5 }).then(function () { return C.say('c9_village', { at: {
+          1: function () { C.frame(['vesna', 'radoje', [77.5, 42.2]], { time: 1.2 }); },
+          2: function () { C.face('vesna', 'player'); }, 3: function () { C.face('radoje', 'player'); },
+          4: function () { C.frame(['sava', [77.5, 42.2]], { dist: 9, time: 1.2 }); }
+        } }); });
       }, clue: 'fact_tihomir_death', then: 'c9_dusk' }]
     },
     { id: 'c9_dusk', chapter: 'ch9', obj: 'obj.c9_dusk', env: { time: 'evening', weather: 'overcast', horror: 0.55, transition: 25 }, music: 'jaglika',
@@ -243,8 +302,21 @@
       triggers: [{ loc: 'village', box: [72, 33, 96, 50], run: function (C) {
         C.shadow('jaglika', { beast: 0.6, wall: { x: 87, z: 26.6, y: BTS.World.heightAt(87, 26.6) } }); C.supernatural(0.6);
         C.sfx('shadow_move', { x: 86, z: 28 }); C.sfx('crow', { x: 88, z: 24 });
-        return C.cam({ target: [86, 2, 28], time: 1.8 }).then(function () { C.sfx('sting_low', {}); return C.say('c9_beast'); })
-          .then(function () { return C.walk('jaglika', [78, 36], { noWait: true }); }).then(function () { return C.wait(1.5); })
+        var CW = { x: 87, z: 26.6, y: BTS.World.heightAt(87, 26.6) };
+        C.shadow('jaglika', { wall: CW });
+        return C.cam({ target: [86, 2, 28], time: 1.8 }).then(function () { C.sfx('sting_low', {}); return C.say('c9_beast', { at: {
+          1: function () { C.face('jaglika', 'up'); C.frame(['jaglika'], { dist: 13, time: 1.0 }); },
+          2: function () { var j = C.ent('jaglika'); C.frame(['jaglika', [87, 26.8]], { dist: 15, y: 2.4, time: 1.4 }); C.tween(2.0, function (k) { if (j) j.shadow.beast = 0.6 + k * 0.25; }); },
+          3: function () { C.walk('lisa', U.nearPlayer(-0.8, 0.5), { run: true }); C.shadowFear({ look: 0.3, back: 0.6 }); },
+          4: function () { C.frame([[87, 26.6]], { dist: 9, y: 3.0, time: 1.2 }); C.shake(0.2); },   // over the icon above the door
+          6: function () {   // she turns and walks away; the shadow peels off the wall only slowly
+            C.face('jaglika', 'down'); C.walk('jaglika', [80.5, 33.5], { noWait: true, speed: 0.8 });
+            C.frame(['jaglika', [87, 26.8]], { dist: 15, time: 1.2 });
+            C.wait(1.6).then(function () { C.sfx('shadow_move', { x: 86, z: 27 }); var x0 = CW.x, z0 = CW.z; return C.tween(1.8, function (k) { var j = C.ent('jaglika'); if (!j) return; CW.x = x0 + (j.x - x0) * k; CW.z = Math.min(z0 + (j.z - 0.6 - z0) * k, j.z - 0.3); }); })
+              .then(function () { C.shadow('jaglika', { wall: null }); });
+          }
+        } }); })
+          .then(function () { C.shadow('jaglika', { wall: null }); return C.walk('jaglika', [78, 36], { noWait: true }); }).then(function () { return C.wait(1.5); })
           .then(function () { C.despawn('jaglika'); C.supernatural(0); });
       }, clue: 'sk_jaglika_beast', then: 'c9_lisa' }],
       blockExit: { west: 'block_night', south: 'block_night' }
@@ -288,8 +360,25 @@
       scene: function (C) {
         C.intensity(0.2);
         BTS.Camera.setPreset({ dist: 19 });   // the climax is played close: the beast, the fire and the hero fill the frame
-        return C.cam({ target: [93, 1, 82], dist: 19, time: 1.6 }).then(function () { return C.say('c10_arrive'); })
-          .then(function () { C.shadow('jaglika', { beast: 0.95 }); C.sfx('shadow_tear', {}); C.shake(0.8); C.intensity(0.6); return C.say('c10_grow'); })
+        var J0 = [96.5, 81.5];
+        C.place('jaglika', [104.6, 86.2], 'left');   // she comes out of the dark, from the field
+        return C.cam({ target: [93, 1, 82], dist: 19, time: 1.6 }).then(function () { return C.say('c10_arrive', { at: {
+          1: function () { C.walk('jaglika', J0, { dir: 'left', speed: 0.9 }); C.frame([[100.5, 84], J0], { dist: 16, time: 1.4 }); },
+          2: function () { C.face('jaglika', 'player'); C.face('player', 'jaglika'); C.frame(['jaglika', 'player'], { time: 1.0 }); },
+          5: function () { C.face('jaglika', 'player'); },
+          6: function () { C.anim('jaglika', 'point'); C.shadowFear({ look: 0.4, hold: 0.5 }); },
+          7: function () { C.anim('jaglika', null); }
+        } }); })
+          .then(function () { var j = C.ent('jaglika'); C.sfx('shadow_tear', {}); C.shake(0.8); C.intensity(0.6); C.tween(2.2, function (k) { if (j) { j.shadow.beast = 0.9 + k * 0.1; j.shadow.lenMul = 1 + k * 0.5; } });
+            return C.say('c10_grow', { at: {
+              1: function () { C.frame(['jaglika', [88, 79], [84, 76.6]], { dist: 22, time: 1.4 }); },   // across the grass, up the pole, over the stalls
+              3: function () {   // Lisa shines her torch on it
+                var l = C.ent('lisa'); if (!l) return; C.face('lisa', 'jaglika'); C.anim('lisa', 'point');
+                var tl = C.keyLight(l.x + 0.6, l.z - 0.4, { y: 1.3, dz: 0, radius: 7, intensity: 1.6, color: [0.95, 0.95, 0.85], kind: 'fill' });
+                C.wait(3).then(function () { C.unlight(tl); C.anim('lisa', 'fear'); });
+              },
+              5: function () { C.frame(['player', 'jaglika'], { dist: 19, time: 1.0 }); }
+            } }); })
           .then(function () { riteStart(BTS.World); C.intensity(0.8); });
       },
       blockExit: { west: 'block_night', south: 'block_night', djordje: 'block_night', zajko: 'block_night', kafana: 'block_night', guest: 'block_night', church: 'block_night', gorazd: 'block_night', tihomir: 'block_night', jaglika: 'block_night' },
@@ -394,8 +483,23 @@
       npcs: { lisa: LISA_FOLLOW, milka: { loc: 'village', at: 'milka_bench', act: 'sit', dir: 'down' }, sava: { loc: 'village', at: 'churchyard', act: 'pray', dir: 'up' }, stana: { loc: 'village', at: 'guest_bench', act: 'sit', dir: 'down' }, dragan: { loc: 'village', at: 'kafana_table', act: 'idle', dir: 'down' },
         zlatko: { loc: 'village', at: [93.6, 32.6], act: 'mourn', dir: 'up' }, jablan: { loc: 'village', at: [94.8, 32.4], act: 'idle', dir: 'up' } },
       hideAll: true, keep: ['lisa', 'milka', 'sava', 'stana', 'dragan', 'zlatko', 'jablan'],
-      onPopulate: function (loc) { BTS.World.player.hidden = false; if (BTS.World.player.shadow) BTS.World.player.shadow.setStage(0); },
-      scene: function (C) { C.hide('player', false); return C.say('e_dawn'); },
+      onPopulate: function (loc, W) {
+        W.player.hidden = false; if (W.player.shadow) W.player.shadow.setStage(0);
+        if (loc !== 'village') return;   // the bonfire has burned out: no flame, no glow
+        BTS.Env.lights.forEach(function (l) { if (Math.hypot(l.x - 90.5, l.z - 82.3) < 1 && l.kind === 'fire') l.off = true; });
+        W.statics.forEach(function (s2) { if ((s2.fire && Math.hypot(s2.x - 90.5, s2.z - 82) < 1.5) || (s2.pool && Math.hypot(s2.pool[0] - 90.5, s2.pool[2] - 82) < 1)) s2.off = true; });
+      },
+      scene: function (C) {
+        C.hide('player', false);
+        return C.say('e_dawn', { at: {
+          1: function () { C.frame([[90.5, 82], [84, 76.6]], { dist: 18, time: 1.6 }); },   // the burnt-out fire, the pole still standing
+          2: function () { C.face('lisa', 'player'); C.frame(['lisa', 'player'], { time: 1.0 }); },
+          3: function () {   // he looks down at his shadow — and does not look away
+            var p = C.ent('player'), sl = null; for (var k in (p.shadow && p.shadow.slots) || {}) if (!sl || p.shadow.slots[k].a > sl.a) sl = p.shadow.slots[k];
+            if (sl) p.faceTo(p.x + sl.dx, p.z + sl.dz); C.frame(['player'], { dist: 9, time: 1.2 });
+          }
+        } });
+      },
       interact: [
         { loc: 'village', id: 'leave_toy', at: 'grave_zajko', label: 'it.grave_zajko', verb: 'verb.leave', dlg: 'e_toy', hint: true, once: true, need: 'item:zajko_toy' },
         { loc: 'village', id: 'parents_grave', at: 'grave_pecko', label: 'it.grave_parents', verb: 'verb.pray', dlg: 'e_parents', set: 'e_parents', hint: true, once: true }
@@ -405,13 +509,20 @@
     { id: 'e_leave', chapter: 'epilogue', obj: 'obj.e_leave', music: 'epilogue',
       npcs: { lisa: LISA_FOLLOW, milka: { loc: 'village', at: 'milka_bench', act: 'sit', dir: 'down' } }, hideAll: true, keep: ['lisa', 'milka'],
       triggers: [{ loc: 'village', box: [49, 82, 57, 89], run: function (C) {
-        return C.say('e_bridge').then(function () { return C.fade(1, 1.2); });
+        return C.say('e_bridge', { at: {
+          1: function () { C.face('player', 'up'); C.cam({ target: [54, 1, 60], dist: 34, pitch: 0.6, time: 2.0 }); },   // looking back: the roofs, the chimneys, the hill
+          4: function () { C.face('lisa', 'player'); C.frame(['lisa', 'player'], { time: 1.2 }); },
+          6: function () {   // they walk away down the road; their shadows go with them, on time
+            C.walk('player', [53, 88.6], { direct: true, speed: 0.6 }); C.walk('lisa', [53.9, 88.4], { direct: true, speed: 0.6 });
+            C.frame(['player', [53, 87]], { dist: 14, time: 2.0 });
+          }
+        } }).then(function () { return C.wait(1.5); }).then(function () { return C.fade(1, 1.2); });
       }, then: 'e_final' }]
     },
     /* the next Vidovdan: Đorđe comes back for the fair — and looks at his own shadow. Then the final titles. */
     { id: 'e_final', chapter: 'epilogue', ambience: { crowd: 0.8, fire: 0.8, firePos: [90.5, 82] }, loc: 'village', spawn: 'fair_edge', forceSpawn: true, chapterCard: 'date.next_june', chapterSub: 'sub.e_final', day: 365,
       env: { time: 'night', weather: 'clear', horror: 0 }, envInstant: true, obj: null, music: 'fair', noSave: true,
-      npcs: { mila: { loc: 'village', at: [89.4, 80.4], act: 'wander', radius: 1.6, stage: 0 }, luka: { loc: 'village', at: [92, 81.8], act: 'wander', radius: 1.5 }, milka: { loc: 'village', at: [76.2, 79.6], act: 'sit', dir: 'down' },
+      npcs: { mila: { loc: 'village', at: [89.4, 80.4], act: 'wander', radius: 1.6, stage: 0 }, luka: { loc: 'village', at: [92, 81.8], act: 'wander', radius: 1.5 }, milka: { loc: 'village', at: [98.6, 83.4], act: 'sit', dir: 'right' },
         lisa: { loc: 'village', at: [101.4, 85.2], act: 'idle', dir: 'left', noTalk: true } },
       hideAll: true, keep: ['mila', 'luka', 'milka', 'lisa'],
       extras: [
@@ -421,11 +532,29 @@
       onPopulate: function (loc, W) { W.player.hidden = false; if (W.player.shadow) W.player.shadow.setStage(0); },
       scene: function (C) {
         return C.cam({ target: [95, 0.5, 83], dist: 22, time: 0.1 }).then(function () { return C.wait(1.5); })
-          .then(function () { return C.say('e_final'); })
+          .then(function () { return C.say('e_final', { at: {
+            1: function () { C.frame([[90.5, 82], [84, 76.6]], { dist: 20, time: 1.6 }); },
+            3: function () { C.face('lisa', 'player'); C.face('player', 'lisa'); C.frame(['lisa', 'player'], { time: 1.0 }); },
+            5: function () { C.face('milka', 'player'); C.frame(['milka', 'player'], { time: 1.0 }); },
+            6: function () { hop2(C, ['mila', 'luka'], 6); C.frame(['mila', [90.5, 82]], { dist: 14, time: 1.2 }); },
+            7: function () { C.face('mila', 'player'); }
+          } }); })
           .then(function () { C.walk('player', [96.6, 83.6]); return C.wait(1.8); })
-          .then(function () { C.face('player', 'left'); return C.say('e_final_b'); })
+          .then(function () {
+            C.face('player', 'left');
+            return C.say('e_final_b', { at: {
+              2: function () {   // he looks at it. Not a flinch: a long look
+                var p = C.ent('player'), sl = null; for (var k in (p.shadow && p.shadow.slots) || {}) if (!sl || p.shadow.slots[k].a > sl.a) sl = p.shadow.slots[k];
+                if (sl) p.faceTo(p.x + sl.dx, p.z + sl.dz); C.frame(['player'], { dist: 10, time: 1.4 });
+              }
+            } });
+          })
           .then(function () { C.anim('player', 'point'); return C.wait(1.6); })
-          .then(function () { C.anim('player', null); return C.say('e_final_c'); })
+          .then(function () { C.anim('player', null); return C.say('e_final_c', { at: {
+            1: function () { C.anim('player', 'point'); }, 2: function () { C.anim('player', null); },
+            3: function () { var p = C.ent('player'); C.walk('lisa', U.freeNear(p.x + 1, p.z + 0.4)).then(function () { C.face('lisa', 'player'); }); }
+          } }); })
+          .then(function () { return lanternProcession(C); })
           .then(function () { return C.fade(1, 1.2); })
           .then(function () { BTS.Music.set('epilogue', 1.5); return U.cards(ENDING_CARDS); })
           .then(function () { return C.title('ui.the_end'); })
@@ -447,6 +576,22 @@
   add('dragan', [{ beats: 'e_dawn..e_leave', dlg: 'e_dragan' }, { beats: 'c9_silence..c9_prepare', dlg: 'c9_dragan' }]);
   BTS.Data.globalProps.push({ beats: 'c9_dusk..', loc: 'village', sprite: 'cross_grave_new', at: 'grave_tihomir', scale: 1.1 });
   BTS.Story.calls.leaveToy = function () { S.removeItem('zajko_toy'); S.set('e_toy_left'); };
+
+  var Q = BTS.Cutscene.cue;
+  Q('c9_pillow', { 1: function (C) { C.face('player', 'up'); C.anim('player', 'interact'); }, 2: function (C) { C.anim('player', null); }, 4: function (C) { C.anim('player', 'interact'); var l = C.ent('lisa'); if (l) C.face('lisa', 'player'); } });
+  Q('c9_decide', { 5: function (C) { C.anim('player', 'interact'); C.wait(0.8).then(function () { C.anim('player', null); }); }, 9: function (C) { C.face('player', 'up'); }, 10: function (C) { C.face('player', 'lisa'); } });
+  Q('c10_fire', {
+    1: function (C) {   // three matches; on the third the wet wood catches
+      var W = BTS.World; C.face('player', 'right'); C.anim('player', 'interact');
+      C.wait(0.7).then(function () { C.sfx('match', {}); return C.wait(0.9); }).then(function () { C.sfx('match', {}); return C.wait(0.9); }).then(function () {
+        C.sfx('match', {}); C.sfx('fire_pop', {}); C.anim('player', null);
+        BTS.Env.lights.forEach(function (l) { if (Math.hypot(l.x - 90.5, l.z - 82.3) < 1 && l.kind === 'fire') l.off = false; });
+        W.statics.forEach(function (s2) { if (s2.fire && Math.hypot(s2.x - 90.5, s2.z - 82) < 1.5) s2.off = false; if (s2.pool && Math.hypot(s2.pool[0] - 90.5, s2.pool[2] - 82) < 1) s2.off = false; });
+      });
+    },
+    2: function (C) { var p = C.ent('player'); C.tween(1.2, function (k) { if (p.shadow) p.shadow.lenMul = 1 + k * 1.2; }); C.shadowFear({ back: 0.15, look: 0.9, hold: 1.0, turnAway: false }); },
+    3: function (C) { var p = C.ent('player'); if (p.shadow) p.shadow.lenMul = 1; C.frame([[100, 84], 'player'], { time: 1.2 }); }
+  });
 
   D('c8_chest', [['*', '1'], ['>', '2'], ['*', '3'], ['>', '4'], ['>', '5']]);
   D('c8_lisa', [['lisa', '1', { p: 'worried' }]]);

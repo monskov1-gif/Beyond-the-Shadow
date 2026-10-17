@@ -76,6 +76,7 @@
     var p = W.player; if (!p || W.locId !== 'village') return;
     if (!DANCE) {
       if (S.done('shadow_dance') || BTS.Cutscene.running || BTS.Dialogue.active || BTS.Game.transitioning) return;
+      if (BTS.Auto && !BTS.Auto.done) return;   // the scripted playthrough bot walks past it (never blocked by it)
       if (Math.hypot(p.x - POLE[0], p.z - POLE[1]) > 6.5) return;
       var ds = W.entities.filter(function (e) { return e.anim && /^dancer/.test(e.anim.sheetId) && e.brain && !e.hidden; });
       if (ds.length < 2) return;

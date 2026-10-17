@@ -104,10 +104,10 @@ BTS.Portraits = (function () {
   var EXP = {
     neutral: {},
     sad: { browIn: 0.75, browOut: -0.25, browKnit: 0.15, lid: 0.78, gazeY: 0.55, gazeX: -0.15, curve: -0.7, pitch: 0.06, roll: -0.035, lowLid: 0.1 },
-    scared: { browIn: 0.95, browOut: 0.55, browKnit: 0.35, lid: 1.3, lowLid: -0.15, pupil: 0.72, open: 0.42, wide: 0.86, curve: -0.25, pitch: -0.03, gazeX: -0.25 },
+    scared: { browIn: 1.0, browOut: 0.6, browKnit: 0.4, lid: 1.32, lowLid: -0.2, pupil: 0.65, open: 0.7, openTop: 0.42, openRound: 1, teeth: 0.6, wide: 0.82, curve: -0.3, pitch: -0.03, gazeX: -0.25, pale: 0.4 },
     angry: { browIn: -0.85, browOut: 0.25, browKnit: 0.8, lid: 0.74, lowLid: 0.4, curve: -0.55, press: 1, flare: 1, pitch: 0.05, wide: 0.92 },
-    smile: { curve: 1, open: 0.16, teeth: 1, lowLid: 0.5, lid: 0.86, cheek: 1, browIn: 0.12, browOut: 0.12, roll: 0.035, wide: 1.1 },
-    blank: { lid: 0.7, gazeX: 0, gazeY: 0.05, pupil: 0.62, curve: -0.05, browIn: -0.05, browOut: -0.12, open: 0.06, pale: 0.35, stare: 1 },
+    smile: { curve: 1.1, open: 0.36, openTop: 0.18, teeth: 1, lowLid: 0.6, lid: 0.84, cheek: 1, browIn: 0.15, browOut: 0.15, roll: 0.035, wide: 1.12 },
+    blank: { lid: 0.92, gazeX: -0.6, gazeY: 0.1, pupil: 0.5, curve: -0.08, browIn: -0.1, browOut: -0.15, open: 0.12, pale: 0.6, stare: 1, yaw: -0.04 },
     worried: { browIn: 0.6, browOut: -0.05, browKnit: 0.45, lid: 0.98, gazeX: 0.55, gazeY: 0.1, curve: -0.35, wave: 1, roll: 0.025, lowLid: 0.05 },
     tired: { lid: 0.55, browIn: 0.22, browOut: -0.3, curve: -0.25, open: 0.07, gazeY: 0.35, pitch: 0.05, roll: -0.045, bags: 0.4 }
   };
@@ -188,9 +188,10 @@ BTS.Portraits = (function () {
     if (Y > c.chinY) { var v = clamp((Y - c.chinY) / (c.chinB - c.chinY), 0, 1), e = Math.sqrt(Math.max(0, 1 - v * v)); return { W: Math.max(c.chinW * e, 0.001), zf: c.faceZ - v * v * 0.3, zb: lerp(0.15, 0.55, v) }; }
     var W = catmull(pf.W, Y), zf = Y < 0 ? lerp(Zc + Az, c.faceZ, ss((Y - Yc) / -Yc)) : c.faceZ + (Y > c.mouthY ? -0.03 * (Y - c.mouthY) : 0);
     var zb;
-    if (Y < 0.3) zb = Zc - Az - 0.02;
-    else if (Y < c.jawY) zb = lerp(Zc - Az - 0.02, -0.45, ss((Y - 0.3) / (c.jawY - 0.3)));
-    else zb = lerp(-0.45, 0.15, ss((Y - c.jawY) / (c.chinY - c.jawY)));
+    var y1 = Math.min(0.35, c.jawY - 0.4);
+    if (Y < y1) zb = Zc - Az - 0.02;
+    else if (Y < c.jawY) zb = lerp(Zc - Az - 0.02, -0.75, Math.pow((Y - y1) / (c.jawY - y1), 0.7));
+    else zb = lerp(-0.75, 0.15, ss((Y - c.jawY) / (c.chinY - c.jawY)));
     return { W: W, zf: zf, zb: zb };
   };
   /* project head-space point to screen */
@@ -444,6 +445,7 @@ BTS.Portraits = (function () {
   function eyes(a) {
     var fc = a.fc, ex = a.ex, pd = a.pd, S = a.S, sk = a.skin;
     var irisCol = hx(pd.eyes || [90, 80, 64]);
+    if (ex.stare) irisCol = mix(irisCol, [158, 160, 164], 0.45);
     var heavy = pd.heavyLids || 0, lashes = pd.lashes === undefined ? (/woman|girl|old$/.test(pd.face) ? 1 : 0) : pd.lashes;
     var s = '', top = '';
     [-1, 1].forEach(function (sd) {
@@ -626,21 +628,24 @@ BTS.Portraits = (function () {
     var my = fc.mouthY, mw = fc.mouthW * 1.12 * (pd.mouthK || 1) * ex.wide, ul = fc.ulip * 1.75 * (pd.lipK || 1), ll = fc.llip * 1.55 * (pd.lipK || 1);
     var curve = clamp(ex.curve + (pd.mouthCurve || 0), -1.4, 1.4), open = clamp(ex.open, 0, 1), press = ex.press;
     if (press) { ul *= 0.6; ll *= 0.65; }
-    var cornerLift = curve * 0.075, wave = ex.wave;
+    if (curve > 0.3) { ul *= 1 - curve * 0.3; ll *= 1 - curve * 0.2; }
+    if (open > 0.3) { ul *= 0.8; ll *= 0.8; }
+    var cornerLift = curve * 0.1, wave = ex.wave;
     var N = 12, M = [], UT = [], LB = [], UI = [], LI = [];
     function mY(u) {
       var c = -cornerLift * Math.pow(Math.abs(u), 2.2) + (curve > 0 ? curve * 0.03 * (1 - u * u) : 0);
       c += wave * 0.012 * Math.sin(u * Math.PI * 2);
       return my + c;
     }
-    var gap = open * 0.13 * (1 + curve * 0.2);
+    var gap = open * 0.3 * (1 + Math.max(0, curve) * 0.15), gT = ex.openTop === undefined ? 0.4 : ex.openTop, gB = 1 - gT, kx = ex.openRound ? 0.42 : 0.6;
     for (var i = 0; i <= N; i++) {
-      var u = -1 + 2 * i / N, X = u * mw, Y = mY(u), k = Math.pow(1 - u * u, 0.6);
+      var u = -1 + 2 * i / N, X = u * mw, Y = mY(u), k = Math.pow(1 - u * u, kx);
       var bow = 1 - 0.35 * Math.exp(-u * u / 0.012) + 0.12 * Math.exp(-Math.pow(Math.abs(u) - 0.28, 2) / 0.02);
-      UT.push(a.on(X * 1.0, Y - gap * 0.4 * k - ul * k * bow - 0.005, 0.07 * k));
-      UI.push(a.on(X * 0.98, Y - gap * 0.4 * k, 0.07 * k));
-      LI.push(a.on(X * 0.98, Y + gap * 0.6 * k, 0.07 * k));
-      LB.push(a.on(X * 0.96, Y + gap * 0.6 * k + ll * Math.pow(1 - u * u, 0.75), 0.07 * k));
+      var kl = Math.pow(1 - u * u, 0.6);
+      UT.push(a.on(X * 1.0, Y - gap * gT * k - ul * kl * bow - 0.005, 0.07 * kl));
+      UI.push(a.on(X * 0.98, Y - gap * gT * k, 0.07 * kl));
+      LI.push(a.on(X * 0.98, Y + gap * gB * k, 0.07 * kl));
+      LB.push(a.on(X * 0.96, Y + gap * gB * k + ll * Math.pow(1 - u * u, 0.75) * (1 - open * 0.25), 0.07 * kl));
       M.push(a.on(X, Y, 0.07 * k));
     }
     var s = '';
@@ -657,7 +662,7 @@ BTS.Portraits = (function () {
       var mcp = a.clip(inD);
       var inner = a.el(inD, '#3a1618');
       if (ex.teeth || open > 0.25) {
-        var tt = UI.map(function (p) { return [p[0], p[1] + S * 0.045 * (ex.teeth ? 1 : 0.6)]; });
+        var tt = UI.map(function (p) { return [p[0], p[1] + S * 0.07 * (ex.teeth || 0.6)]; });
         var td = smooth(UI.concat(tt.slice().reverse()), true);
         inner += a.el(td, '#e8e0d4') + a.el(td, mix(sk.shadow, [200, 190, 180], 0.5), { op: 0.0 });
         inner += a.el(smooth(UI.concat(offset(UI.slice().reverse(), 0, S * 0.016)), true), '#9a8a80', { op: 0.5, blur: 0.6 });
@@ -689,7 +694,7 @@ BTS.Portraits = (function () {
     // lip outline: soft lower contour
     s += a.ink(LB.slice(3, N - 2), [0.1, 0.7, 0.1], { op: 0.35 });
     // smile folds / age folds
-    var age = a.age, nl = Math.max(age * 0.8, ex.cheek * 0.6, (pd.folds || 0));
+    var age = a.age, nl = Math.max(age * 0.8, ex.cheek * (0.3 + age * 0.4), (pd.folds || 0));
     if (nl > 0.1) {
       [-1, 1].forEach(function (sd) {
         var p0 = a.on(sd * (fc.noseW + 0.08), fc.noseY - 0.04, 0.02), p1 = a.on(sd * (mw + 0.14 + ex.cheek * 0.04), (fc.noseY + my) / 2 + 0.06, 0.0), p2 = a.on(sd * (mw + 0.08), my + 0.12 + age * 0.08, 0);

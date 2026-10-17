@@ -79,7 +79,7 @@ BTS.Shadows = (function () {
   /* the single source of her shadow's size: len (length multiplier), width, beast (0 human .. 1 inhuman), lag */
   S.jaglikaGrowth = function (level) {
     var l = level === undefined ? S.jaglikaLevel() : level;
-    return { level: l, len: 1.15 + l * 0.2, width: 1 + l * 0.06, beast: BTS.M.clamp((l - 1.5) / 6, 0, 1), lag: Math.min(0.35, l * 0.04), alpha: 1 + Math.min(0.5, l * 0.07) };
+    return { level: l, len: 1.15 + l * 0.2, width: 1 + l * 0.06, beast: BTS.M.clamp((l - 3.5) / 4, 0, 1), lag: Math.min(0.35, l * 0.04), alpha: 1 + Math.min(0.5, l * 0.07) };
   };
 
   /* one silhouette layer: on the ground from the feet, or — with a wall — along the ground to the wall's foot and up it */
@@ -129,7 +129,7 @@ BTS.Shadows = (function () {
       var beast = sc.beast || 0, wscale = 1;
       if (grow) { len *= grow.len; wscale = grow.width; beast = Math.max(beast, grow.beast); alpha *= grow.alpha; }
       sc.beastFrame = Math.floor(t * 3) % 4;
-      var human = 1 - BTS.M.clamp((beast - 0.15) / 0.7, 0, 1);   // cross-fade: a human silhouette slowly becomes the beast
+      var human = 1 - BTS.M.clamp((beast - 0.3) / 0.6, 0, 1);   // cross-fade: a human silhouette slowly becomes the beast
       if (human > 0.02) layer(R, sc, bx, bz, dx, dz, len, src.reg, 1, wscale, alpha * human, primary && human >= 0.5, t, heightAt);
       if (beast > 0.15) {
         var breg = BTS.Atlas.get('shadow_beast_' + sc.beastFrame);
