@@ -99,7 +99,9 @@
       npcs: { baka: { loc: 'djordje_house', at: A('baka_chair', [6.4, 3.8]), act: 'sit', dir: 'down', noTalk: true }, lisa: null },
       /* Grandmother's legend is performed as a shadow-puppet theatre (BTS.Theatre); the plain dialogue is the fallback */
       interact: [{ loc: 'djordje_house', id: 'baka_tale', at: A('baka_chair', [6.4, 3.8], 0, 0.9), label: 'name.baka', verb: 'verb.listen', hint: true, r: 1.8, run: function (C) {
-        if (BTS.Theatre && BTS.Theatre.play) return BTS.Theatre.play().then(function (how) { if (how === 'abort') return C.say('c8_legend'); });
+        // the theatre resolves 'done' or 'abort'; on 'abort' (or without a theatre) the legend is told as dialogue.
+        // fact_legend is granted by `clue` below in both cases.
+        if (BTS.Theatre && BTS.Theatre.play) return Promise.resolve(BTS.Theatre.play()).then(function (how) { if (how === 'abort') return C.say('c8_legend'); }, function () { return C.say('c8_legend'); });
         return C.say('c8_legend');
       }, clue: 'fact_legend', then: 'c8_back' }],
       onPopulate: function () { setSheet('djordje_young'); BTS.Env.sepiaGoal = 0.85; BTS.Env.sepia = 0.85; },
