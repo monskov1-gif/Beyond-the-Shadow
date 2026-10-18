@@ -30,7 +30,10 @@ BTS.Cutscene = (function () {
   function ent(id) {
     if (id === 'player' || id === 'djordje') return BTS.World.player;
     var e = BTS.World.get(id);
-    if (!e) BTS.Log.warn('cutscene: no entity', id);
+    if (!e) {
+      var cur = BTS.Dialogue && BTS.Dialogue.current;
+      BTS.Log.warn('cutscene: no entity', id, '[beat ' + BTS.State.d.beat + ' @' + BTS.World.locId + (CS.running ? ' scene ' + CS.scene : ' after scene ' + CS.scene) + (cur ? ' dlg ' + cur.id + ':' + cur.pc : '') + ']');
+    }
     return e;
   }
   /* a goal inside a collider is moved to the nearest free navigation cell */
@@ -208,7 +211,7 @@ BTS.Cutscene = (function () {
   CS.C = C;
 
   CS.play = function (fn, name) {
-    CS.running++;
+    CS.running++; CS.scene = name;
     BTS.World.controlLocked++;
     BTS.UI && BTS.UI.letterbox(true);
     BTS.Events.emit('cutscene', name, true);
