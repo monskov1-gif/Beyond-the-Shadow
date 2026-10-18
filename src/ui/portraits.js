@@ -106,7 +106,7 @@ BTS.Portraits = (function () {
     sad: { browIn: 0.95, browOut: -0.35, browKnit: 0.3, lid: 0.8, gazeY: 0.6, gazeX: -0.2, curve: -0.75, pout: 0.8, pitch: 0.07, roll: -0.035, lowLid: 0.15, asym: 0.3, shine: 0.7 },
     scared: { browIn: 1.15, browOut: 0.55, browKnit: 0.55, lid: 1.3, lowLid: -0.15, pupil: 0.6, open: 0.62, openTop: 0.38, teeth: 0.7, wide: 1.06, curve: -0.45, stretch: 1, pitch: -0.04, gazeX: -0.35, pale: 0.45, flare: 0.4, asym: 0.25 },
     angry: { browIn: -1.25, browOut: 0.2, browKnit: 1.0, lid: 1.0, lowLid: 0.55, curve: -0.45, press: 1, flare: 1, pitch: 0.07, wide: 0.9, glare: 1, asym: 0.35 },
-    smile: { curve: 1.3, open: 0.32, openTop: 0.16, teeth: 1, lowLid: 0.85, lid: 0.86, cheek: 1, browIn: 0.12, browOut: 0.2, roll: 0.035, wide: 1.2, asym: 0.45 },
+    smile: { curve: 1.25, open: 0.36, openTop: 0.2, teeth: 1, lowLid: 1.0, lid: 0.8, cheek: 1.2, browIn: 0.05, browOut: -0.05, roll: 0.03, wide: 1.2, asym: 0.12 },
     blank: { lid: 0.86, gazeX: -0.55, gazeY: 0.2, pupil: 0.55, curve: -0.1, browIn: -0.05, browOut: -0.2, open: 0.08, pale: 0.55, stare: 1, yaw: -0.04 },
     worried: { browIn: 0.75, browOut: -0.1, browKnit: 0.55, lid: 1.04, gazeX: 0.6, gazeY: 0.05, curve: -0.3, wave: 1, roll: 0.025, lowLid: 0.12, press: 0.4, asym: 0.4 },
     tired: { lid: 0.6, browIn: 0.3, browOut: -0.3, curve: -0.25, open: 0.06, gazeY: 0.4, pitch: 0.06, roll: -0.045, bags: 0.45, droop: 1 }
@@ -145,15 +145,15 @@ BTS.Portraits = (function () {
     a.line = rgb(pd.line || mix(mul(a.skin.base, 0.22), [30, 14, 12], 0.7));
   }
   function skinTones(base, pd) {
-    base = desat(base, 0.12);
-    var sh = mix(mul(base, 0.8), [130, 70, 76], 0.22);
+    base = desat(base, 0.04);
+    var sh = mix(mul(base, 0.8), [150, 76, 70], 0.22);
     return {
       base: base,
       light: mix(base, [255, 238, 222], 0.3),
       hi: mix(base, [255, 248, 238], 0.55),
       shadow: sh,
       deep: mix(mul(base, 0.6), [96, 50, 60], 0.25),
-      blush: mix(base, [214, 96, 96], 0.5),
+      blush: mix(base, [218, 100, 92], 0.5),
       lip: pd.lipCol ? hx(pd.lipCol) : mix(mul(base, 0.84), [176, 82, 84], /man/.test(pd.face) ? 0.24 : pd.face === 'boy' ? 0.32 : 0.42),
       line: mix(mul(base, 0.32), [40, 16, 14], 0.6)
     };
@@ -331,6 +331,8 @@ BTS.Portraits = (function () {
     // 2. far side: the cheek turns away under the cheekbone, and the far jaw
     var fh = FL([[0.94, 0.3], [0.72, 0.42], [0.66 - hol * 0.05, 0.66], [0.7, jy - 0.05], [0.62, (jy + cy2) / 2], [1.2, (jy + cy2) / 2], [1.2, 0.3]]);
     if (hol > 0.15) sh.push(a.el(smooth(fh, true), shCol, { op: (hol - 0.1) * 0.5, blur: 2 }));
+    // temples turn away from the front plane
+    [-1, 1].forEach(function (sd) { sh.push(a.el(smooth(FL([[sd * 0.95, -0.9], [sd * 0.78, -0.72], [sd * 0.78, -0.3], [sd * 0.98, -0.22]]), true), shCol, { op: sd < 0 ? 0.22 : 0.14, blur: 2.4 })); });
     // gaunt temples
     if (hol > 0.2) [-1, 1].forEach(function (sd) {
       sh.push(a.el(smooth(FL([[sd * 0.92, -0.85], [sd * 0.74, -0.7], [sd * 0.72, -0.32], [sd * 0.95, -0.24]]), true), shCol, { op: 0.4 * hol, blur: 1.4 }));
@@ -392,7 +394,7 @@ BTS.Portraits = (function () {
     var y0 = 0.5, yc = fc.chinB - 0.08, y1 = fc.chinB + 0.7;
     var zc = -0.42;
     function cx(Y) { return a.P(0, Y, zc)[0]; }
-    var l0 = [cx(y0) - nwF * S * 1.04, a.P(0, y0, zc)[1]], l1 = [cx(y1) - nwF * S * 1.16, a.P(0, y1, zc)[1]];
+    var l0 = [cx(y0) - nwF * S * 0.92, a.P(0, y0 + 0.15, zc)[1]], l1 = [cx(y1) - nwF * S * 1.16, a.P(0, y1, zc)[1]];
     var r0 = [cx(yc) + nwF * S * 0.98, a.P(0, yc, zc)[1]], r1 = [cx(y1) + nwF * S * 1.1, a.P(0, y1, zc)[1]];
     var lm = [lerp(l0[0], l1[0], 0.55) + S * 0.03, lerp(l0[1], l1[1], 0.55)], rm = [lerp(r0[0], r1[0], 0.5) - S * 0.02, lerp(r0[1], r1[1], 0.5)];
     var bot = [cx(y1 + 0.3), a.P(0, y1 + 0.3, zc)[1]];
@@ -403,7 +405,7 @@ BTS.Portraits = (function () {
     // the neck turns away from the light on the ear side
     inner += a.el(d, a.lin(l0[0], 0, r0[0], 0, [[0, sk.deep, 0.8], [0.45, sk.shadow, 0.6], [0.8, sk.base, 0], [1, sk.light, 0.3]]));
     // the nape turns away into the shadow under the skull
-    inner += a.el(smooth([[l0[0] - S * 0.3, l0[1] - S * 0.3], [l0[0] + S * 0.32, l0[1]], [l1[0] + S * 0.4, l1[1] + S * 0.1], [l1[0] - S * 0.3, l1[1] + S * 0.3]], true), sk.deep, { op: 0.55, blur: 2.4 });
+    inner += a.el(smooth([[l0[0] - S * 0.3, l0[1] - S * 0.5], [l0[0] + S * 0.5, l0[1] - S * 0.2], [l1[0] + S * 0.55, l1[1] + S * 0.1], [l1[0] - S * 0.3, l1[1] + S * 0.3]], true), mix(sk.deep, [60, 36, 40], 0.25), { op: 0.8, blur: 3 });
     // the head's cast shadow on the neck: a crisp shape following the jaw
     var o = a.outline(), jaw = [];
     o.L.forEach(function (p, i) { if (i > o.L.length * 0.5) jaw.push(p); });
@@ -441,7 +443,7 @@ BTS.Portraits = (function () {
     // helix outline: from the front top, over the rim, down the back, round the lobe to the front
     var pts = [E(0.05, 0.02), E(0.45, -0.07), E(0.85, 0.02), E(1.02, 0.25), E(0.95, 0.52), E(0.72, 0.76), E(0.5, 0.95), E(0.28, 1.02), E(0.08, 0.95), E(0.0, 0.78)];
     var d = smooth(pts, false) + 'Z';
-    var s = a.el(d, mix(sk.base, sk.shadow, 0.35));
+    var s = a.el(d, mix(mix(sk.base, sk.shadow, 0.3), sk.blush, 0.3));
     var inner = '';
     // the bowl of the ear (concha) and the antihelix
     inner += a.el(smooth([E(0.18, 0.3), E(0.5, 0.22), E(0.68, 0.42), E(0.55, 0.66), E(0.3, 0.7), E(0.15, 0.55)], true), sk.deep, { op: 0.55, blur: 0.7 });
@@ -549,11 +551,11 @@ BTS.Portraits = (function () {
       }
       // crow's feet
       if (a.age > 0.3 || ex.cheek > 0.5) {
-        var oc = a.on(cx + sd * w * 1.12, cyy + 0.0, 0.0), n3 = a.age > 0.3 ? 3 : 1;
+        var oc = a.on(cx + sd * w * 1.12, cyy + 0.0, 0.0), n3 = a.age > 0.3 || ex.cheek > 1 ? 3 : 1;
         for (q = 0; q < n3; q++) {
           var ang = (-0.35 + q * 0.38) , len = S * (0.1 + a.age * 0.06);
           var p1 = [oc[0] + sd * S * 0.02, oc[1] + q * S * 0.03 - S * 0.02], p2 = [p1[0] + sd * Math.cos(ang) * len * (sd > 0 ? 0.6 : 1), p1[1] + Math.sin(ang) * len];
-          top += a.ink([p1, [lerp(p1[0], p2[0], 0.5), lerp(p1[1], p2[1], 0.5) - 0.5], p2], [0.15, 0.85, 0.05], { op: 0.45 * Math.max(a.age, ex.cheek * 0.4) });
+          top += a.ink([p1, [lerp(p1[0], p2[0], 0.5), lerp(p1[1], p2[1], 0.5) - 0.5], p2], [0.15, 0.85, 0.05], { op: 0.45 * Math.max(a.age, ex.cheek * 0.55) });
         }
       }
       a['eye' + (sd < 0 ? 'L' : 'R')] = { U: U, Lo: Lo, inner: inner, outer: outer, cx: cx, w: w, open: open };
@@ -618,6 +620,7 @@ BTS.Portraits = (function () {
     // light on the bridge and the tip (the side facing the light)
     var hl = []; for (i = 1; i <= 7; i++) hl.push(rp(i / 8, 0.035, 0.0));
     s += a.ink(hl, [0.2, 1.8, 0.5], { col: rgb(sk.hi), op: 0.55 });
+    s += '<ellipse cx="' + f(tip[0]) + '" cy="' + f(tip[1] + S * 0.01) + '" rx="' + f(S * (tipR + nw * 0.4)) + '" ry="' + f(S * tipR * 0.9) + '" fill="' + rgb(sk.blush) + '" opacity="0.3" filter="url(#' + a.blur(1.4) + ')"/>';
     s += '<ellipse cx="' + f(tip[0] + S * 0.02) + '" cy="' + f(tip[1] - S * 0.025) + '" rx="' + f(S * tipR * 0.5) + '" ry="' + f(S * tipR * 0.36) + '" fill="' + rgb(sk.hi) + '" opacity="0.7" filter="url(#' + a.blur(0.6) + ')"/>';
     // nostrils
     var nCol = rgb(mix(sk.deep, [50, 20, 22], 0.55));
@@ -742,7 +745,8 @@ BTS.Portraits = (function () {
     }
     if (ex.cheek > 0.2) {
       // smiling cheeks bunch up
-      [-1, 1].forEach(function (sd) { var c = a.on(sd * 0.5, 0.42, 0.03); s += '<ellipse cx="' + f(c[0]) + '" cy="' + f(c[1]) + '" rx="' + f(S * 0.2) + '" ry="' + f(S * 0.12) + '" fill="' + rgb(sk.hi) + '" opacity="' + fo(0.3 * ex.cheek) + '" filter="url(#' + a.blur(2.2) + ')"/>'; });
+      [-1, 1].forEach(function (sd) { var c = a.on(sd * 0.5, 0.36, 0.03); s += '<ellipse cx="' + f(c[0]) + '" cy="' + f(c[1]) + '" rx="' + f(S * 0.2) + '" ry="' + f(S * 0.12) + '" fill="' + rgb(sk.hi) + '" opacity="' + fo(0.3 * ex.cheek) + '" filter="url(#' + a.blur(2.2) + ')"/>';
+        s += a.el(smooth([a.on(sd * 0.28, 0.5, 0.02), a.on(sd * 0.5, 0.56, 0.02), a.on(sd * 0.74, 0.48, 0.02), a.on(sd * 0.5, 0.62, 0.02)], true), sk.shadow, { op: 0.3 * ex.cheek, blur: 1.6 }); });
     }
     a.mouthInfo = { M: M, my: my, mw: mw, LB: LB, UT: UT, gap: gap };
     a.add('mouth', s);
@@ -818,6 +822,7 @@ BTS.Portraits = (function () {
 
   function build(id, expr) {
     var def = BTS.Data.characters[id], pd = def.portrait || {};
+    if (pd.look) pd = Object.assign({}, pd, pd.look, { f: Object.assign({}, pd.f, pd.look.f) });
     var ex = expression(expr, pd);
     var a = new Rig(def, pd, ex);
     var Lib = BTS.PortraitLib || {};
