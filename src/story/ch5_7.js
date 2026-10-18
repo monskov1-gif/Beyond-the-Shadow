@@ -69,11 +69,16 @@
     var W = BTS.World;
     W.extraRender = function (Rd) {
       if (!W.get(id)) { W.extraRender = null; return; }
-      var reg = e.anim && e.anim.region('down'); if (!reg) return;
-      var L = Math.min(bed.d - 0.35, reg.w / 16), Wd = Math.min(bed.w - 0.2, reg.h / 16 * Math.min(1, (bed.d - 0.35) / (reg.w / 16)));
+      if (!e.anim) return;
+      if (e.anim.cur !== 'lie') e.anim.set('lie');   // the lying frame: eyes closed, arms along the body
+      var reg = e.anim.region('down'); if (!reg) return;
+      var lie = /_lie/.test(reg.name || '');           // lying frame: head on its left edge; a standing frame: head on top
+      var len = (lie ? reg.w : reg.h) / 16, wid = (lie ? reg.h : reg.w) / 16, k = Math.min(1, (bed.d - 0.35) / len);
+      var L = len * k, Wd = Math.min(bed.w - 0.2, wid * k);
       var z0 = bed.z - bed.d / 2 + 0.14, z1 = z0 + L, y0 = 0.62, y1 = 0.5, x = bed.x, q = 0.9999;
-      // the rotated lying frame has the head on its left edge: u=0 -> pillow end (z0)
-      Rd.pushFx(1, [[x + Wd / 2, y0, z0], [x + Wd / 2, y1, z1], [x - Wd / 2, y1, z1], [x - Wd / 2, y0, z0]], reg, [0.5, 0.47, 0.56, 1], [[0, q], [q, q], [q, 0], [0, 0]]);
+      // head -> pillow end (z0), feet -> toward the viewer (z1)
+      var uv = lie ? [[0, q], [q, q], [q, 0], [0, 0]] : [[q, 0], [q, q], [0, q], [0, 0]];
+      Rd.pushFx(1, [[x + Wd / 2, y0, z0], [x + Wd / 2, y1, z1], [x - Wd / 2, y1, z1], [x - Wd / 2, y0, z0]], reg, [0.5, 0.47, 0.56, 1], uv);
     };
     return e;
   }
@@ -163,7 +168,7 @@
         var WIN = { x: 74.7, z: 41.3, y: 0 }, peel = null;   // peel: her shadow crawling off the wall; she leaves only after it
         // Tihomir's bed (interiors.js: K.bed(10.8, 2.0, 1.3, 2.6)); the hiding place: the east side wall of his house
         // (house 74..79 x 37.5..41.5), behind the line of the front wall, so she cannot see them when she climbs out
-        var BED = { x: 10.8, z: 2.0, w: 1.3, d: 2.6 }, HIDE_P = [79.55, 41.05], HIDE_L = [79.6, 40.15], HIDE_OUT = [78.6, 42.3];
+        var BED = { x: 10.8, z: 2.0, w: 1.3, d: 2.6 }, HIDE_P = [79.5, 41.1], HIDE_L = [80.05, 40.85], HIDE_OUT = [78.6, 42.3], HIDE_OUT_L = [79.5, 42.7];
         return C.cam({ target: [74, 1.4, 41.6], dist: 15, time: 1.6 }).then(function () { return C.say('c6_window_a', { at: {
           2: function () { C.face('jaglika', 'up'); C.anim('jaglika', 'interact'); C.sfx('creak', { x: 74.7, z: 41.5, vol: 0.4 }); },
           3: function () {   // she climbs in
@@ -215,7 +220,7 @@
             2: function () { C.shadowFear({ cower: true, keepCower: true, back: 0.2 }); },
             3: function () { C.face('lisa', 'player'); }
           } }); })
-          .then(function () { return C.walk('player', HIDE_OUT, { dir: 'left' }); })   // only when she is gone do they step out of cover
+          .then(function () { C.anim('lisa', null); C.walk('lisa', HIDE_OUT_L, { dir: 'left' }); return C.walk('player', HIDE_OUT, { dir: 'left' }); })   // only when she is gone do they step out of cover
           .then(function () { return peel; })
           .then(function () { C.shadow('jaglika', { wall: null }); C.clue('sk_jaglika'); return C.walk('jaglika', [62, 47], { noWait: true }); }).then(function () { return C.wait(2.4); })
           .then(function () { C.despawn('jaglika'); C.anim('player', null); C.anim('lisa', null); C.face('lisa', 'player'); return C.say('c6_window_d'); }).then(function () { return C.fade(1, 0.6); });

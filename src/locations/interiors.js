@@ -232,7 +232,6 @@
       K.shelf(15.2, 0.3, 1.0, 'books', 1.6);
       K.window(13.6, 0, { side: 'back', y: 1.3, w: 1.1 });
       K.rug(13.8, 5.6, 2, 2, 'rug_plain');
-      K.prop('cradle_toy', 17.1, 3.3, { y: 0.45 });
       K.decal(11.2, 1.3, 0, 1.1, 0.85, 'pinned_notes');                         // his drawings pinned on the wall
       K.sideDecal(10.14, 1.0, 2.6, 1.6, 1.15, 'pinned_notes', 'e');             // notes board: sketches, a map of the village
       K.wardrobe(17.5, 6.6, 0.8, 1.6, 'w', 2.0);
