@@ -311,13 +311,13 @@
   /* ---------- staging cues for talk / interactable dialogues ---------- */
   var Q = BTS.Cutscene.cue;
   Q('c3_gorazd', {
-    1: function (C) { C.face('gorazd', 'down'); var n = 0; var chop = function () { if (n++ > 3) return; C.anim('gorazd', 'interact'); C.sfx('chop', {}); C.wait(0.35).then(function () { C.anim('gorazd', null); return C.wait(0.45); }).then(chop); }; chop(); },
+    1: function (C) { C.face('gorazd', 'down'); var n = 0; var chop = function () { if (n++ > 3 || !C.has('gorazd')) return; C.anim('gorazd', 'interact'); C.sfx('chop', {}); C.wait(0.35).then(function () { if (C.has('gorazd')) C.anim('gorazd', null); return C.wait(0.45); }).then(chop); }; chop(); },
     2: function (C) { C.face('gorazd', 'player'); },
     4: function (C) { C.anim('gorazd', 'point'); }, 5: function (C) { C.anim('gorazd', 'point'); C.shake(0.2); },
     6: function (C) { C.anim('gorazd', 'point'); C.shadowFear({ look: 0.3 }); }, 7: function (C) { C.anim('gorazd', null); }
   });
   Q('c4_gorazd', {   // in the rain, cap to the eyebrows, looking over his shoulder
-    1: function (C) { C.face('gorazd', 'left'); C.wait(0.9).then(function () { C.face('gorazd', 'right'); return C.wait(0.9); }).then(function () { C.face('gorazd', 'up'); }); },
+    1: function (C) { C.face('gorazd', 'left'); C.wait(0.9).then(function () { if (!C.has('gorazd')) return; C.face('gorazd', 'right'); return C.wait(0.9).then(function () { if (C.has('gorazd')) C.face('gorazd', 'up'); }); }); },
     2: function (C) { C.face('gorazd', 'player'); },
     5: function (C) { C.face('gorazd', 'up'); }, 6: function (C) { C.face('gorazd', 'player'); },
     7: function (C) { C.anim('gorazd', 'point'); C.face('gorazd', 'up'); }

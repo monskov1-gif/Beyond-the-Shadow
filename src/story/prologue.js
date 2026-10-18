@@ -192,9 +192,9 @@
         /* staged in the open in front of Gorazd's stall (not behind the table/awning): the onlookers step back,
            a soft fill light (no extra shadow) keeps her readable, the camera holds her in the clear upper frame */
         var G = [90.9, 72.9], J = [93.1, 73.5], MID = [92, 73.3];
+        C.spawn('jaglika', [103.2, 76.8], { dir: 'left', noTalk: true });   // on stage before clearArea, so she is kept
         C.clearArea(MID, 3.4, ['gorazd', 'jaglika']);
         var fill = C.keyLight(92.2, 73.4, { radius: 6.5, intensity: 1.15, dz: 2.6, kind: 'fill' });
-        C.spawn('jaglika', [103.2, 76.8], { dir: 'left', noTalk: true });
         C.walk('gorazd', G, { noWait: true, dir: 'right' });
         return C.frame([[97, 76], MID], { dist: 13, time: 1.4 }).then(function () { return C.walk('jaglika', J, { via: [[96.4, 77.4]] }); })
           .then(function () { C.face('jaglika', 'up'); return C.frame([MID], { dist: 10.5, time: 1.0 }); })    // she looks over his goods
@@ -235,7 +235,7 @@
       shadows: { zajko: { stage: 1 } },
       scene: function (C) {
         C.place('player', 'game_watch', 'right');
-        var RING = [88.6, 81.2];
+        var RING = [88.6, 81.2], lukaLeft = false;   // set when Luka runs off (line 20): late walk callbacks must not pull him back
         return C.cam({ target: [89, 0.5, 81.5], dist: 15, time: 1.6 }).then(function () { return C.say('p_game', { at: {
           1: function () { hop(C, ['zajko', 'mila', 'luka'], 7); },                      // they jump and stamp on their shadows
           2: function () { C.face('zajko', 'player'); },
@@ -252,13 +252,13 @@
           },
           10: function () { var p = C.ent('player'); C.walk('zajko', [p.x + 1.1, p.z + 0.4], { noWait: true }); C.anim('player', null); },
           18: function () {   // Luka comes up and points
-            var p = C.ent('player'); C.walk('luka', U.freeNear(p.x + 2.4, p.z + 0.9), { run: true }).then(function () { C.face('luka', 'player'); C.anim('luka', 'point'); });
+            var p = C.ent('player'); C.walk('luka', U.freeNear(p.x + 2.4, p.z + 0.9), { run: true }).then(function () { if (lukaLeft || !C.has('luka')) return; C.face('luka', 'player'); C.anim('luka', 'point'); });
           },
           19: function () {   // Zajko steps between them, shoulder first
             var p = C.ent('player'), l = C.ent('luka'); if (!l) return;
-            C.walk('zajko', U.freeNear((p.x + l.x) / 2, (p.z + l.z) / 2), { run: true }).then(function () { C.face('zajko', 'luka'); C.face('luka', 'zajko'); C.anim('luka', null); });
+            C.walk('zajko', U.freeNear((p.x + l.x) / 2, (p.z + l.z) / 2), { run: true }).then(function () { if (lukaLeft || !C.has('luka') || !C.has('zajko')) return; C.face('zajko', 'luka'); C.face('luka', 'zajko'); C.anim('luka', null); });
           },
-          20: function () { C.anim('luka', null); C.walk('luka', [80.2, 86.2], { run: true, noWait: true }); },
+          20: function () { lukaLeft = true; C.anim('luka', null); C.walk('luka', [80.2, 86.2], { run: true, noWait: true }); },
           16: function () { C.frame([[96.4, 84.6]], { dist: 11, time: 1.4 }); },   // the Baroness, in the dark beyond the fire
           17: function () { C.frame([[89, 81.5]], { dist: 15, time: 1.0 }); hop(C, ['zajko'], 1.6); }
         } }); })

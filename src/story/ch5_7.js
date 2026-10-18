@@ -143,7 +143,7 @@
       hideAll: true, keep: ['lisa', 'jaglika'],
       scene: function (C) {
         C.place('player', 'tihomir_hide', 'up'); C.anim('player', 'cower'); C.place('lisa', [72.2, 43.6], 'up'); C.anim('lisa', 'cower');
-        var WIN = { x: 74.7, z: 41.3, y: 0 };
+        var WIN = { x: 74.7, z: 41.3, y: 0 }, peel = null;   // peel: her shadow crawling off the wall; she leaves only after it
         return C.cam({ target: [74, 1.4, 41.6], dist: 15, time: 1.6 }).then(function () { return C.say('c6_window_a', { at: {
           2: function () { C.face('jaglika', 'up'); C.anim('jaglika', 'interact'); C.sfx('creak', { x: 74.7, z: 41.5, vol: 0.4 }); },
           3: function () {   // she climbs in
@@ -176,13 +176,14 @@
           .then(function () { return C.say('c6_window_c', { at: {
             1: function () {   // she climbs out and walks off; on the house wall her shadow stays a second longer — then crawls after her
               var j = C.ent('jaglika'); C.tween(0.5, function (k) { j.lift = 0.4 * (1 - k); j.z = 41.6 + k * 0.9; });
-              C.wait(0.6).then(function () { return C.walk('jaglika', [70.6, 45.4], { speed: 0.8 }); });
-              C.wait(2.2).then(function () { C.sfx('shadow_move', { x: 75, z: 42 }); var x0 = WIN.x; return C.tween(1.4, function (k) { var e = C.ent('jaglika'); WIN.x = x0 + ((e ? e.x : x0) - x0) * k; }); })
+              C.wait(0.6).then(function () { if (C.has('jaglika')) return C.walk('jaglika', [70.6, 45.4], { speed: 0.8 }); });
+              peel = C.wait(2.2).then(function () { C.sfx('shadow_move', { x: 75, z: 42 }); var x0 = WIN.x; return C.tween(1.4, function (k) { var e = BTS.World.get('jaglika'); WIN.x = x0 + ((e ? e.x : x0) - x0) * k; }); })
                 .then(function () { C.shadow('jaglika', { wall: null }); });
             },
             2: function () { C.shadowFear({ cower: true, keepCower: true, back: 0.2 }); },
             3: function () { C.face('lisa', 'player'); }
           } }); })
+          .then(function () { return peel; })
           .then(function () { C.shadow('jaglika', { wall: null }); C.clue('sk_jaglika'); return C.walk('jaglika', [62, 47], { noWait: true }); }).then(function () { return C.wait(2.4); })
           .then(function () { C.despawn('jaglika'); C.anim('player', null); C.anim('lisa', null); C.face('lisa', 'player'); return C.say('c6_window_d'); }).then(function () { return C.fade(1, 0.6); });
       }, after: 'c7_wait'

@@ -302,7 +302,7 @@
       triggers: [{ loc: 'village', box: [72, 33, 96, 50], run: function (C) {
         C.shadow('jaglika', { beast: 0.6, wall: { x: 87, z: 26.6, y: BTS.World.heightAt(87, 26.6) } }); C.supernatural(0.6);
         C.sfx('shadow_move', { x: 86, z: 28 }); C.sfx('crow', { x: 88, z: 24 });
-        var CW = { x: 87, z: 26.6, y: BTS.World.heightAt(87, 26.6) };
+        var CW = { x: 87, z: 26.6, y: BTS.World.heightAt(87, 26.6) }, peel = null;   // she is despawned only after her shadow has peeled off the wall
         C.shadow('jaglika', { wall: CW });
         return C.cam({ target: [86, 2, 28], time: 1.8 }).then(function () { C.sfx('sting_low', {}); return C.say('c9_beast', { at: {
           1: function () { C.face('jaglika', 'up'); C.frame(['jaglika'], { dist: 13, time: 1.0 }); },
@@ -312,10 +312,11 @@
           6: function () {   // she turns and walks away; the shadow peels off the wall only slowly
             C.face('jaglika', 'down'); C.walk('jaglika', [80.5, 33.5], { noWait: true, speed: 0.8 });
             C.frame(['jaglika', [87, 26.8]], { dist: 15, time: 1.2 });
-            C.wait(1.6).then(function () { C.sfx('shadow_move', { x: 86, z: 27 }); var x0 = CW.x, z0 = CW.z; return C.tween(1.8, function (k) { var j = C.ent('jaglika'); if (!j) return; CW.x = x0 + (j.x - x0) * k; CW.z = Math.min(z0 + (j.z - 0.6 - z0) * k, j.z - 0.3); }); })
+            peel = C.wait(1.6).then(function () { C.sfx('shadow_move', { x: 86, z: 27 }); var x0 = CW.x, z0 = CW.z; return C.tween(1.8, function (k) { var j = BTS.World.get('jaglika'); if (!j) return; CW.x = x0 + (j.x - x0) * k; CW.z = Math.min(z0 + (j.z - 0.6 - z0) * k, j.z - 0.3); }); })
               .then(function () { C.shadow('jaglika', { wall: null }); });
           }
         } }); })
+          .then(function () { return peel; })
           .then(function () { C.shadow('jaglika', { wall: null }); return C.walk('jaglika', [78, 36], { noWait: true }); }).then(function () { return C.wait(1.5); })
           .then(function () { C.despawn('jaglika'); C.supernatural(0); });
       }, clue: 'sk_jaglika_beast', then: 'c9_lisa' }],
@@ -361,6 +362,8 @@
         C.intensity(0.2);
         BTS.Camera.setPreset({ dist: 19 });   // the climax is played close: the beast, the fire and the hero fill the frame
         var J0 = [96.5, 81.5];
+        // c10_rite is entered from the bonfire without a location load, so its npcs are not populated yet: bring her on stage
+        if (!C.has('jaglika')) C.spawn('jaglika', J0, { act: 'idle', dir: 'left', noTalk: true, beast: 0.9 });
         C.place('jaglika', [104.6, 86.2], 'left');   // she comes out of the dark, from the field
         return C.cam({ target: [93, 1, 82], dist: 19, time: 1.6 }).then(function () { return C.say('c10_arrive', { at: {
           1: function () { C.walk('jaglika', J0, { dir: 'left', speed: 0.9 }); C.frame([[100.5, 84], J0], { dist: 16, time: 1.4 }); },

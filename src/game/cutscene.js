@@ -162,6 +162,8 @@ BTS.Cutscene = (function () {
     place: function (id, p, dir) { var e = ent(id), q = pos(p); if (!e || !q) return; e.x = q[0]; e.z = q[1]; e.path = null; e._fpStep = 0; if (e._autoNoClip) { e._autoNoClip = false; e.noClip = false; } if (dir) e.dir = dir; e.y = BTS.World.heightAt(e.x, e.z); },
     face: function (id, dir) { var e = ent(id); if (!e) return; if (typeof dir === 'string' && ['up', 'down', 'left', 'right'].indexOf(dir) >= 0) e.dir = dir; else { var o = ent(dir); if (o) e.faceTo(o.x, o.z); } },
     anim: function (id, a) { var e = ent(id); if (e && e.anim) e.anim.lock = a || null; },
+    /* quiet presence check for delayed continuations (the actor may have left the stage meanwhile) */
+    has: function (id) { return id === 'player' || id === 'djordje' || !!BTS.World.get(id); },
     hide: function (id, v) { var e = ent(id); if (e) e.hidden = v !== false; },
     /* say(dlg, {at: {lineId: fn(C)}}) — staging cues fired when a given line of the dialogue is shown */
     say: function (dlg, o) {

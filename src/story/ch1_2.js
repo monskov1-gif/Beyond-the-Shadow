@@ -337,15 +337,16 @@
     4: function (C) { C.anim('zajko', null); C.face('zajko', 'player'); },
     5: function (C) { throwStone(C, 0.4); }, 7: function (C) { throwStone(C, 1); }, 9: function (C) { throwStone(C, 0); },
     16: function (C) { C.face('player', 'zajko'); },
-    20: function (C) { C.face('zajko', 'right'); C.anim('zajko', 'interact'); C.wait(1.2).then(function () { C.face('zajko', 'player'); }); },   // half to Kum, half of his half to me
+    20: function (C) { C.face('zajko', 'right'); C.anim('zajko', 'interact'); C.wait(1.2).then(function () { if (C.has('zajko')) C.face('zajko', 'player'); }); },   // half to Kum, half of his half to me
     21: function (C) { C.anim('zajko', null); },
     23: function (C) { C.anim('zajko', 'sit'); },
     29: function (C) { C.anim('zajko', null); C.face('zajko', 'down'); },
     32: function (C) {   // he throws a stone; his shadow throws — later
       C.anim('player', null); C.face('zajko', 'down'); C.shadow('zajko', { lag: 0.45 }); C.frame(['zajko'], { dist: 8, time: 1.0 });
-      C.anim('zajko', 'interact'); C.wait(0.5).then(function () { C.anim('zajko', null); C.sfx('water_splash', { vol: 0.5 }); return C.wait(1.0); })
-        .then(function () { C.anim('zajko', 'interact'); return C.wait(0.5); }).then(function () { C.anim('zajko', null); return C.wait(1.0); })
-        .then(function () { C.shadow('zajko', { stage: 1 }); });
+      var Z = function (f) { return function () { if (C.has('zajko')) return f(); }; };   // a fast reader may leave the mill before the throws end
+      C.anim('zajko', 'interact'); C.wait(0.5).then(Z(function () { C.anim('zajko', null); C.sfx('water_splash', { vol: 0.5 }); return C.wait(1.0); }))
+        .then(Z(function () { C.anim('zajko', 'interact'); return C.wait(0.5); })).then(Z(function () { C.anim('zajko', null); return C.wait(1.0); }))
+        .then(Z(function () { C.shadow('zajko', { stage: 1 }); }));
     },
     42: function (C) { C.face('zajko', 'player'); C.face('player', 'zajko'); C.anim('zajko', 'point'); C.wait(1.4).then(function () { C.anim('player', 'point'); }); },
     44: function (C) { C.anim('zajko', null); C.anim('player', null); }
@@ -405,12 +406,12 @@
     12: function (C) { C.face('pecko', 'player'); }
   });
   Q('c2_mama_b', {
-    2: function (C) { var m = C.ent('pecko'); if (m) C.walk('gvozdin', U.freeNear(m.x + 0.7, m.z + 0.3), { dir: 'left' }).then(function () { C.anim('gvozdin', 'interact'); C.anim('pecko', null); C.face('pecko', 'gvozdin'); }); },
+    2: function (C) { var m = C.ent('pecko'); if (m) C.walk('gvozdin', U.freeNear(m.x + 0.7, m.z + 0.3), { dir: 'left' }).then(function () { if (!C.has('gvozdin') || !C.has('pecko')) return; C.anim('gvozdin', 'interact'); C.anim('pecko', null); C.face('pecko', 'gvozdin'); }); },
     3: function (C) { C.anim('gvozdin', null); C.face('gvozdin', 'player'); },
     6: function (C) {   // his shadow on the wall lifts its head before he does
       C.shadow('gvozdin', { wall: { x: 5.2, z: 0.3, y: 0 } }); C.anim('gvozdin', 'weak'); C.shadowPose('gvozdin', 'idle', 1.8, 'up');
       C.frame(['gvozdin', [5.2, 1.0]], { dist: 9, y: 1.3, time: 1.0 });
-      C.wait(1.8).then(function () { C.anim('gvozdin', null); return C.shadowFear({ look: 0.35 }); });
+      C.wait(1.8).then(function () { if (!C.has('gvozdin')) return; C.anim('gvozdin', null); return C.shadowFear({ look: 0.35 }); });
     },
     7: function (C) { C.shadow('gvozdin', { wall: null }); }
   });
