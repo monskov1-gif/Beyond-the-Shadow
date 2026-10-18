@@ -225,23 +225,36 @@ BTS.Music = (function () {
     LOOK = document.hidden ? 2.5 : 1.0;
     if (document.hidden) Mu.schedule();
   });
+  /* One theme at a time. A new state fades every other layer out (and they stop scheduling notes at once); the new
+     layer starts its first notes only when the old one is mostly gone and then fades in, so two themes in different
+     keys/tempi are never heard together for more than a short tail. */
   Mu.set = function (state, fade) {
     if (!STATES[state]) { BTS.Log.warn('unknown music state', state); return; }
     if (!A.ready) { Mu.pending = state; return; }
-    if (Mu.state === state) return;
-    var t = A.now(), f = fade === undefined ? 3 : fade;
+    Mu.pending = null;
+    var live = Mu.live();
+    if (Mu.state === state && (live || state === 'silence')) return;
+    var t = A.now(), f = fade === undefined ? 3 : Math.max(0, fade);
+    var fo = Math.max(0.06, Math.min(f * 0.6, 1.8));          // out: quicker than the in-fade
+    var gap = Math.min(fo * 0.7, 1.2);                          // the new theme waits until the old one is mostly down
     for (var k in Mu.layers) {
       var old = Mu.layers[k];
-      old.g.gain.cancelScheduledValues(t); old.g.gain.setValueAtTime(old.g.gain.value, t); old.g.gain.linearRampToValueAtTime(0.0001, t + f);
-      old.dying = t + f;
+      if (old.dying && old.dying <= t + fo) continue;           // already on its way out, faster
+      var v = old.g.gain.value;
+      old.g.gain.cancelScheduledValues(t); old.g.gain.setValueAtTime(Math.max(0.0001, v), t); old.g.gain.exponentialRampToValueAtTime(0.0001, t + fo);
+      old.dying = t + fo;
     }
-    var g = A.gain(0, A.bus.music);
-    var rs = A.gain(0.45, A.send.music); g.connect(rs);
-    g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(1, t + Math.max(0.05, f * 0.8));
-    Mu.layers[state + '_' + Math.floor(t * 1000)] = { state: state, g: g, next: t + 0.1 };
     Mu.state = state;
     BTS.Events.emit('music', state);
+    if (state === 'silence') return;                            // silence is the absence of a layer
+    var g = A.gain(0, A.bus.music);
+    var rs = A.gain(0.45, A.send.music); g.connect(rs);
+    g.gain.setValueAtTime(0.0001, t); g.gain.setValueAtTime(0.0001, t + gap); g.gain.linearRampToValueAtTime(1, t + gap + Math.max(0.05, f * 0.8));
+    Mu.layers[state + '_' + (++Mu.serial)] = { state: state, g: g, rs: rs, next: t + gap + 0.05 };
   };
+  /* the layer that is playing now (not fading out) */
+  Mu.live = function () { for (var k in Mu.layers) if (!Mu.layers[k].dying) return Mu.layers[k]; return null; };
+  Mu.serial = 0;
   /* hard cut (e.g. moment the needle pierces the shadow) */
   Mu.cut = function () {
     if (!A.ready) return;
@@ -254,7 +267,7 @@ BTS.Music = (function () {
     var t = A.now();
     for (var k in Mu.layers) {
       var L = Mu.layers[k];
-      if (L.dying && t > L.dying + 0.5) { L.g.disconnect(); delete Mu.layers[k]; continue; }
+      if (L.dying && t > L.dying + 0.3) { try { L.g.disconnect(); if (L.rs) L.rs.disconnect(); } catch (e) { } delete Mu.layers[k]; continue; }
       if (L.dying) continue;
       var st = STATES[L.state];
       var guard = 0;

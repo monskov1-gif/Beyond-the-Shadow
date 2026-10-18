@@ -452,6 +452,11 @@
   BTS.Data.globalProps = (BTS.Data.globalProps || []).concat([
     { beats: 'c2_funeral..', loc: 'village', sprite: 'cross_grave_new', at: 'grave_zajko', scale: 1.1 },
     { beats: 'c2_alone..', loc: 'village', sprite: 'cross_grave_new', at: 'grave_pecko', scale: 1.1 },
-    { beats: 'c2_house..', loc: 'village', sprite: 'cross_grave_new', at: 'grave_gvozdin', scale: 1.1 }
+    { beats: 'c2_house..', loc: 'village', sprite: 'cross_grave_new', at: 'grave_gvozdin', scale: 1.1 },
+    /* Zajko's rag rabbit lies on Đorđe's bed only while Đorđe has it: not before Zlatko gives it to him (c2_rabbit),
+       not in the memory of nine years ago, and not after he has left it on Zajko's grave */
+    { id: 'prop_rabbit_room', beats: 'c2_funeral..', cond: 'item:zajko_toy&!beat:c8_memory', loc: 'djordje_house', sprite: 'cradle_toy', at: [17.1, 3.3], y: 0.45 }
   ]);
+  BTS.Data.examineCond = BTS.Data.examineCond || {};
+  BTS.Data.examineCond.x_dj_rabbit = 'item:zajko_toy&!beat:c8_memory';
 })();

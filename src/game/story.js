@@ -126,10 +126,13 @@ BTS.Story = (function () {
       if (p.anim) e.anim.lock = p.anim;
     });
     // static story props (mourning objects, new graves...)
+    // (a prop with `cond` exists only while the condition holds, e.g. Zajko's rabbit only once Đorđe has it)
     (b && b.props || []).concat((BTS.Data.globalProps || []).filter(function (g) { return S.inRange(g.beats); })).forEach(function (pr, i) {
       if (pr.loc !== loc) return;
+      if (pr.cond && !BTS.Cond.eval(pr.cond)) return;
       var at = typeof pr.at === 'string' ? W.spot(pr.at) : { x: pr.at[0], z: pr.at[1] }; if (!at) return;
-      var e = new BTS.Entity({ id: 'prop' + i, sprite: pr.sprite, x: at.x, z: at.z, shadow: false });
+      if (pr.dx || pr.dz) at = { x: at.x + (pr.dx || 0), z: at.z + (pr.dz || 0) };
+      var e = new BTS.Entity({ id: pr.id || 'prop' + i, sprite: pr.sprite, x: at.x, z: at.z, shadow: false });
       e.solid = false; e.lift = pr.y || 0; e.scale = pr.scale; e.emissive = pr.emissive; e.persistent = false;
       W.addEntity(e);
     });
@@ -150,7 +153,12 @@ BTS.Story = (function () {
       if (x.walk) W.addTrigger({ box: x.walk, onEnter: function () { S.useExit(x); } });
     });
     // location examinables (flavor)
-    (ldef.examine || []).forEach(function (x) { if (x.when && !S.inRange(x.when)) return; S.addInteract(x, loc); });
+    // story-side conditions for location examinables (BTS.Data.examineCond[id] = 'item:x&!beat:y')
+    (ldef.examine || []).forEach(function (x) {
+      if (x.when && !S.inRange(x.when)) return;
+      var xc = BTS.Data.examineCond && BTS.Data.examineCond[x.id]; if (xc && !BTS.Cond.eval(xc)) return;
+      S.addInteract(x, loc);
+    });
     // beat interactables & triggers (beat-local and persistent lists)
     var lists = [];
     if (b && b.interact) lists.push(b.interact);

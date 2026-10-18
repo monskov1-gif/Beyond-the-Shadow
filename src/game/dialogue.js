@@ -75,12 +75,15 @@ BTS.Dialogue = (function () {
         var sp = s[0], arg = s[1], o = s[2] || {};
         if (o.if && !BTS.Cond.eval(o.if)) { c.pc++; continue; }
         if (sp === '~') { c.pc++; BTS.Events.emit('dlg_pause', arg); D.waitPause = setTimeout(function () { if (D.current === c) run(); }, arg * 1000); return; }
+        var lk = key(c, arg);
+        // a line whose text is missing (or is a raw identifier) is never shown to the player: it is skipped
+        if (!BTS.t(lk)) { BTS.Log.warn('dialogue line without text skipped', lk); c.pc++; if (o.do) D.effect(o.do); continue; }
         var kind = sp === '>' ? 'thought' : sp === '*' ? 'action' : 'line';
         var speaker = kind === 'line' ? (sp === 'dj' ? 'djordje' : sp) : (kind === 'thought' ? 'djordje' : null);
         D.speakingId = kind === 'line' ? speaker : null;
         c.waiting = true;
         c.pc++;
-        BTS.Events.emit('dlg_line', { kind: kind, speaker: speaker, key: key(c, arg), portrait: o.p, anim: o.anim, sfx: o.sfx, shake: o.shake });
+        BTS.Events.emit('dlg_line', { kind: kind, speaker: speaker, key: lk, portrait: o.p, anim: o.anim, sfx: o.sfx, shake: o.shake });
         if (o.sfx) BTS.Audio.play(o.sfx);
         if (o.do) D.effect(o.do);
         return;
@@ -97,7 +100,8 @@ BTS.Dialogue = (function () {
       }
       if (s.choice) {
         var opts = s.choice.map(function (ch, i) { return { i: i, key: key(c, ch[0]), target: ch[1], cond: ch[2] && ch[2].if, effect: ch[2] && ch[2].do, once: ch[2] && ch[2].once }; })
-          .filter(function (o) { return BTS.Cond.eval(o.cond) && !(o.once && BTS.State.flag('chose.' + c.id + '.' + o.key)); });
+          .filter(function (o) { return BTS.Cond.eval(o.cond) && !(o.once && BTS.State.flag('chose.' + c.id + '.' + o.key)); })
+          .filter(function (o) { if (BTS.t(o.key)) return true; BTS.Log.warn('dialogue choice without text skipped', o.key); return false; });
         if (!opts.length) { c.pc++; continue; }
         c.choices = opts; c.waiting = true;
         BTS.Events.emit('dlg_choice', opts);

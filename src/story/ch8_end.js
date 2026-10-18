@@ -98,7 +98,6 @@
       lamps.push({ e: lan, l: C.light({ x: e.x, y: 1.2, z: e.z, color: [1, 0.55, 0.3], radius: 2.4, intensity: 0.7, kind: 'fill', flicker: 0.1, cs: true }) });
     }
     C.frame([F], { dist: 18, pitch: 0.7, time: 2.0 });
-    C.music('fair', 1.5);
     var p = W.player;
     return new Promise(function (res) {
       C.ticker(function (dt) {
@@ -524,7 +523,9 @@
     },
     /* the next Vidovdan: Đorđe comes back for the fair — and looks at his own shadow. Then the final titles. */
     { id: 'e_final', chapter: 'epilogue', ambience: { crowd: 0.8, fire: 0.8, firePos: [90.5, 82] }, loc: 'village', spawn: 'fair_edge', forceSpawn: true, chapterCard: 'date.next_june', chapterSub: 'sub.e_final', day: 365,
-      env: { time: 'night', weather: 'clear', horror: 0 }, envInstant: true, obj: null, music: 'fair', noSave: true,
+      env: { time: 'night', weather: 'clear', horror: 0 }, envInstant: true, obj: null, noSave: true,
+      // the fair until the final titles; from then on the epilogue theme only (the refresh after the scene must not bring the fair back)
+      get music() { return S.flag('e_titles') ? 'epilogue' : 'fair'; },
       npcs: { mila: { loc: 'village', at: [89.4, 80.4], act: 'wander', radius: 1.6, stage: 0 }, luka: { loc: 'village', at: [92, 81.8], act: 'wander', radius: 1.5 }, milka: { loc: 'village', at: [98.6, 83.4], act: 'sit', dir: 'right' },
         lisa: { loc: 'village', at: [101.4, 85.2], act: 'idle', dir: 'left', noTalk: true } },
       hideAll: true, keep: ['mila', 'luka', 'milka', 'lisa'],
@@ -559,7 +560,7 @@
           } }); })
           .then(function () { return lanternProcession(C); })
           .then(function () { return C.fade(1, 1.2); })
-          .then(function () { BTS.Music.set('epilogue', 1.5); return U.cards(ENDING_CARDS); })
+          .then(function () { S.set('e_titles'); BTS.Music.set('epilogue', 3); return U.cards(ENDING_CARDS); })
           .then(function () { return C.title('ui.the_end'); })
           .then(function () { S.set('game_complete'); S.markDone('scene:e_final'); BTS.Save.write('auto', BTS.Save.snapshot()); BTS.Screens.credits(true); });
       }
@@ -578,9 +579,21 @@
   add('jablan', [{ beats: 'e_dawn..e_leave', dlg: 'e_jablan' }]);
   add('dragan', [{ beats: 'e_dawn..e_leave', dlg: 'e_dragan' }, { beats: 'c9_silence..c9_prepare', dlg: 'c9_dragan' }]);
   BTS.Data.globalProps.push({ beats: 'c9_dusk..', loc: 'village', sprite: 'cross_grave_new', at: 'grave_tihomir', scale: 1.1 });
-  BTS.Story.calls.leaveToy = function () { S.removeItem('zajko_toy'); S.set('e_toy_left'); };
+  /* the rag rabbit stays on Zajko's grave, at the foot of the cross (also after reloading / coming back) */
+  var TOY_GRAVE = { id: 'prop_rabbit_grave', beats: 'e_dawn..', cond: 'flag:e_toy_left', loc: 'village', sprite: 'cradle_toy', at: 'grave_zajko', dz: 0.42, y: 0.02 };
+  BTS.Data.globalProps.push(TOY_GRAVE);
+  function placeToy() {
+    var W = BTS.World; if (W.locId !== 'village' || W.get(TOY_GRAVE.id)) return;
+    var sp = W.spot(TOY_GRAVE.at); if (!sp) return;
+    var e = new BTS.Entity({ id: TOY_GRAVE.id, sprite: TOY_GRAVE.sprite, x: sp.x + (TOY_GRAVE.dx || 0), z: sp.z + TOY_GRAVE.dz, shadow: false });
+    e.solid = false; e.lift = TOY_GRAVE.y; e.persistent = false; W.addEntity(e);
+  }
+  BTS.Story.calls.leaveToy = function () { S.removeItem('zajko_toy'); S.set('e_toy_left'); placeToy(); };
 
   var Q = BTS.Cutscene.cue;
+  Q('e_toy', {   // he kneels at the cross and sets the rabbit down; it stays there
+    1: function (C) { var sp = BTS.World.spot('grave_zajko'); if (sp) C.ent('player').faceTo(sp.x, sp.z); C.anim('player', 'interact'); C.wait(0.9).then(function () { placeToy(); C.anim('player', null); }); }
+  });
   Q('c9_pillow', { 1: function (C) { C.face('player', 'up'); C.anim('player', 'interact'); }, 2: function (C) { C.anim('player', null); }, 4: function (C) { C.anim('player', 'interact'); var l = C.ent('lisa'); if (l) C.face('lisa', 'player'); } });
   Q('c9_decide', { 5: function (C) { C.anim('player', 'interact'); C.wait(0.8).then(function () { C.anim('player', null); }); }, 9: function (C) { C.face('player', 'up'); }, 10: function (C) { C.face('player', 'lisa'); } });
   Q('c10_fire', {
@@ -636,7 +649,7 @@
   D('c11_shades', [['*', '1'], ['>', '2'], ['>', '5'], ['>', '6'], ['jaglika', '3'], ['*', '4']]);
   D('c11_fall', [['*', '1'], ['jaglika', '2'], ['*', '3']]);
   D('c11_silence', [['*', '1'], ['>', '2']]);
-  D('e_dawn', [['*', '1'], ['lisa', '2', { p: 'tired' }], ['dj', '3'], ['lisa', '4'], ['>', '5']]);
+  D('e_dawn', [['*', '1'], ['lisa', '2', { p: 'tired' }], ['dj', '3'], ['lisa', '4'], ['lisa', '5', { p: 'sad' }]]);   // 5: Lisa tells him to say goodbye (her line, her portrait)
   D('e_toy', [['*', '1'], ['>', '2'], ['>', '3'], { call: 'leaveToy' }]);
   D('e_milka', [['milka', '1', { p: 'sad' }], ['milka', '2'], ['dj', '3'], ['milka', '4', { p: 'smile' }], ['milka', '5']]);
   D('e_milka2', [['milka', '1', { p: 'smile' }]]);
@@ -644,7 +657,7 @@
   D('e_stana', [['stana', '1', { p: 'sad' }]]);
   D('e_dragan', [['dragan', '1', { p: 'tired' }]]);
   D('e_lisa', [['lisa', '1']]);
-  D('e_ready', [['lisa', '1'], ['>', '2']]);
+  D('e_ready', [['lisa', '1'], ['lisa', '2']]);   // both Lisa's: where the car waits
   D('e_bridge', [['*', '1'], ['>', '2'], ['>', '3'], ['lisa', '4', { p: 'smile' }], ['dj', '5'], ['*', '6']]);
   D('e_final', [['*', '1'], ['>', '2'], ['lisa', '3', { p: 'smile' }], ['dj', '4'], ['milka', '5', { p: 'smile' }], ['*', '6'], ['mila', '7', { p: 'smile' }], ['*', '8']]);
   D('e_final_b', [['>', '1'], ['>', '2']]);

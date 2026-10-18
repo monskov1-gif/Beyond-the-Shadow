@@ -302,7 +302,7 @@
     ['dj', '18'], ['*', '19'], ['lisa', '20', { p: 'smile' }], ['>', '21'], ['lisa', '22'], { if: 'flag:trust_hi', then: 'warm' }, ['>', '23'], { end: true },
     { label: 'warm' }, ['lisa', '24', { p: 'smile' }], ['>', '25']
   ]);
-  D('c4_milka', [['milka', '1', { p: 'worried' }], ['milka', '2']]);
+  D('c4_milka', [['milka', '1', { p: 'worried' }], ['milka', '3', { p: 'angry' }], ['milka', '2']]);
   D('c4_dragan', [['dragan', '1', { p: 'worried' }], ['dragan', '2']]);
   D('c4_sava', [['sava', '1', { p: 'worried' }], ['sava', '2']]);
   D('c4_vesna', [['vesna', '1', { p: 'worried' }]]);

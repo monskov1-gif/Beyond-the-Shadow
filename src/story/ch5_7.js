@@ -60,6 +60,23 @@
   }
 
 
+  /* someone asleep IN a bed: the lying sprite is laid flat on the mattress (head on the pillow at the back, feet toward
+     the viewer) instead of standing on the floor beside it. bed: {x, z, w, d} as given to Kit.bed (mattress top 0.45). */
+  function sleeper(C, id, bed) {
+    var e = C.spawn(id, [bed.x, bed.z], { act: 'lie', dir: 'down', noTalk: true });
+    if (!e) return null;
+    e.noClip = true; e.solid = false; e.hidden = true; if (e.brain) { e.brain.paused = true; e.keepPaused = true; }
+    var W = BTS.World;
+    W.extraRender = function (Rd) {
+      if (!W.get(id)) { W.extraRender = null; return; }
+      var reg = e.anim && e.anim.region('down'); if (!reg) return;
+      var L = Math.min(bed.d - 0.35, reg.w / 16), Wd = Math.min(bed.w - 0.2, reg.h / 16 * Math.min(1, (bed.d - 0.35) / (reg.w / 16)));
+      var z0 = bed.z - bed.d / 2 + 0.14, z1 = z0 + L, y0 = 0.62, y1 = 0.5, x = bed.x, q = 0.9999;
+      // the rotated lying frame has the head on its left edge: u=0 -> pillow end (z0)
+      Rd.pushFx(1, [[x + Wd / 2, y0, z0], [x + Wd / 2, y1, z1], [x - Wd / 2, y1, z1], [x - Wd / 2, y0, z0]], reg, [0.5, 0.47, 0.56, 1], [[0, q], [q, q], [q, 0], [0, 0]]);
+    };
+    return e;
+  }
   var GORAZD_FIELD = { loc: 'outskirts', at: [41.5, 35.5], act: 'lie', stage: 4, noTalk: true, get sheet() { return U.sheetOr('gorazd_bare', 'gorazd'); } };
 
   BTS.Story.define([
@@ -144,6 +161,9 @@
       scene: function (C) {
         C.place('player', 'tihomir_hide', 'up'); C.anim('player', 'cower'); C.place('lisa', [72.2, 43.6], 'up'); C.anim('lisa', 'cower');
         var WIN = { x: 74.7, z: 41.3, y: 0 }, peel = null;   // peel: her shadow crawling off the wall; she leaves only after it
+        // Tihomir's bed (interiors.js: K.bed(10.8, 2.0, 1.3, 2.6)); the hiding place: the east side wall of his house
+        // (house 74..79 x 37.5..41.5), behind the line of the front wall, so she cannot see them when she climbs out
+        var BED = { x: 10.8, z: 2.0, w: 1.3, d: 2.6 }, HIDE_P = [79.55, 41.05], HIDE_L = [79.6, 40.15], HIDE_OUT = [78.6, 42.3];
         return C.cam({ target: [74, 1.4, 41.6], dist: 15, time: 1.6 }).then(function () { return C.say('c6_window_a', { at: {
           2: function () { C.face('jaglika', 'up'); C.anim('jaglika', 'interact'); C.sfx('creak', { x: 74.7, z: 41.5, vol: 0.4 }); },
           3: function () {   // she climbs in
@@ -152,11 +172,11 @@
           }
         } }); })
           .then(function () { C.hide('jaglika', true); return C.fade(1, 2.5); })
-          .then(function () {   // through the window: Tihomir asleep on his back, a dark figure over him
+          .then(function () {   // through the window: Tihomir asleep on his back in his bed, a dark figure over him
             C.load('tihomir_house', 'default'); C.hide('player', true);
-            C.spawn('tihomir', U.spot('bed', [9.4, 3]), { act: 'lie', dir: 'down', noTalk: true });
-            C.spawn('jaglika', [8.3, 3.4], { dir: 'right', noTalk: true, stage: 2 });
-            C.cam({ target: [9, 0.6, 3.2], dist: 9, time: 0.1 });
+            sleeper(C, 'tihomir', BED);
+            C.spawn('jaglika', [BED.x - BED.w / 2 - 0.42, BED.z + 0.35], { dir: 'right', noTalk: true, stage: 2 });
+            C.cam({ target: [BED.x - 0.5, 0.6, BED.z + 0.6], dist: 9, time: 0.1 });
             return C.fade(0, 2.5);
           })
           .then(function () { return C.say('c6_window_b', { at: {
@@ -168,10 +188,22 @@
             C.despawn('tihomir');
             C.load('village', 'tihomir_hide'); C.place('player', 'tihomir_hide', 'up'); C.anim('player', 'cower');
             C.spawn('lisa', [72.2, 43.6], { dir: 'up', noTalk: true }); C.anim('lisa', 'cower');
-            var j = C.spawn('jaglika', [74.7, 41.6], { dir: 'down', noTalk: true, stage: 2 }); j.lift = 0.4;
+            var j = C.spawn('jaglika', [74.7, 41.6], { dir: 'down', noTalk: true, stage: 2 }); j.lift = 0.4; j.hidden = true;   // still inside
+            C.cam({ target: [76.2, 1.2, 42.2], dist: 16, time: 0.1 });
+            return C.fade(0, 1.6);
+          })
+          .then(function () {   // the frame creaks: before she is out, they slip round the east corner of the house, out of her sight
+            C.sfx('creak', { x: 74.7, z: 41.5, vol: 0.35 });
+            C.anim('player', null); C.anim('lisa', null);
+            C.walk('lisa', HIDE_L, { run: true, dir: 'left' });
+            return C.wait(0.25).then(function () { return C.walk('player', HIDE_P, { run: true, dir: 'left' }); });
+          })
+          .then(function () {   // pressed to the side wall; Đorđe peeks round the corner
+            C.face('player', 'left'); C.face('lisa', 'left'); C.anim('lisa', 'cower');
+            var j = C.ent('jaglika'); if (j) j.hidden = false;
             C.shadow('jaglika', { wall: WIN });
-            C.cam({ target: [74, 1.4, 41.6], dist: 14, time: 0.1 });
-            return C.fade(0, 2.5);
+            C.frame([[74.7, 42], 'player'], { dist: 15, time: 0.8 });
+            return C.wait(0.6);
           })
           .then(function () { return C.say('c6_window_c', { at: {
             1: function () {   // she climbs out and walks off; on the house wall her shadow stays a second longer — then crawls after her
@@ -183,6 +215,7 @@
             2: function () { C.shadowFear({ cower: true, keepCower: true, back: 0.2 }); },
             3: function () { C.face('lisa', 'player'); }
           } }); })
+          .then(function () { return C.walk('player', HIDE_OUT, { dir: 'left' }); })   // only when she is gone do they step out of cover
           .then(function () { return peel; })
           .then(function () { C.shadow('jaglika', { wall: null }); C.clue('sk_jaglika'); return C.walk('jaglika', [62, 47], { noWait: true }); }).then(function () { return C.wait(2.4); })
           .then(function () { C.despawn('jaglika'); C.anim('player', null); C.anim('lisa', null); C.face('lisa', 'player'); return C.say('c6_window_d'); }).then(function () { return C.fade(1, 0.6); });

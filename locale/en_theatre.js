@@ -85,7 +85,10 @@ BTS.Locale.en_parts.push({
       lamp: 'The lamp smells of kerosene. The flame trembles when Grandmother speaks.',
       victim: 'He can’t see that his shadow is gone.',
       moon: 'The moon is on a pin. Sometimes it slips.',
-      hands: 'Grandmother’s hands. Warm — you can tell even from here.'
+      hands: 'Grandmother’s hands. Warm — you can tell even from here.',
+      woman2: 'A woman in a headscarf. Her palm at her face — as if she’s crying. Or hiding.',
+      fence: 'A wattle fence of matches and thread. The rooster stays on it with a pin.',
+      ground: 'The ground is a strip of cardboard. Grandmother cut it with the bread knife, along a ruler.'
     }
   },
   clue: {

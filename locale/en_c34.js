@@ -209,7 +209,8 @@ BTS.Locale.en_parts.push({
       23: 'She drinks her tea. Stirred seven times. So do I.',
       24: 'You know… it’s easy to be quiet with you. That’s rare. Thank you.', 25: '“It’s easy to be quiet with you.” Zajko said the same. I write it down next to his words.'
     },
-    c4_milka: { 1: 'Bolt the doors, young master. Shutter the windows. That’s what Mother did when trouble came to the estate.', 2: 'And the red-haired lady from the city — she has manners. I approve.' },
+    c4_milka: { 1: 'Bolt the doors, young master. Shutter the windows. That’s what Mother did when trouble came to the estate.', 2: 'And the red-haired lady from the city — she has manners. I approve.',
+      3: 'And don’t look at me like that, young master. In her day the Baroness was a machine-gunner. Oh yes. My hand still doesn’t shake — let her just try.' },
     c4_dragan: { 1: 'I’ll be closing the kafana soon. Nobody comes. They’re scared.', 2: 'I’m scared too, little man. Just don’t tell anyone.' },
     c4_sava: { 1: 'I rang the town. They said — coincidence, village medicine, old age.', 2: 'I pray, Đorđe. But I too can see that something is wrong.' },
     c4_vesna: { 1: 'The washing won’t dry. And the shadows of the washing on the line… No. Nothing. Go on, Đorđe.' },

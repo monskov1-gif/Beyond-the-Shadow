@@ -81,7 +81,7 @@ BTS.Locale.en_parts.push({
     c11_fall: { 1: 'In the middle of the field Jaglika falls. The shadows close round her in a ring.', 2: 'Desa’s boy… you…', 3: 'The shadows sink onto her — and go down into the earth with her. Like water into sand.' },
     c11_silence: { 1: 'Silence. The rain has stopped. The east is growing pale.', 2: 'The earth in the field is smooth. As if no one had ever been here.' },
     e_dawn: { 1: 'Dawn. Mist over the meadow. The fire has burned out. The pole still stands.', 2: 'You’re alive. You’re alive… I saw it. I don’t know what I saw. But I saw it.', 3: 'My shadow is in its place.',
-      4: 'In its place. Long, a morning shadow. Yours.', 5: 'I need to say goodbye. To Zajko. To Milka. Then — leave.' },
+      4: 'In its place. Long, a morning shadow. Yours.', 5: 'You need to say goodbye. To Zajko. To Milka. And then — we leave.' },
     e_toy: { 1: 'Đorđe lays the rag rabbit at Zajko’s cross.', 2: 'It belongs here. Next to its owner.', 3: 'Zajko. Your shadow is free.' },
     e_milka: { 1: 'You’re leaving, young master.', 2: 'That’s right. It’s empty here now. Quiet. It’s good that it’s quiet.', 3: 'Thank you for the food. Eight-oh-oh and eighteen-oh-oh. Thirty days. Never once late.', 4: 'Oh, you… Eat there. Eat, do you hear?', 5: 'And come back for Vidovdan. The Baroness receives on Thursdays — and at the fair.' },
     e_milka2: { 1: 'Go on, go. Don’t look back. Looking back is bad luck. And bad form.' },

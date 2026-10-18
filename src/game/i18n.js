@@ -31,6 +31,15 @@ BTS.I18N = (function () {
     BTS.Events.emit('language', lang);
   };
   I.has = function (key) { return I.dicts[I.lang] && I.dicts[I.lang][key] !== undefined; };
+  /* a value that is a technical identifier rather than player-facing text: 'theatre_look_ground', 'dlg.x.3', 'it.toy' */
+  I.looksRaw = function (s) {
+    if (s === undefined || s === null) return true;
+    s = String(s);
+    if (!s) return false;
+    if (/\s/.test(s)) return false;
+    return /^(dlg|it|obj|item|clue|cap|ui|verb|loc|name|theatre)\.[\w.]+$/.test(s) || (/_/.test(s) && /^[\w.\-]+$/.test(s)) || /^\[[\w.]+\]$/.test(s);
+  };
+  /* never returns a raw key: a missing key falls back to the other language, else to '' (logged once) */
   I.t = function (key, params) {
     if (!key) return '';
     var d = I.dicts[I.lang] || {};
@@ -38,8 +47,10 @@ BTS.I18N = (function () {
     if (s === undefined || s === '') {
       if (!I.missing[key]) { I.missing[key] = true; BTS.Log.warn('missing loc key', I.lang, key); }
       var other = I.dicts[I.lang === 'ru' ? 'en' : 'ru'] || {};
-      s = other[key] !== undefined ? other[key] : '[' + key + ']';
+      s = other[key] !== undefined ? other[key] : '';
     }
+    if (s && typeof s === 'object' && !Array.isArray(s)) { if (!I.missing[key]) { I.missing[key] = true; BTS.Log.warn('non-text loc key', I.lang, key); } return ''; }
+    if (typeof s === 'string' && I.looksRaw(s)) { if (!I.missing['raw:' + key]) { I.missing['raw:' + key] = true; BTS.Log.warn('raw identifier as loc text', I.lang, key, s); } return ''; }
     if (params) s = String(s).replace(/\{(\w+)\}/g, function (m, p) { return params[p] !== undefined ? (typeof params[p] === 'string' && I.has(params[p]) ? I.t(params[p]) : params[p]) : m; });
     return s;
   };
