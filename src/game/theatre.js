@@ -497,7 +497,7 @@ BTS.Theatre = (function () {
     if (!S.carry || !S.carry.length) return;
     var hs = S.handShadow, cs = Math.cos(hs.rot), sn = Math.sin(hs.rot);
     S.carry.forEach(function (p) {
-      var c = p.carried, k = EASE.io(clamp((clock - c.t0) / 0.45, 0, 1));
+      var c = p.carried, k = EASE.io(clamp((clock - c.t0) / 0.35, 0, 1));
       var lx = c.slot * hs.s, ly = (-64 - c.lift) * hs.s;   // pinched between the fingers, poking out above them
       p.x = lerp(c.x0, hs.x + cs * lx - sn * ly, k); p.y = lerp(c.y0, hs.y + sn * lx + cs * ly, k);
       p.rot = c.r0 + (hs.rot - c.hr) * k + Math.sin(clock * 9 + p.id) * 0.06 * k;
