@@ -141,7 +141,7 @@ BTS.Portraits = (function () {
     a.cy = Math.cos(a.yaw); a.sy = Math.sin(a.yaw); a.cp = Math.cos(a.pitch); a.sp = Math.sin(a.pitch);
     a.layers = {}; a.defs = []; a.nid = 0;
     a.n = fc.n || 2.5;
-    a.skin = skinTones(hx(def.skin || [227, 180, 143]), pd);
+    a.skin = skinTones(hx(pd.skin || def.skin || [227, 180, 143]), pd);
     a.line = rgb(pd.line || mix(mul(a.skin.base, 0.22), [30, 14, 12], 0.7));
   }
   function skinTones(base, pd) {
@@ -238,8 +238,9 @@ BTS.Portraits = (function () {
   R.farBump = function (Y) {
     var c = this.fc, k = Math.min(1, this.yaw / 0.35), hol = (c.hollow || 0) + (this.pd.gaunt || 0) * 0.6;
     function g(m, w) { return Math.exp(-Math.pow((Y - m) / w, 2)); }
-    var fu = this.full || 0;
-    return k * (0.035 * g(c.browY + 0.02, 0.1) - 0.03 * g(c.browY - 0.3, 0.14) - 0.035 * g(0.0, 0.08) + (0.045 - fu * 0.02 + hol * 0.03) * g(c.cheekY, 0.13) - Math.max(0, hol - 0.2) * 0.08 * g(c.cheekY + 0.42, 0.16) + (fu * 0.02 + 0.012) * g(c.cheekY + 0.3, 0.22));
+    var fu = this.full || 0, t = clamp((Y - c.cheekY) / (c.chinB - c.cheekY), 0, 1), kid = /small|girl|boy/.test(this.pd.face) ? 1 : 0.7;
+    var round = (0.03 + fu * 0.01) * kid * Math.pow(Math.sin(Math.PI * Math.pow(t, 0.8)), 0.7) * (1 - Math.max(0, hol - 0.3)) + 0.02 * g(c.chinY, 0.1);
+    return k * round + k * (0.035 * g(c.browY + 0.02, 0.1) - 0.03 * g(c.browY - 0.3, 0.14) - 0.035 * g(0.0, 0.08) + (0.045 - fu * 0.02 + hol * 0.03) * g(c.cheekY, 0.13) - Math.max(0, hol - 0.2) * 0.08 * g(c.cheekY + 0.42, 0.16) + (fu * 0.02 + 0.012) * g(c.cheekY + 0.3, 0.22));
   };
   /* point on the head silhouette in direction ang (degrees, 0 = screen right, 90 = down) from the skull centre, pushed out by pad units */
   R.rim = function (ang, pad) {
@@ -322,7 +323,7 @@ BTS.Portraits = (function () {
     var term = [[-0.66, fc.crown + 0.1], [-0.7, -1.0], [-0.76, -0.55], [-0.8, -0.3], [-0.68, -0.08], [-0.7, 0.08], [-0.8, 0.24], [-0.72 + hol * 0.12 - a.full * 0.06, 0.44], [-0.7 + hol * 0.12 - a.full * 0.06, 0.64], [-0.74 + hol * 0.06 - a.full * 0.04, 0.84], [-0.76 - a.full * 0.04, jy], [-0.66, (jy + cy2) / 2], [-0.5, cy2 - 0.02], [-0.2, fc.chinB - 0.01]];
     term = term.map(function (q) { return [q[0] - a.full * 0.1 * Math.max(0, Math.min(1, (q[1] + 0.3) / 0.6)), q[1]]; });
     var tp = FL(term), far = tp.concat([[tp[tp.length - 1][0] - S * 0.2, tp[tp.length - 1][1] + S * 0.5], [tp[0][0] - S * 3, tp[tp.length - 1][1] + S], [tp[0][0] - S * 3, tp[0][1] - S * 2]]);
-    sh.push(a.el(smooth(far, true, 0.75), mix(shCol, sk.blush, 0.18), { op: 0.42 - a.full * 0.1, blur: 2 + a.full * 0.8 }));
+    sh.push(a.el(smooth(far, true, 0.75), mix(shCol, sk.blush, 0.18), { op: (0.42 - a.full * 0.1) * (a.pd.shadeK || 1), blur: 2 + a.full * 0.8 }));
     // darker core along the terminator under the cheekbone and the jaw
     var core = FL([[-0.9, 0.32], [-0.74, 0.46], [-0.68, 0.7], [-0.7, jy - 0.05], [-0.56, (jy + cy2) / 2], [-0.46, cy2], [-0.76, cy2], [-0.95, jy], [-0.98, 0.6]]);
     sh.push(a.el(smooth(core, true), dpCol, { op: (0.08 + Math.max(0, hol - 0.15) * 0.4) * (1 - a.full * 0.7), blur: 2.4 }));
@@ -391,10 +392,10 @@ BTS.Portraits = (function () {
   /* ---------------- neck ---------------- */
   function neck(a) {
     var fc = a.fc, S = a.S, sk = a.skin, nw = fc.neckW * (a.pd.neckK || 1) * 1.42 + a.full * 0.04, nwF = fc.neckW * (a.pd.neckK || 1) * (1.26 + a.full * 0.06);
-    var y0 = 0.5, yc = fc.chinB - 0.08, y1 = fc.chinB + 0.7;
+    var y0 = 0.5, yc = fc.chinB - 0.08, y1 = fc.chinB + 0.7 * (a.pd.neckLen || 1);
     var zc = -0.42;
     function cx(Y) { return a.P(0, Y, zc)[0]; }
-    var l0 = [cx(y0) - nwF * S * 0.92, a.P(0, y0 + 0.15, zc)[1]], l1 = [cx(y1) - nwF * S * 1.16, a.P(0, y1, zc)[1]];
+    var nk = a.pd.napeK || 1, l0 = [cx(y0) - nwF * S * 0.92 * nk, a.P(0, y0 + 0.15, zc)[1]], l1 = [cx(y1) - nwF * S * (1.16 - (1 - nk) * 0.6), a.P(0, y1, zc)[1]];
     var r0 = [cx(yc) + nwF * S * 0.98, a.P(0, yc, zc)[1]], r1 = [cx(y1) + nwF * S * 1.1, a.P(0, y1, zc)[1]];
     var lm = [lerp(l0[0], l1[0], 0.55) + S * 0.03, lerp(l0[1], l1[1], 0.55)], rm = [lerp(r0[0], r1[0], 0.5) - S * 0.02, lerp(r0[1], r1[1], 0.5)];
     var bot = [cx(y1 + 0.3), a.P(0, y1 + 0.3, zc)[1]];
@@ -533,7 +534,7 @@ BTS.Portraits = (function () {
           top += a.ink([base, [lerp(base[0], tip[0], 0.6), lerp(base[1], tip[1], 0.4)], tip], [1.1, 0.8, 0.1], { col: '#1c1212' });
         }
       }
-      top += a.ink(C1, [0.1, 0.9 + heavy * 0.4, 0.3], { op: 0.75 });
+      top += a.ink(C1, [0.1, (0.9 + heavy * 0.4) * (pd.creaseK || 1), 0.3], { op: Math.min(1, 0.75 * (pd.creaseK || 1)) });
       if (a.age > 0.5) top += a.ink(C1.map(function (p) { return [p[0], p[1] - S * 0.035]; }).slice(Math.floor(N * 0.4)), [0.1, 0.6, 0.1], { op: 0.35 + a.age * 0.2 });
       // lower lid line, softer
       top += a.ink(Lo, function (t) { return t < 0.1 ? 0.3 : t > 0.85 ? 1.1 : lerp(0.5, 1.1, t); }, { per: 2, op: 0.55 });
@@ -704,7 +705,8 @@ BTS.Portraits = (function () {
     s += '<ellipse cx="' + f(lh[0]) + '" cy="' + f(lh[1]) + '" rx="' + f(S * mw * 0.35) + '" ry="' + f(S * ll * 0.22) + '" fill="' + rgb(mix(lipL, [255, 240, 230], 0.45)) + '" opacity="0.65" filter="url(#' + a.blur(0.8) + ')"/>';
     // philtrum and the light ridge of the upper lip
     var ph = a.on(0.01, my - ul - 0.07, 0.06), ph2 = a.on(0.02, fc.noseY + 0.1, 0.04);
-    s += a.ink([ph2, ph], [0.6, 1.4, 0.8], { col: rgb(sk.shadow), op: 0.45 });
+    s += a.ink([ph2, ph], [0.6, 1.4 * (pd.philtrum || 1), 0.8], { col: rgb(sk.shadow), op: Math.min(0.9, 0.45 * (pd.philtrum || 1)) });
+    if (pd.philtrum > 1) [-1, 1].forEach(function (sd) { s += a.ink([a.on(sd * 0.05, fc.noseY + 0.12, 0.04), a.on(sd * 0.07, my - ul - 0.04, 0.06)], [0.2, 0.7, 0.3], { col: rgb(sk.shadow), op: 0.35 }); });
     s += a.el(smooth(UT.slice(2, N - 1), false), 'none', { stroke: sk.light, sw: 1.0, op: 0.5 });
     // mouth line
     var lineCol = rgb(mix(sk.deep, [40, 10, 14], 0.6));
