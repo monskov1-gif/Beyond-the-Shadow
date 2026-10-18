@@ -37,7 +37,7 @@ BTS.Journal = (function () {
       }
       U.button(s, foot, '?', function () {
         var h = J.hint(); J.hintIds = [h.a, h.b].filter(Boolean); J.lastResult = h.text; BTS.Audio.play('page');
-        if (J.hintIds.length && J.tab !== 'tasks' && J.tab !== 'sketch') { if (!linkSel) linkSel = []; }
+        if (J.hintIds.length) { if (!linkSel) linkSel = []; var hc = BTS.State.d.clues[J.hintIds[0]]; if (hc) J.tab = hc.cat === 'sketch' ? 'obs' : hc.cat; }
         s.refresh();
       }, { cls: 'hintbtn' });
       U.button(s, foot, t('ui.close'), function () { U.pop(); }, { sound: 'ui_back' });
@@ -46,8 +46,15 @@ BTS.Journal = (function () {
     function renderClues(s, body, cat) {
       var ids = BTS.State.cluesBy(cat);
       if (linkSel) {
+        // linking: stay on the current tab, list only entries that take part in some deduction
+        // (sketches that can be linked are listed with the observations); selected ones always stay visible
         el('div', 'linkhint', esc(t('jr.link_hint', { n: linkSel.length })), body);
-        ids = BTS.State.d.clueOrder.slice();
+        var L = linkable();
+        ids = BTS.State.d.clueOrder.filter(function (id) {
+          var c = BTS.State.d.clues[id].cat, inTab = c === cat || (cat === 'obs' && c === 'sketch');
+          return linkSel.indexOf(id) >= 0 || (inTab && L[id]);
+        });
+        if (!ids.length) { el('p', 'empty', esc(t('jr.link_none_here')), body); return; }
       }
       if (!ids.length) { el('p', 'empty', esc(t('jr.empty_' + cat)), body); return; }
       ids.slice().reverse().forEach(function (id) {
@@ -126,6 +133,12 @@ BTS.Journal = (function () {
     return !!d && haveOrDerivable(d.a) && haveOrDerivable(d.b) && (!d.cond || BTS.Cond.eval(d.cond));
   }
 
+  /* every entry that is an input of some deduction (directly or as evidence behind a hypothesis) */
+  function linkable() {
+    var out = {};
+    BTS.Data.deductions.forEach(function (d) { sources(d.a).concat(sources(d.b)).forEach(function (c) { out[c] = true; }); });
+    return out;
+  }
   J.tryLink = function (a, b) {
     var ds = BTS.Data.deductions, known = false, notyet = false;
     // exact pairs first, then pairs where either entry is part of the evidence behind the needed one

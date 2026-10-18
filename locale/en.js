@@ -34,7 +34,7 @@ BTS.Locale.en = {
     empty_obs: 'Nothing written down yet.', empty_fact: 'No confirmed facts yet.', empty_hyp: 'No hypotheses yet. Try linking two entries.', empty_sketch: 'No sketches yet. Press F to study the shadow of a person nearby.',
     link: 'Link two entries', cancel_link: 'Cancel linking', link_hint: 'Choose two entries you think belong together. Selected: {n} of 2.',
     link_fail: 'Đorđe stares at the two entries for a long time. No — together they don’t say anything yet. (Not sure what to link? Press “?”.)', link_known: 'Đorđe has already written this connection down.', link_notyet: 'Something is missing. One more confirmation is needed.',
-    current: 'Now', hint_try: 'Hint: link “{a}” and “{b}”. Tap both entries — they are highlighted.', hint_half: 'Hint: “{a}” connects to something you haven’t found yet. Follow your goal — the clue will turn up.', hint_none: 'Nothing to link right now. You need new clues. Goal: {obj}'
+    link_none_here: 'Nothing to link in this section — try the next one.', current: 'Now', hint_try: 'Hint: link “{a}” and “{b}”. Tap both entries — they are highlighted.', hint_half: 'Hint: “{a}” connects to something you haven’t found yet. Follow your goal — the clue will turn up.', hint_none: 'Nothing to link right now. You need new clues. Goal: {obj}'
   },
   map: { legend: '← → village / outskirts. The red dot is Đorđe; pins mark places the story has led you to.', unknown: 'This place is not on the map yet.', you: 'Đorđe', north: 'N ↑',
     p_djordje: 'Đorđe’s house', p_zajko: 'Zlatko and Jablan’s house', p_kafana: 'Dragan’s kafana', p_church: 'The church', p_gorazd: 'Gorazd’s house', p_guest: 'Stana’s guesthouse', p_tihomir: 'Tihomir’s house', p_jaglika: 'Jaglika’s hut' },

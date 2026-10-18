@@ -859,6 +859,7 @@ BTS.Portraits = (function () {
     var base = resolve(id);
     var def = BTS.Data.characters[base];
     if (!def || !def.portrait) return null;
+    if (def.portrait.image) return def.portrait.image;   // hand-supplied portrait (client reference), same for every expression
     expr = EXPR.indexOf(expr) >= 0 ? expr : 'neutral';
     var k = base + ':' + expr;
     if (cache[k]) return cache[k];
