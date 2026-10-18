@@ -604,7 +604,7 @@ BTS.Theatre = (function () {
   function resize() {
     if (!cv) return;
     W = Math.max(1, window.innerWidth); H = Math.max(1, window.innerHeight);
-    DPR = Math.min(window.devicePixelRatio || 1, 2);
+    DPR = BTS.Device.dpr(2);
     var px = W * H * DPR * DPR; if (px > 2.6e6) DPR = Math.sqrt(2.6e6 / (W * H));
     cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
     cv.style.width = W + 'px'; cv.style.height = H + 'px';

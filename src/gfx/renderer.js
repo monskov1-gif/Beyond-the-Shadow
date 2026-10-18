@@ -12,7 +12,7 @@ BTS.Renderer = (function () {
   var FX_STRIDE = 13;
   R.internal = [640, 360]; R.scale = 2; R.viewport = [0, 0, 1280, 720];
   R.stats = { draws: 0, tris: 0, sprites: 0, fx: 0 };
-  R.shadowSize = 2048;
+  R.shadowSize = BTS.Device && BTS.Device.safe ? 1024 : 2048;
 
   R.init = function (canvas) {
     R.canvas = canvas;
@@ -43,7 +43,7 @@ BTS.Renderer = (function () {
 
   R.resize = function () {
     var c = R.canvas;
-    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    var dpr = BTS.Device.dpr(2);
     var cw = Math.max(320, Math.floor(c.clientWidth * dpr)), ch = Math.max(200, Math.floor(c.clientHeight * dpr));
     if (c.width !== cw || c.height !== ch) { c.width = cw; c.height = ch; }
     var targetH = (BTS.Config.get('pixelScale') || 360) * (R.zoom || 1);

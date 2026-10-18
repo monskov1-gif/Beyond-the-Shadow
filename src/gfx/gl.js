@@ -5,9 +5,12 @@ BTS.GL = (function () {
   var GLX = {};
 
   GLX.init = function (canvas) {
-    gl = canvas.getContext('webgl2', { antialias: false, alpha: false, depth: true, premultipliedAlpha: false, preserveDrawingBuffer: true, powerPreference: 'high-performance' });
+    var safe = BTS.Device && BTS.Device.safe;
+    gl = canvas.getContext('webgl2', { antialias: false, alpha: false, depth: true, premultipliedAlpha: false, preserveDrawingBuffer: !safe, powerPreference: safe ? 'default' : 'high-performance' });
     if (!gl) throw new Error('webgl2_unsupported');
     GLX.gl = gl;
+    // a lost context (GPU reset / memory pressure) cannot be recovered in place: say so instead of a frozen screen
+    canvas.addEventListener('webglcontextlost', function (e) { e.preventDefault(); BTS.Log.error('webgl context lost'); BTS.Device.fail(); BTS.App.fatal('webgl_lost'); });
     GLX.floatTargets = !!gl.getExtension('EXT_color_buffer_float');
     gl.getExtension('OES_texture_float_linear');
     BTS.Log.info('WebGL2 ready; float targets:', GLX.floatTargets, gl.getParameter(gl.RENDERER));

@@ -90,6 +90,28 @@ BTS.Config = (function () {
   };
 })();
 
+/* ---------- device profile ----------
+   iPhone Safari kills a tab that uses too much memory and silently reloads it, so phones get a lighter
+   renderer (no DPR upscaling, smaller shadow map). A boot counter catches the crash itself: it is set on load and
+   cleared after the game has run for a while (or the page is left normally), so a launch that died before that
+   comes back in safe mode, and a second one also drops the effects to low. */
+BTS.Device = (function () {
+  var ua = navigator.userAgent || '';
+  var D = { phoneIOS: /iPhone|iPod/.test(ua) };
+  var KEY = 'bts.boot', prev = 0;
+  try { prev = +localStorage.getItem(KEY) || 0; localStorage.setItem(KEY, String(prev + 1)); } catch (e) { }
+  D.crashes = prev;
+  D.safe = D.phoneIOS || prev >= 1;
+  D.ok = function () { if (D.failed) return; try { localStorage.setItem(KEY, '0'); } catch (e) { } };
+  D.fail = function () { D.failed = true; try { localStorage.setItem(KEY, String(Math.max(2, prev + 1))); } catch (e) { } };   // next launch: safe + low effects
+  setTimeout(D.ok, 25000);
+  window.addEventListener('pagehide', D.ok);
+  document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'hidden') D.ok(); });
+  if (prev >= 2 && BTS.Config.get('effects') > 0) BTS.Config.set('effects', 0);
+  D.dpr = function (cap) { return Math.min(window.devicePixelRatio || 1, D.safe ? 1 : cap); };
+  return D;
+})();
+
 /* ---------- math ---------- */
 BTS.M = (function () {
   var M = {};

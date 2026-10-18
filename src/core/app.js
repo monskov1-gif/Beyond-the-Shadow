@@ -14,6 +14,8 @@ BTS.App = (function () {
     var head = ru ? 'Произошла ошибка' : 'An error occurred';
     var hint = msg === 'webgl2_unsupported'
       ? (ru ? 'Ваш браузер не поддерживает WebGL2. Попробуйте свежий Chrome, Firefox или Edge.' : 'Your browser does not support WebGL2. Please try a recent Chrome, Firefox or Edge.')
+      : msg === 'webgl_lost'
+      ? (ru ? 'Графика устройства перезапустилась (не хватило памяти). Перезагрузите страницу — игра включит облегчённый режим. Прогресс сохранён в последней точке сохранения.' : 'The device graphics were reset (out of memory). Reload the page and the game will switch to a lighter mode. Progress is kept at the last save point.')
       : (ru ? 'Прогресс сохранён в последней точке сохранения. Перезагрузите страницу.' : 'Progress is kept at the last save point. Please reload the page.');
     el.innerHTML = '<h2>' + head + '</h2><p>' + hint + '</p><pre></pre><button onclick="location.reload()">' + (ru ? 'Перезагрузить' : 'Reload') + '</button>';
     el.querySelector('pre').textContent = msg;

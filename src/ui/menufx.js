@@ -90,7 +90,7 @@ BTS.MenuFX = (function () {
 
   function resize(st) {
     var w = st.cv.clientWidth || window.innerWidth, h = st.cv.clientHeight || window.innerHeight;
-    var dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+    var dpr = BTS.Device.dpr(1.5);
     if (w === st.w && h === st.h && dpr === st.dpr) return;
     st.w = w; st.h = h; st.dpr = dpr;
     st.cv.width = Math.round(w * dpr); st.cv.height = Math.round(h * dpr);

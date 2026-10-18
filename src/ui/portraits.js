@@ -843,6 +843,7 @@ BTS.Portraits = (function () {
         var cv = document.createElement('canvas'); cv.width = cv.height = RES;
         var g = cv.getContext('2d'); g.drawImage(img, 0, 0, RES, RES);
         cache[k] = cv.toDataURL('image/png');
+        cv.width = cv.height = 0;   // free the backing store now (iOS counts live canvas memory)
       } catch (e) { cache[k] = svgs[k]; }
       busy[k] = 0;
     };
