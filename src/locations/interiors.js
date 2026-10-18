@@ -74,12 +74,12 @@
     this.L.box(x - w / 2, z - d / 2, x + w / 2, z + d / 2, 'table');
     return h;
   };
-  Kit.prototype.chair = function (x, z, back) {
+  Kit.prototype.chair = function (x, z, back, noCollide) {
     var mb = this.mb;
     mb.box(x, 0.42, z, 0.45, 0.06, 0.45, { all: 'wood_light' }, { mat: MAT.WOOD });
     [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(function (s) { mb.post(x + s[0] * 0.18, 0, z + s[1] * 0.18, 0.42, 0.06, 'wood_dark', { mat: MAT.WOOD }); });
     if (back !== false) mb.box(x, 0.48, z - 0.2, 0.45, 0.55, 0.05, { all: 'wood_dark' }, { mat: MAT.WOOD });
-    this.L.circle(x, z, 0.25, 'chair');
+    if (!noCollide) this.L.circle(x, z, 0.25, 'chair');
   };
   Kit.prototype.bed = function (x, z, w, d, blanket) {
     var mb = this.mb;
@@ -215,7 +215,7 @@
       K.prop('basket', 1.2, 3.2, { collide: 0.25 });
 
       /* --- family room --- */
-      K.table(5.6, 4.3, 2.0, 1.1, { cloth: 'cloth_white' }); K.chair(4.8, 3.4); K.chair(6.4, 3.4); K.chair(5.6, 5.3, false);
+      K.table(5.6, 4.3, 2.0, 1.1, { cloth: 'cloth_white' }); K.chair(4.8, 3.3); K.chair(6.4, 3.25, true, true); K.chair(5.6, 5.3, false);   // grandmother's chair: no collider, she sits on it
       K.prop('jug', 4.9, 4.1, { y: 0.8 });
       K.rug(7.0, 6.5, 4.2, 2);
       K.decal(8.2, 1.7, 0, 0.6, 0.72, 'icon_corner', MAT.DEFAULT); K.candle(8.2, 1.3, 0.25, { radius: 2.8, intensity: 0.5 });
@@ -242,7 +242,7 @@
       L.spot('kitchen', 2.6, 4.9, 'left'); L.spot('hall', -2.1, 5.0, 'up'); L.spot('pantry', -2.4, 6.9, 'down'); L.spot('parents_room', -7.0, 6.6, 'up');
       L.spot('oven', 2.4, 6.9, 'left');
       L.spot('door_in', 3.5, 7.6, 'up'); L.spot('chest', 8.7, 6.7, 'down'); L.spot('stove', 1.6, 2.4, 'up'); L.spot('default', 5, 7, 'up');
-      L.spot('baka_chair', 6.4, 3.8, 'down'); L.spot('lisa_table', 6.4, 5.4, 'left');
+      L.spot('baka_chair', 6.4, 3.25, 'down'); L.spot('lisa_table', 6.4, 5.4, 'left');
     },
     exits: [{ id: 'out', at: [3.5, 8.6], to: 'village', spawn: 'djordje_door', label: 'loc.village', verb: 'verb.go' }],
     examine: [
@@ -320,8 +320,10 @@
 
   /* ============ Stana's guesthouse: two storeys ============
      ground floor (y 0): kitchen | dining room | reception (front door) | stair hall
-     upper floor (y 3, laid out to the east of the stair, reached by a walkable flight): landing | Jessica's room | Lisa's room.
-     Jessica's room keeps its old x/z, so the story's desk interactables still sit on her desk (now upstairs). */
+     upper floor (y 3, laid out to the east of the stair, reached by a walkable flight): the landing opens onto a hall
+     (x 9.8-11.8) that turns into a corridor along the front (z 6.9-9). Jessica's room (x 11.8-18) has its own door
+     off the hall; Lisa's room (x 18-25.6) has its own door at the corridor's end. The rooms no longer connect.
+     The story's desk interactables follow the 'jess_desk' spot (BTS.SpotAt), so they stay on her desk. */
   var GH_UP = 3.0;
   interior('guesthouse', {
     nameKey: 'loc.guesthouse', bounds: [-11, -1, 27, 10], camBounds: [-7, 2, 23, 7], mapParent: 'village', mapPos: [64, 37],
@@ -377,18 +379,22 @@
       U.floor(ux0, 0, ux1, 9, 'floor_wood');
       U.shell(ux0, 0, ux1, 9, 'wall_int_white', { noWest: true });
       L.pad(ux0, 0, ux1, 9, GH_UP);
-      U.partition(ux0, 0, 9, 1.0, 3.2, 'wall_int_white');
-      U.partition(18, 0, 9, 5.0, 7.0, 'wall_int_white');
+      U.partition(ux0, 0, 9, 0, 3.6, 'wall_int_white');               // landing -> hall: open; low rail along the stairwell
+      var jx = 11.8, jz = 6.9;                                           // Jessica's room: x jx..18, z 0..jz
+      U.partition(jx, 0, jz, 3.4, 5.2, 'wall_int_white');               // hall | Jessica's room, her door at z 3.4-5.2
+      U.mb.box((jx + 18) / 2, 0, jz, 18 - jx, 1.0, 0.22, { all: 'wall_int_white', top: 'wood_dark' }, { mat: MAT.PLASTER, ao: 0.6 });   // low (cut-away) wall to the corridor
+      L.box(jx, jz - 0.12, 18, jz + 0.12, 'wall');
+      U.partition(18, 0, 9, 7.1, 8.9, 'wall_int_white');                // Lisa's room: her door at the corridor's end
+      U.cupboard(10.8, 0.45, 1.2); U.rug(10.8, 6.0, 1.4, 3.6, 'rug_kilim'); U.lamp(10.8, 5.6, 4.5); U.lamp(15.0, 8.0, 4);
       // Jessica's room
-      U.bed(16.6, 2.2, 1.4, 2.8, 'cloth_white');
-      U.table(11.6, 1.0, 2.4, 0.9); U.chair(11.6, 2.0, false);
-      U.prop('papers', 11.2, 1.0, { y: 0.8 }); U.prop('photo_frame', 12.4, 1.0, { y: 0.8 });
-      U.prop('suitcase', 14.6, 6.8, { collide: 0.4 }); U.prop('easel', 11.2, 7.0, { collide: 0.3 });
-      U.window(14.0, 0, { side: 'back', y: 1.3 });
-      U.decal(10.6, 1.7, 0, 0.8, 0.65, 'pinned_notes');
-      U.rug(13.6, 5.4, 2, 2, 'rug_plain');
-      U.candle(12.6, 0.8, 1.1, { radius: 3.5, intensity: 0.8 });
-      U.cupboard(17.2, 7.9, 1.2);
+      U.bed(16.8, 2.2, 1.4, 2.8, 'cloth_white');
+      U.table(13.6, 1.0, 2.4, 0.9); U.chair(13.6, 2.0, false);
+      U.prop('papers', 13.2, 1.0, { y: 0.8 }); U.prop('photo_frame', 14.4, 1.0, { y: 0.8 });
+      U.prop('suitcase', 16.9, 5.8, { collide: 0.4 }); U.prop('easel', 12.5, 6.1, { collide: 0.3 });
+      U.window(15.6, 0, { side: 'back', y: 1.3 });
+      U.decal(12.3, 1.7, 0, 0.8, 0.65, 'pinned_notes');
+      U.rug(14.6, 4.6, 2, 2, 'rug_plain');
+      U.candle(14.6, 0.8, 1.1, { radius: 3.5, intensity: 0.8 });
       // Lisa's room
       U.bed(24.3, 2.2, 1.4, 2.8, 'blanket');
       var lt = U.table(20.2, 1.0, 2.0, 0.9); U.chair(20.2, 2.0, false);
@@ -397,12 +403,13 @@
       U.window(22.4, 0, { side: 'back', y: 1.3 });
       U.decal(18.9, 1.55, 0, 0.9, 0.7, 'pinned_notes');
       U.rug(21.4, 5.2, 2.4, 2, 'rug_kilim');
-      U.lamp(21.4, 4.4, 5.5); U.lamp(13.6, 4.4, 5.5);
+      U.lamp(21.4, 4.4, 5.5); U.lamp(14.6, 4.0, 5.0);
       U.done();
       K.door(3, 9);
       L.spot('door_in', 3, 7.6, 'up'); L.spot('counter', 5.6, 3.6, 'up'); L.spot('stana_spot', 5.6, 1.4, 'down'); L.spot('default', 4, 7, 'up');
       L.spot('guest_kitchen', -7.4, 5.8, 'up'); L.spot('dining', -2.5, 4.6, 'up'); L.spot('stairs', 8.7, 8.2, 'up'); L.spot('upstairs', 8.7, 2.0, 'right');
-      L.spot('jess_desk', 11.6, 2.2, 'up'); L.spot('jess_bed', 15.2, 3.0, 'right'); L.spot('jess_room', 13.2, 6.0, 'up');
+      L.spot('jess_desk', 13.6, 2.2, 'up'); L.spot('jess_bed', 15.4, 3.0, 'right'); L.spot('jess_room', 14.4, 5.4, 'up');
+      L.spot('upper_hall', 10.8, 4.4, 'right'); L.spot('upper_corridor', 15.0, 8.0, 'right');
       L.spot('lisa_room', 21.4, 6.3, 'up'); L.spot('lisa_bed', 22.9, 3.0, 'right'); L.spot('lisa_desk', 20.2, 2.5, 'up');
     },
     exits: [{ id: 'out', at: [3, 8.6], to: 'village', spawn: 'guest_door', label: 'loc.village', verb: 'verb.go' }],

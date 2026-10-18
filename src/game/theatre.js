@@ -440,6 +440,13 @@ BTS.Theatre = (function () {
      table top y=300, floor y=540. Grandmother sits to the right (x≈760), Đorđe on the floor left (x≈-720). */
   var CLOTH = { x0: -452, x1: 452, y0: -308, y1: 226 };
   var FEET = 166;
+  /* the lowest point of the cut ground strip (placed at FEET + 2) under a footprint, plus a little sink,
+     so scenery stands in the grass instead of floating over the hollows */
+  function groundAt(x0, x1) {
+    var m = -1e9;
+    for (var x = x0; x <= x1; x += 4) m = Math.max(m, FEET + 2 + Math.sin(x * 0.011) * 6 + Math.sin(x * 0.037) * 2.5);
+    return m + 2;
+  }
   var S = null, clock = 0, timers = [], tweens = [];
   function newScene() {
     return {
@@ -475,7 +482,31 @@ BTS.Theatre = (function () {
 
   /* ---------------- puppet life: gait, jerky hand-held steps, pose history ---------------- */
   function add(p, o) { if (o) Object.assign(p, o); S.puppets.push(p); p.disp = pose(p); return p; }
-  function remove(p) { if (!p) return; var i = S.puppets.indexOf(p); if (i >= 0) S.puppets.splice(i, 1); stopTweens(p); stopTweens(p.ang); stopTweens(p.sh); }
+  function remove(p) { if (!p) return; if (S.grab && !p.carried && S.puppets.indexOf(p) >= 0) { carry(p); return; } drop(p); }
+  /* during a hand sweep the removed figures are caught by the hand and carried off with it */
+  function carry(p) {
+    stopTweens(p); stopTweens(p.ang); stopTweens(p.sh);
+    S.carry = S.carry || [];
+    var n = S.carry.length, hs = S.handShadow;
+    p.carried = { t0: clock, x0: p.x, y0: p.y, r0: p.rot, slot: ((n % 5) - 2) * 15 + (n > 4 ? 7 : 0), lift: Math.floor(n / 5) * 22, M0: p.sh.frozenM, hr: hs.rot };
+    p.held = false; p.rods = []; p.gait = null; p.pinnedStill = false; p.follow = false;
+    S.carry.push(p);
+    play('paper', { vol: 0.35 });
+  }
+  function carryStep() {
+    if (!S.carry || !S.carry.length) return;
+    var hs = S.handShadow, cs = Math.cos(hs.rot), sn = Math.sin(hs.rot);
+    S.carry.forEach(function (p) {
+      var c = p.carried, k = EASE.io(clamp((clock - c.t0) / 0.45, 0, 1));
+      var lx = c.slot * hs.s, ly = (-64 - c.lift) * hs.s;   // pinched between the fingers, poking out above them
+      p.x = lerp(c.x0, hs.x + cs * lx - sn * ly, k); p.y = lerp(c.y0, hs.y + sn * lx + cs * ly, k);
+      p.rot = c.r0 + (hs.rot - c.hr) * k + Math.sin(clock * 9 + p.id) * 0.06 * k;
+      p.tq = 0;   // no jerky rod steps: it moves with the hand
+      if (c.M0) p.sh.frozenM = new DOMMatrix().translateSelf(p.x - c.x0, p.y - c.y0).multiply(c.M0);
+    });
+  }
+  function dropCarried() { (S.carry || []).forEach(function (p) { p.carried = null; drop(p); }); S.carry = []; }
+  function drop(p) { var i = S.puppets.indexOf(p); if (i >= 0) S.puppets.splice(i, 1); stopTweens(p); stopTweens(p.ang); stopTweens(p.sh); }
   function byKind(k) { return S.puppets.filter(function (p) { return p.kind === k; }); }
   var clickBudget = 0;
   function livePuppet(p, dt) {
@@ -638,27 +669,67 @@ BTS.Theatre = (function () {
     grainTex = makeCanvas(256, 256); var gq = grainTex.getContext('2d'), im = gq.createImageData(256, 256);
     for (i = 0; i < 256 * 256; i++) { var v = R() * 255; im.data[i * 4] = v; im.data[i * 4 + 1] = v; im.data[i * 4 + 2] = v; im.data[i * 4 + 3] = 255; }
     gq.putImageData(im, 0, 0);
-    // the people in the room: grandmother on her low stool (facing the sheet), Đorđe on the floor
+    // a tapered limb: a capsule from (x1,y1) radius r1 to (x2,y2) radius r2
+    function limb(x1, y1, r1, x2, y2, r2) {
+      var a = Math.atan2(y2 - y1, x2 - x1), out = [], i, b;
+      for (i = 0; i <= 4; i++) { b = a - Math.PI / 2 + i / 4 * Math.PI; out.push([x2 + Math.cos(b) * r2, y2 + Math.sin(b) * r2]); }
+      for (i = 0; i <= 4; i++) { b = a + Math.PI / 2 + i / 4 * Math.PI; out.push([x1 + Math.cos(b) * r1, y1 + Math.sin(b) * r1]); }
+      return out;
+    }
+    // the people in the room: grandmother on her low stool (facing the sheet, to the left), Đorđe on the floor hugging his knees
     people = {
       gma: shape([
-        [[-140, -162], [-150, -120], [-145, -60], [-156, -8, 1], [-92, -5, 1], [-62, -8, 1], [-70, -60], [-62, -104], [20, -110], [72, -118, 1], [88, -170], [84, -230], [72, -300], [44, -366], [12, -404], [-22, -424], [-62, -410], [-78, -372], [-72, -322], [-58, -272], [-64, -214], [-104, -184]],
-        ell(-62, -462, 40, 46, 16),
-        [[-30, -514], [10, -492], [32, -452], [44, -392, 1], [14, -412], [-14, -430], [-60, -420], [-98, -440], [-104, -488], [-74, -516]],
-        [[-98, -462], [-114, -442, 1], [-97, -432]],
-        [[40, -372], [72, -330], [82, -270, 1], [58, -300]],
-        [[-182, -2, 1], [-160, -12], [-130, -10], [-120, 0, 1]],
-        rect(-44, -126, 74, -110), rect(-36, -110, -24, 0), rect(54, -110, 66, 0)
-      ], 1.5),
-      gmaArm: shape([[[10, -10], [-22, 14], [-120, 92], [-236, 132], [-266, 142], [-276, 158], [-248, 160], [-128, 122], [-26, 52], [24, 26]], ell(-262, 150, 22, 14, 12)], 1.2),
-      dj: shape([
-        [[-80, 0, 1], [-95, -50], [-90, -120], [-76, -178], [-56, -214], [-26, -232], [6, -226], [26, -206], [62, -196], [110, -190], [134, -172], [140, -142], [132, -92], [138, -32], [168, -8, 1], [164, 2, 1], [40, 2, 1]]
-      ], 1.5),
-      djHead: shape([
-        ell(0, -46, 42, 45, 16),
-        [[-44, -50], [-50, -78], [-32, -100, 1], [-16, -92], [-6, -106, 1], [10, -94], [28, -104, 1], [36, -86], [50, -70], [42, -58]],
-        [[38, -50], [55, -34, 1], [38, -27]]
+        // the low three-legged stool
+        [[-14, -130, 1], [104, -130, 1], [106, -116, 1], [-16, -116, 1]],
+        [[-2, -118, 1], [12, -118, 1], [2, 0, 1], [-12, 0, 1]], [[78, -118, 1], [92, -118, 1], [104, 0, 1], [90, 0, 1]], rect(0, -52, 96, -44),
+        // hips on the seat, lap and thighs running forward to the knee, the long skirt falling to mid-shin
+        [[96, -124, 1], [104, -170], [70, -206], [-40, -212], [-128, -210], [-162, -196], [-168, -150], [-172, -66, 1], [-100, -60, 1], [-92, -112], [-40, -124], [-10, -122, 1]],
+        // thick stockings, ankles and flat shoes pointing to the sheet
+        [[-158, -70, 1], [-112, -70, 1], [-110, -34], [-106, -18, 1], [-140, -16, 1], [-154, -36]],
+        [[-100, -26, 1], [-96, 0, 1], [-188, 0, 1], [-192, -8], [-178, -22], [-146, -28, 1]],
+        // the stooped back (an old hump), the chest and the belly under a cardigan
+        [[90, -150, 1], [102, -250], [92, -340], [62, -398], [16, -420], [-24, -398], [-42, -340], [-56, -262], [-44, -196, 1]],
+        // the far arm lying on her lap, the hand over the knee
+        limb(-10, -330, 18, -76, -246, 14), limb(-76, -246, 14, -142, -214, 10),
+        [[-134, -222, 1], [-156, -226], [-172, -208], [-174, -184, 1], [-165, -184, 1], [-162, -200], [-146, -204, 1]],
+        // neck pushed forward
+        limb(4, -404, 18, -34, -444, 16),
+        // the head and the face in profile: brow, a long nose, sunken mouth, small chin
+        ell(-56, -474, 40, 48, 16),
+        [[-60, -520], [-98, -512], [-108, -490, 1], [-112, -478], [-124, -462, 1], [-110, -455, 1], [-110, -446], [-103, -439, 1], [-108, -428], [-98, -416], [-62, -418]],
+        // the headscarf: tight over the brow, round over the bun, tied under the chin, a point over the shoulders
+        [[-114, -496, 1], [-102, -530], [-64, -548], [-18, -540], [6, -506], [14, -462], [24, -420], [62, -378, 1], [14, -394], [-30, -410], [-70, -412, 1], [-64, -440], [-80, -476], [-96, -488, 1]],
+        ell(-84, -414, 12, 9, 10), [[-92, -412, 1], [-106, -392, 1], [-90, -396, 1]], [[-82, -410, 1], [-86, -390, 1], [-72, -396, 1]]
       ], 1.2),
-      djArm: shape([[[-16, -8], [16, -10], [70, 16], [130, 24], [152, 36], [150, 52], [120, 50], [60, 40], [-12, 18]]], 1.2)
+      // her reaching arm (pivot at the shoulder): sleeve, elbow, thin forearm, a bony hand reaching for the rods
+      gmaArm: shape([
+        ell(0, 6, 28, 30, 12),
+        limb(0, 6, 26, -112, 100, 19), limb(-112, 100, 19, -222, 142, 12),
+        [[-214, 130, 1], [-236, 128], [-252, 132, 1], [-276, 130], [-290, 136, 1], [-280, 141, 1], [-258, 142, 1], [-284, 148], [-292, 156, 1], [-280, 158, 1], [-256, 152, 1], [-276, 162], [-282, 168, 1], [-270, 168, 1], [-246, 158], [-226, 160], [-212, 154, 1]],
+        [[-232, 132, 1], [-246, 116], [-258, 112, 1], [-258, 120], [-244, 136, 1]]
+      ], 1),
+      // Đorđe (faces right): sitting on the floor, knees drawn up, back rounded over them
+      dj: shape([
+        // seat and the rounded back up to the nape
+        [[-70, 0, 1], [-90, -40], [-88, -110], [-74, -166], [-50, -204], [-26, -222, 1], [0, -214, 1], [12, -170], [-10, -60], [10, 0, 1]],
+        // thigh up to the knee, shin down to the ankle, the foot flat on the floor
+        limb(-40, -28, 30, 66, -142, 24), limb(66, -142, 24, 96, -24, 16),
+        [[80, -30, 1], [112, -32], [132, -14], [146, -2, 1], [148, 2, 1], [78, 2, 1]],
+        // the neck under the head
+        limb(-26, -206, 14, -12, -236, 13)
+      ], 1.2),
+      // his head (pivot at the nape): round skull, small nose, chin, ear, shaggy uncut hair
+      djHead: shape([
+        ell(2, -46, 38, 42, 16),
+        [[24, -78], [40, -60], [44, -48, 1], [52, -38, 1], [44, -32, 1], [42, -22], [36, -14, 1], [20, -6], [6, -10]],
+        [[-38, -34, 1], [-44, -52], [-62, -62, 1], [-48, -72], [-62, -92, 1], [-42, -94], [-46, -116, 1], [-26, -106], [-16, -126, 1], [-2, -108], [16, -124, 1], [22, -106], [42, -110, 1], [40, -94], [58, -86, 1], [46, -78], [54, -62, 1], [40, -68], [36, -54, 1], [28, -66], [10, -72], [-18, -62], [-30, -40], [-32, -12, 1], [-40, -22, 1], [-52, -14, 1], [-46, -30]]
+      ], 1.1),
+      // both arms wrapped round his shins (pivot at the shoulder), the hands clasped in front of them
+      djArm: shape([
+        ell(4, 14, 15, 15, 10),
+        limb(4, 14, 15, 44, 74, 13), limb(44, 74, 13, 120, 82, 10),
+        [[112, 70, 1], [134, 68], [142, 82], [134, 96], [112, 94, 1]]
+      ], 1.1)
     };
   }
 
@@ -930,7 +1001,7 @@ BTS.Theatre = (function () {
     if (S.gma.show !== false) {
       gg.save(); gg.translate(800, 540);
       rimFill(gg, people.gma, 6, -2, rim);
-      gg.save(); gg.translate(-20, -400); gg.rotate(S.gma.arm);
+      gg.save(); gg.translate(20, -392); gg.rotate(S.gma.arm);
       rimFill(gg, people.gmaArm, 6, -2, rim); gg.restore();
       gg.restore();
     }
@@ -1291,6 +1362,7 @@ BTS.Theatre = (function () {
     tick(dt); clickBudget -= dt;
     keyLamp(dt);
     for (var i = 0; i < S.hooks.length; i++) S.hooks[i](dt);
+    carryStep();
     S.puppets.forEach(function (p) { livePuppet(p, dt); });
     S.djHist.push({ t: clock, headFlip: S.dj.headFlip, head: S.dj.head, arm: S.dj.arm });
     while (S.djHist.length > 2 && S.djHist[0].t < clock - 2) S.djHist.shift();
@@ -1321,7 +1393,7 @@ BTS.Theatre = (function () {
     p.alpha = 0; var y = p.y; p.y = y - 26; add(p);
     return wait(delay || 0).then(function () { p.alpha = 1; play('paper', { vol: 0.35 }); return tw(p, { y: y }, 0.32, 'back'); }).then(function () { sfxClick(0.3); });
   }
-  function take(p) { if (!p) return Promise.resolve(); play('paper', { vol: 0.3 }); return tw(p, { y: p.y - 30, alpha: 0 }, 0.3, 'in').then(function () { remove(p); }); }
+  function take(p) { if (!p) return Promise.resolve(); if (S.grab) { remove(p); return Promise.resolve(); } play('paper', { vol: 0.3 }); return tw(p, { y: p.y - 30, alpha: 0 }, 0.3, 'in').then(function () { remove(p); }); }
   function walk(p, x, speed, ease) {
     if (Math.abs(x - p.x) > 1) p.flip = x > p.x ? 1 : -1;
     return tw(p, { x: x }, Math.abs(x - p.x) / (speed || 40), ease || 'lin');
@@ -1333,8 +1405,11 @@ BTS.Theatre = (function () {
     hs.on = true; hs.x = 620 * dir; hs.y = 120; hs.rot = -0.35 * dir; hs.s = 2.1; hs.alpha = 0.95;
     play('cloth', { vol: 0.8 }); setTimeout(function () { play('paper', { vol: 0.5 }); }, 300);
     tw(hs, { y: -40 }, dur * 0.5, 'out').then(function () { return tw(hs, { y: 140 }, dur * 0.5, 'in'); });
-    tw(hs, { x: -620 * dir, rot: 0.2 * dir }, dur, 'io').then(function () { hs.on = false; });
-    return wait(dur * 0.45).then(function () { if (swap) swap(); return wait(dur * 0.55); });
+    tw(hs, { x: -780 * dir, rot: 0.2 * dir }, dur, 'io').then(function () { hs.on = false; dropCarried(); });
+    return wait(dur * 0.45).then(function () {
+      if (swap) { S.grab = true; try { swap(); } finally { S.grab = false; } }
+      return wait(dur * 0.55);
+    });
   }
   function glint(x, y) { S.glints = S.glints || []; S.glints.push({ x: x, y: y, t0: clock }); sfxGlint(); }
   function needleTip(p, part) { var M = partMatrix(p, p.disp, part || 'needle'); return pt(M, 0, 9); }
@@ -1613,8 +1688,9 @@ BTS.Theatre = (function () {
     var gr = make.ground({ x: 0, y: FEET + 2, z: -6 }); gr.pinnedStill = true;
     handSweep(-1, null, 1.9);
     await place(gr, 0.3);
-    var scenery = [make.moon({ x: -330, y: -185, z: -5 }), make.church({ x: -40, y: FEET - 4, s: 0.72, z: -4 }), make.houseA({ x: -255, y: FEET, z: -3 }),
-      make.well({ x: 30, y: FEET, z: -3 }), make.houseB({ x: 200, y: FEET, z: -3 }), make.fence({ x: -168, y: FEET, z: -2 }), make.rooster({ x: -128, y: FEET - 39, z: -1 })];
+    var fenceY = groundAt(-170, -46);   // everything stands on the wavy ground line, not on a flat FEET
+    var scenery = [make.moon({ x: -330, y: -185, z: -5 }), make.church({ x: -40, y: groundAt(-60, -20), s: 0.72, z: -4 }), make.houseA({ x: -255, y: groundAt(-335, -175), z: -3 }),
+      make.well({ x: 30, y: groundAt(0, 60), z: -3 }), make.houseB({ x: 200, y: groundAt(140, 260), z: -3 }), make.fence({ x: -168, y: fenceY, z: -2 }), make.rooster({ x: -128, y: fenceY - 39, z: -1 })];
     scenery.forEach(function (p) { p.pinnedStill = true; });
     A_.scenery = scenery;
     for (var i = 0; i < scenery.length; i++) await place(scenery[i], 0.18);

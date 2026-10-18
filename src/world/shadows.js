@@ -82,10 +82,27 @@ BTS.Shadows = (function () {
     return { level: l, len: 1.15 + l * 0.2, width: 1 + l * 0.06, beast: BTS.M.clamp((l - 3.5) / 4, 0, 1), lag: Math.min(0.35, l * 0.04), alpha: 1 + Math.min(0.5, l * 0.07) };
   };
 
+  /* a ground silhouette from the feet (b) to the tip (b + d*len), subdivided along its length so every vertex
+     sits on the terrain (slopes, the church rise, pads/plinths) instead of a flat quad sinking under it.
+     v runs from vFeet (feet) to vTip (tip); the sprite's u spans the width (p = half-width vector). */
+  var GROUND_SEGS = 8, GROUND_OFF = 0.04;
+  function groundStrip(R, bx, bz, ux, uz, len, px, pz, reg, col, vFeet, vTip, heightAt) {
+    var q = 0.9999, n = len > 0.6 ? GROUND_SEGS : 2;
+    var prev = null;
+    for (var i = 0; i <= n; i++) {
+      var f = i / n, cx = bx + ux * len * f, cz = bz + uz * len * f, v = vFeet + (vTip - vFeet) * f;
+      var lx = cx - px, lz = cz - pz, rx = cx + px, rz = cz + pz;
+      var cy = heightAt(cx, cz);
+      var row = [[lx, Math.max(heightAt(lx, lz), cy - 0.25) + GROUND_OFF, lz], [rx, Math.max(heightAt(rx, rz), cy - 0.25) + GROUND_OFF, rz], v];
+      if (prev) R.pushFx(0, [prev[0], prev[1], row[1], row[0]], reg, col, [[0, prev[2]], [q, prev[2]], [q, row[2]], [0, row[2]]]);
+      prev = row;
+    }
+  }
+
   /* one silhouette layer: on the ground from the feet, or — with a wall — along the ground to the wall's foot and up it */
   function layer(R, sc, bx, bz, dx, dz, len, sreg, scale, wscale, alpha, primary, t, heightAt) {
     var h = sreg.h / 16 * scale, w = sreg.w / 16 * scale * wscale;
-    var q = 0.9999, by = heightAt(bx, bz) + 0.03;
+    var q = 0.9999;
     var Wl = sc.wall && primary ? sc.wall : null;
     if (Wl && Wl.z < bz - 0.15) {
       // a projection: the shadow leaves the feet along the ground toward the wall, then climbs it from where it meets it
@@ -96,15 +113,14 @@ BTS.Shadows = (function () {
       var px = -dz * w / 2, pz = dx * w / 2;
       var fx = bx + dx * gd, fz = Wl.z + 0.05, fy = Wl.y !== undefined ? Wl.y : heightAt(fx, fz - 0.3);
       var gy = heightAt(fx, fz + 0.2) + 0.03;
-      R.pushFx(0, [[bx - px, by, bz - pz], [bx + px, by, bz + pz], [fx + px, gy, fz + pz], [fx - px, gy, fz - pz]], sreg, [COL[0], COL[1], COL[2], BTS.M.clamp(alpha, 0, 0.85)], [[0, q], [q, q], [q, vs], [0, vs]]);
+      groundStrip(R, bx, bz, dx, dz, gd, px, pz, sreg, [COL[0], COL[1], COL[2], BTS.M.clamp(alpha, 0, 0.85)], q, vs, heightAt);
       var ww = Math.abs(px) * 2 || w, lean = Math.sin(t * 1.3 + sc.phase) * 0.18 * (sc.beast ? 1.5 : 1) + (sc.wallLean || 0);   // wallLean: the top leans away on its own
       var x0 = fx - ww / 2, x1 = fx + ww / 2;
       R.pushFx(3, [[x0, fy, fz], [x1, fy, fz], [x1 + lean, fy + wallH, fz], [x0 + lean, fy + wallH, fz]], sreg, [COL[0], COL[1], COL[2], BTS.M.clamp(alpha * 1.15, 0, 0.82)], [[0, vs], [q, vs], [q, 0], [0, 0]]);
       return;
     }
     var px2 = -dz * w / 2, pz2 = dx * w / 2;
-    var tx = bx + dx * h * len, tz = bz + dz * h * len, ty = heightAt(tx, tz) + 0.03;
-    R.pushFx(0, [[bx - px2, by, bz - pz2], [bx + px2, by, bz + pz2], [tx + px2, ty, tz + pz2], [tx - px2, ty, tz - pz2]], sreg, [COL[0], COL[1], COL[2], BTS.M.clamp(alpha, 0, 0.85)]);
+    groundStrip(R, bx, bz, dx, dz, h * len, px2, pz2, sreg, [COL[0], COL[1], COL[2], BTS.M.clamp(alpha, 0, 0.85)], q, 0, heightAt);
   }
 
   /* the shadow always starts at the caster's feet: lag, stretch and turning change its shape and direction, never its anchor */

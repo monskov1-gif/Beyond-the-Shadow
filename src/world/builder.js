@@ -257,6 +257,7 @@ BTS.LocationBuilder = function (def) {
       [[x0 + 0.3, pz + 0.6], [x1 - 0.3, pz + 0.6]].forEach(function (c) { mb.post(c[0], H(c[0], c[1]), c[1], floor + wh - 0.25 - H(c[0], c[1]), 0.16, 'wood_beam', { mat: MAT.WOOD }); });
       mb.quad([[x0 - 0.1, floor + wh - 0.6, pz + 0.85], [x1 + 0.1, floor + wh - 0.6, pz + 0.85], [x1 + 0.1, floor + wh - 0.05, z1], [x0 - 0.1, floor + wh - 0.05, z1]], BTS.M.norm3([0, 1, 0.6]), [[0, 1], [w / 2, 1], [w / 2, 0], [0, 0]], o.porchRoof || 'roof_shingle', null, MAT.WOOD);
       mb.box(x, floor - 0.05, z1 + 0.85, w, 0.08, 1.7, { all: false, top: 'floor_wood' }, { mat: MAT.WOOD });
+      (this.keepClear || (this.keepClear = [])).push([x0 - 0.2, z1, x1 + 0.2, z1 + 1.9]);   // no scattered bushes/grass on the porch deck
     }
     if (o.shed) {
       var sx = o.shed === 'e' ? x1 + 0.9 : x0 - 0.9, sw = 1.8, sd = d * 0.7, sz = z - d * 0.1;
@@ -375,7 +376,9 @@ BTS.LocationBuilder = function (def) {
       var x = x0 + this.rnd() * (x1 - x0), z = z0 + this.rnd() * (z1 - z0);
       if (o.avoid && o.avoid(x, z)) continue;
       var n = names[Math.floor(this.rnd() * names.length)];
-      this.billboard(n, x, z, { scale: (o.scale || 1) * (0.8 + this.rnd() * 0.4), wind: o.wind === undefined ? 0.6 : o.wind, flip: this.rnd() < 0.5, col: o.col, sink: 0.02 });
+      var sc = (o.scale || 1) * (0.8 + this.rnd() * 0.4), fl = this.rnd() < 0.5;   // drawn before the porch test so the random sequence is unchanged
+      if (this.keepClear && this.keepClear.some(function (b) { return x > b[0] && x < b[2] && z > b[1] && z < b[3]; })) continue;
+      this.billboard(n, x, z, { scale: sc, wind: o.wind === undefined ? 0.6 : o.wind, flip: fl, col: o.col, sink: 0.02 });
     }
   };
   LB.cylinder = function (mb, x, y, z, r, h, seg, tile, mat, o) {

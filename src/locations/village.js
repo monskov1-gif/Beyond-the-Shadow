@@ -121,7 +121,7 @@
         if (R() < 0.3) L.billboard(R.pick(['barrel', 'pot_clay', 'bucket', 'basket']), x + doorAt + 0.9, z + d / 2 + 0.5, { mat: BTS.MAT.WOOD, collide: 0.25 });
         if (R() < 0.25) L.billboard('laundry', x + w / 2 + 1.2, z + d / 2 + 1.6, { mat: BTS.MAT.CLOTH, wind: 0.35, collide: 0.2 });
         if (R() < 0.4) L.tree(R.pick(['tree_plum', 'tree_walnut', 'tree_oak2']), x + (R() < 0.5 ? -1 : 1) * (w / 2 + 2.2), z - d / 2 + R.range(-0.5, 1));
-        if (R() < 0.3) L.scatter(['bush', 'bush_berry'], x - w / 2, z + d / 2 + 0.5, x + w / 2, z + d / 2 + 1.4, 2, { wind: 0.2 });
+        if (R() < 0.3) { var bz = z + d / 2 + (h.porch ? 1.9 : 0.5); L.scatter(['bush', 'bush_berry'], x - w / 2, bz, x + w / 2, bz + 0.9, 2, { wind: 0.2 }); }   // in front of a porch, never on it
         return h;
       }
 
@@ -218,7 +218,7 @@
       // graves: old crosses; new ones appear as the story goes (see story onPopulate)
       var graves = [[80, 18], [82, 18.5], [84, 17.5], [79.5, 21.5], [81.5, 22], [94, 18], [95, 21], [93, 25], [94.5, 28], [80, 26], [82, 27.5], [80.5, 30]];
       graves.forEach(function (g, k) { L.billboard(k % 3 === 0 ? 'headstone' : 'cross_grave', g[0], g[1], { mat: BTS.MAT.STONE, collide: 0.25, scale: 1.1 }); });
-      L.spot('grave_zajko', 92, 30.5); L.spot('grave_pecko', 90.5, 31.2); L.spot('grave_gvozdin', 89, 31.6); L.spot('grave_gorazd', 85.3, 31.2); L.spot('grave_jessica', 83.8, 31); L.spot('grave_tihomir', 95.2, 31);
+      L.spot('grave_zajko', 92, 30.5); L.spot('grave_pecko', 90.5, 31.2); L.spot('grave_gvozdin', 89, 31.6); L.spot('grave_gorazd', 82.4, 31.3); L.spot('grave_jessica', 80.9, 32.2);   // west of the gravel path to the door, not on it L.spot('grave_tihomir', 95.2, 31);
       L.spot('churchyard', 86.5, 30.5, 'up');
       L.tree('tree_spruce', 79, 16); L.tree('tree_spruce2', 96, 32); L.tree('tree_spruce_young', 97.2, 20.5); L.tree('tree_spruce', 78.6, 23.6, { scale: 0.9 }); L.tree('tree_birch', 95.5, 16); L.tree('tree_dead', 78.5, 28.5);
       L.scatter(['grass_tall', 'flowers_wild', 'grass_tuft'], 78, 15, 97, 33, 60, { avoid: function (x, z) { return Math.abs(x - 87) < 3.5 && z > 18; } });
