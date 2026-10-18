@@ -20,6 +20,7 @@ All tests run headless in Chromium (Playwright) with software WebGL (SwiftShader
 | RU (after the fix) | every beat in order up to `e_final` and the credits | ✅ (bot did not register the credits screen → harness fixed) | 0 | 0 |
 | EN | all beats, credits | ✅ PLAYTHROUGH COMPLETE | 0 | 0 |
 | RU, final (after all critic fixes, new character art, mobile controls, skirt fix) | all beats, credits | ✅ PLAYTHROUGH COMPLETE | 0 | 0 |
+| RU, after the big revision (new family/Lisa story — 62 beats, new world, theatre, staging, portraits) | every beat up to `e_final`, end titles, credits | ✅ PLAYTHROUGH COMPLETE (game time ≈ 19 min at 2× with instant text) | 0 | 0 |
 
 The finale (rite minigame → release → epilogue → “The End” → credits) was reached in every complete run.
 
