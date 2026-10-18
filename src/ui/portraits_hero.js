@@ -556,7 +556,7 @@ BTS.PortraitLib = (function () {
       var under = [edge[0], a.P(0.3, a.fc.chinB + 0.25, 0.4), a.P(-0.5, a.fc.chinB + 0.2, 0.2), edge[edge.length - 1], a.rim(110, 0.36), a.P(-1.4, 1.9, -0.6), a.P(1.2, 1.9, -0.4)];
       a.add('chin2', a.el(smooth(under, true), T.shadow, { stroke: rgb(T.line), sw: 1.3 }));
       castOnSkin(a, edge.map(function (p) { return [p[0] + S * (p[0] < a.ox ? 0.06 : -0.04), p[1] + S * 0.06]; }).concat([a.on(-2, -2), a.on(2, -2)]), 0.0, 1);
-      castOnSkin(a, edge.slice(5).map(function (p) { return [p[0] + S * 0.1, p[1] + S * 0.04]; }).concat([a.on(-1.5, 1.5)]), 0.5, 1.2);
+      castOnSkin(a, edge.slice(5).map(function (p) { return [p[0] + S * 0.1, p[1] + S * 0.04]; }).concat([a.on(-1.5, 1.5)]), 0.32, 2.6);
     } else {
       // the knot at the nape and the tails
       var kc2 = a.P(-0.7, 0.3, -1.85);
@@ -796,13 +796,15 @@ BTS.PortraitLib = (function () {
     // the jaw's shadow under the mouth
     if (mi) inner += a.el(smooth(mi.LB.map(function (p) { return [p[0], p[1] + S * 0.08]; }).concat([[mi.LB[mi.LB.length - 1][0], mi.LB[0][1] + S * 0.3]]), true), T.deep, { op: 0.5, blur: 1.2 });
     var full = d + (hole ? ' ' + hole : '');
-    var s = '<path d="' + full + '" fill="' + rgb(T.base) + '" fill-rule="evenodd"/>';
+    // where the beard meets the cheek it thins out: a soft halo of short hair, not a cut edge
+    var s = a.ink(nearTop, [S * 0.06, S * 0.12, S * 0.05], { col: rgb(T.base), op: 0.35, blur: 1.6 }) + a.ink(farTop, [S * 0.05, S * 0.08, S * 0.03], { col: rgb(T.base), op: 0.3, blur: 1.4 });
+    s += '<path d="' + full + '" fill="' + rgb(T.base) + '" fill-rule="evenodd"/>';
     var cid = a.id('cp'); a.addDef('<clipPath id="' + cid + '"><path d="' + full + '" clip-rule="evenodd"/></clipPath>');
     s += a.g(inner, { clip: 'url(#' + cid + ')' });
     // a soft, broken outline: hair edges are not hard lines
     s += a.ink(jl.concat(bottom).concat(jr), [0.8, 1.6, 0.8], { col: rgb(T.line), op: 0.9 });
-    s += a.ink(nearTop, [0.3, 0.9, 0.5], { col: rgb(T.line), op: 0.5 });
-    s += a.ink(farTop, [0.5, 0.8, 0.2], { col: rgb(T.line), op: 0.45 });
+    s += a.ink(nearTop, [0.2, 0.6, 0.3], { col: rgb(T.line), op: 0.25 });
+    s += a.ink(farTop, [0.3, 0.6, 0.2], { col: rgb(T.line), op: 0.25 });
     a.add('beard', s);
     MUST.thick(a, c, { beard: 1 });
   }
